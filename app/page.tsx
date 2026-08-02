@@ -5,6 +5,7 @@ import Products from "@/components/Products";
 import HowToOrder from "@/components/HowToOrder";
 import About from "@/components/About";
 import Faq from "@/components/Faq";
+import Reveal from "@/components/Reveal";
 
 export default function Home() {
   return (
@@ -17,7 +18,7 @@ export default function Home() {
       <Faq />
 
       <footer id="contact" className="border-t border-white/10 bg-zinc-900/50 px-6 py-14 sm:px-8">
-        <div className="mx-auto max-w-7xl text-center">
+        <Reveal className="mx-auto max-w-7xl text-center">
           <Image
             src="/images/logo/onebyte-logo.jpg"
             alt="OneByte Steel Cabinets logo"
@@ -83,7 +84,7 @@ export default function Home() {
               +63 918 381 1094
             </a>
           </div>
-        </div>
+        </Reveal>
       </footer>
     </main>
   );

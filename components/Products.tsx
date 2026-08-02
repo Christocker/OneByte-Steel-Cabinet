@@ -1,4 +1,5 @@
 import ProductCard from "./ProductCard";
+import Reveal from "./Reveal";
 import type { Product } from "./ProductCard";
 
 const products: Product[] = [
@@ -52,7 +53,7 @@ const products: Product[] = [
 export default function Products() {
   return (
     <section id="products" className="mx-auto max-w-7xl border-t border-white/10 px-6 py-20 sm:px-8 sm:py-24">
-      <div className="animate-fade-up text-center">
+      <Reveal className="text-center">
         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-500">
           Our Collection
         </p>
@@ -62,19 +63,19 @@ export default function Products() {
         <p className="mx-auto mt-4 max-w-xl text-lg text-zinc-400">
           Best-selling steel cabinets, crafted to last.
         </p>
-      </div>
+      </Reveal>
 
       <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {products.map((p, i) => (
-          <div key={p.name} className="animate-fade-up" style={{ animationDelay: `${i * 120}ms` }}>
+          <Reveal key={p.name} delay={i * 120}>
             <ProductCard product={p} />
-          </div>
+          </Reveal>
         ))}
       </div>
 
-      <div
-        className="mt-14 animate-fade-up rounded-3xl border border-white/10 bg-zinc-900/80 p-8 text-center backdrop-blur"
-        style={{ animationDelay: "360ms" }}
+      <Reveal
+        className="mt-14 rounded-3xl border border-white/10 bg-zinc-900/80 p-8 text-center backdrop-blur"
+        delay={360}
       >
         <h3 className="text-xl font-bold text-white sm:text-2xl">
           Looking for Other Designs?
@@ -102,7 +103,7 @@ export default function Products() {
             Chat on WhatsApp
           </a>
         </div>
-      </div>
+      </Reveal>
     </section>
   );
 }

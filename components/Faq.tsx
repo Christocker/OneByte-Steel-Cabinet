@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Reveal from "./Reveal";
 
 const faqs = [
   {
@@ -29,23 +30,23 @@ export default function Faq() {
 
   return (
     <section id="faq" className="mx-auto max-w-4xl border-t border-white/10 px-6 py-20 sm:px-8 sm:py-24">
-      <div className="animate-fade-up text-center">
+      <Reveal className="text-center">
         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-500">
           FAQ
         </p>
         <h2 className="mt-3 text-5xl font-bold text-white sm:text-7xl">
           Frequently Asked Questions
         </h2>
-      </div>
+      </Reveal>
 
       <div className="mt-12 space-y-4">
         {faqs.map((f, i) => {
           const open = openIndex === i;
           return (
-            <div
+            <Reveal
               key={f.question}
-              className="animate-fade-up overflow-hidden rounded-2xl border border-white/10 bg-zinc-900/80 transition-all duration-300 hover:border-blue-500/40"
-              style={{ animationDelay: `${i * 80}ms` }}
+              className="overflow-hidden rounded-2xl border border-white/10 bg-zinc-900/80 transition-all duration-300 hover:border-blue-500/40"
+              delay={i * 80}
             >
               <button
                 type="button"
@@ -80,7 +81,7 @@ export default function Faq() {
                   </p>
                 </div>
               </div>
-            </div>
+            </Reveal>
           );
         })}
       </div>

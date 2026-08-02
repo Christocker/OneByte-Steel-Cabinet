@@ -1,3 +1,5 @@
+import Reveal from "./Reveal";
+
 const steps = [
   {
     number: "01",
@@ -58,7 +60,7 @@ function PaymentOptions() {
 export default function HowToOrder() {
   return (
     <section id="how-to-order" className="mx-auto max-w-7xl border-t border-white/10 px-6 py-24 sm:px-8 sm:py-28">
-      <div className="animate-fade-up text-center">
+      <Reveal className="text-center">
         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-500">
           How to Order
         </p>
@@ -68,16 +70,16 @@ export default function HowToOrder() {
         <p className="mx-auto mt-4 max-w-xl text-xl text-zinc-400">
           Four simple steps, and your cabinet is on its way.
         </p>
-      </div>
+      </Reveal>
 
       <div className="relative mt-24 hidden lg:block">
         <div className="absolute left-10 right-10 top-10 border-t-2 border-dashed border-white/10" />
         <div className="grid grid-cols-4 gap-8">
           {steps.map((s, i) => (
-            <div
+            <Reveal
               key={s.number}
-              className="relative flex animate-fade-up flex-col items-center text-center"
-              style={{ animationDelay: `${i * 100}ms` }}
+              className="relative flex flex-col items-center text-center"
+              delay={i * 100}
             >
               <StepNumber number={s.number} />
               <h3 className="mt-6 text-xl font-bold text-white">{s.title}</h3>
@@ -86,7 +88,7 @@ export default function HowToOrder() {
               ) : (
                 <p className="mt-3 text-base leading-relaxed text-zinc-400">{s.text}</p>
               )}
-            </div>
+            </Reveal>
           ))}
         </div>
       </div>
@@ -95,11 +97,7 @@ export default function HowToOrder() {
         <div className="absolute bottom-6 left-10 top-6 border-l-2 border-dashed border-white/10" />
         <div className="space-y-12">
           {steps.map((s, i) => (
-            <div
-              key={s.number}
-              className="relative flex animate-fade-up gap-5"
-              style={{ animationDelay: `${i * 100}ms` }}
-            >
+            <Reveal key={s.number} className="relative flex gap-5" delay={i * 100}>
               <StepNumber number={s.number} />
               <div className="flex-1 pt-2">
                 <h3 className="text-xl font-bold text-white">{s.title}</h3>
@@ -109,12 +107,12 @@ export default function HowToOrder() {
                   <p className="mt-3 text-base leading-relaxed text-zinc-400">{s.text}</p>
                 )}
               </div>
-            </div>
+            </Reveal>
           ))}
         </div>
       </div>
 
-      <div className="mt-16 animate-fade-up text-center">
+      <Reveal className="mt-16 text-center">
         <a
           href="#contact"
           className="inline-flex items-center gap-3 rounded-2xl bg-blue-600 px-12 py-5 text-lg font-semibold text-white transition-all duration-300 hover:bg-blue-500 hover:shadow-xl hover:shadow-blue-600/40 active:scale-95"
@@ -125,7 +123,7 @@ export default function HowToOrder() {
             <path d="M12 5l7 7-7 7" />
           </svg>
         </a>
-      </div>
+      </Reveal>
     </section>
   );
 }

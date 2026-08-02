@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Reveal from "./Reveal";
 
 export default function Hero() {
   return (
@@ -10,7 +11,7 @@ export default function Hero() {
       />
 
       <div className="relative z-10 mx-auto grid w-full max-w-7xl items-center gap-14 px-6 py-20 sm:px-8 sm:py-24 lg:grid-cols-2">
-        <div className="animate-fade-up text-center lg:text-left">
+        <Reveal className="text-center lg:text-left">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-blue-400 backdrop-blur">
             <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
             OneByte Steel Cabinets
@@ -42,9 +43,9 @@ export default function Hero() {
               Request Quote
             </a>
           </div>
-        </div>
+        </Reveal>
 
-        <div className="animate-fade-up" style={{ animationDelay: "150ms" }}>
+        <Reveal delay={150}>
           <div className="relative mx-auto max-w-md animate-float">
             <div className="absolute -inset-6 rounded-[2.5rem] bg-gradient-to-tr from-blue-600/40 to-indigo-500/20 blur-2xl" />
             <Image
@@ -70,7 +71,7 @@ export default function Hero() {
               </div>
             </div>
           </div>
-        </div>
+        </Reveal>
       </div>
     </section>
   );
