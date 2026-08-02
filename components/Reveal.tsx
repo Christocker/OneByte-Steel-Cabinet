@@ -33,7 +33,6 @@ export default function Reveal({ children, delay = 0, className = "" }: RevealPr
       observer?.disconnect();
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
-      window.clearTimeout(safety);
     };
 
     const check = () => {
@@ -59,14 +58,10 @@ export default function Reveal({ children, delay = 0, className = "" }: RevealPr
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
 
-    // Safety net: never leave content invisible if the observer misbehaves.
-    const safety = setTimeout(show, 2500);
-
     return () => {
       observer?.disconnect();
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
-      window.clearTimeout(safety);
     };
   }, []);
 
