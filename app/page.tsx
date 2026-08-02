@@ -2,6 +2,7 @@ import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import Products from "@/components/Products";
+import HowToOrder from "@/components/HowToOrder";
 import About from "@/components/About";
 import Faq from "@/components/Faq";
 
@@ -11,6 +12,7 @@ export default function Home() {
       <Navbar />
       <Hero />
       <Products />
+      <HowToOrder />
       <About />
       <Faq />
 
