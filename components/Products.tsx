@@ -51,7 +51,7 @@ const products: Product[] = [
 
 export default function Products() {
   return (
-    <section id="products" className="mx-auto max-w-7xl px-6 py-20 sm:px-8 sm:py-24">
+    <section id="products" className="mx-auto max-w-7xl border-t border-white/10 px-6 py-20 sm:px-8 sm:py-24">
       <div className="animate-fade-up text-center">
         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-500">
           Our Collection

@@ -57,7 +57,7 @@ function PaymentOptions() {
 
 export default function HowToOrder() {
   return (
-    <section id="how-to-order" className="mx-auto max-w-7xl px-6 py-24 sm:px-8 sm:py-28">
+    <section id="how-to-order" className="mx-auto max-w-7xl border-t border-white/10 px-6 py-24 sm:px-8 sm:py-28">
       <div className="animate-fade-up text-center">
         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-500">
           How to Order

@@ -28,7 +28,7 @@ export default function Faq() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <section id="faq" className="mx-auto max-w-4xl px-6 py-20 sm:px-8 sm:py-24">
+    <section id="faq" className="mx-auto max-w-4xl border-t border-white/10 px-6 py-20 sm:px-8 sm:py-24">
       <div className="animate-fade-up text-center">
         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-500">
           FAQ
