@@ -123,13 +123,25 @@ body {
   display: none;
 }
 
-/* Site header glides out of the way while a photo viewer is open */
+/* Site header glides out above the photo viewer overlay */
 #site-header {
-  transition: transform 0.35s ease, opacity 0.35s ease;
+  transition: transform 0.35s ease, opacity 0.35s ease, z-index 0.01s linear;
 }
 body.lightbox-open #site-header {
+  z-index: 55;
+  animation: header-dismiss 0.35s ease forwards;
   transform: translateY(-100%);
   opacity: 0;
+}
+@keyframes header-dismiss {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
 }
 
 /* iOS-style scrollbar */
