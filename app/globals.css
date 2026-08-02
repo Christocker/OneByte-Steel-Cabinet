@@ -9,7 +9,6 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
 html {
@@ -28,36 +27,6 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   -webkit-tap-highlight-color: transparent;
   text-rendering: optimizeLegibility;
-}
-
-/* iOS-style animations */
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(24px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes sheet-up {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
 }
 
 @keyframes float {
@@ -81,27 +50,11 @@ body {
   }
 }
 
-.animate-fade-in {
-  animation: fade-in 0.3s ease-out both;
-}
-.animate-fade-up {
-  animation: fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-.animate-sheet-up {
-  animation: sheet-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
 .animate-menu-drop {
   animation: menu-drop 0.25s ease-out both;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .animate-float,
-  .animate-pulse {
-    animation: none;
-  }
 }
 
 /* iOS-style scrollbar */
@@ -117,4 +70,18 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

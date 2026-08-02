@@ -64,7 +64,7 @@ export default function HowToOrder() {
         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-500">
           How to Order
         </p>
-        <h2 className="mt-3 text-5xl font-bold text-white sm:text-7xl">
+        <h2 className="mt-3 text-5xl font-bold text-white sm:text-6xl lg:text-7xl">
           Ordering is Easy
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-xl text-zinc-400">

@@ -10,6 +10,8 @@ function easeInOutCubic(t: number) {
 
 export default function SmoothScroll() {
   useEffect(() => {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     function onClick(e: MouseEvent) {
       if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
 
@@ -17,6 +19,7 @@ export default function SmoothScroll() {
       if (!anchor) return;
 
       const hash = anchor.getAttribute("href") ?? "";
+      if (reduceMotion) return;
       const id = hash.slice(1);
       const target = id ? document.getElementById(id) : null;
       if (id && !target) return;

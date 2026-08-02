@@ -4,11 +4,15 @@ import Reveal from "./Reveal";
 export default function Hero() {
   return (
     <section className="relative flex min-h-svh items-center overflow-hidden">
-      <div className="pointer-events-none absolute -left-40 -top-40 h-[320px] w-[320px] rounded-full bg-blue-600/30 blur-[100px] animate-float sm:h-[480px] sm:w-[480px]" />
+      <div className="pointer-events-none absolute -left-40 -top-40 h-[320px] w-[320px] animate-float sm:h-[480px] sm:w-[480px]">
+        <div className="h-full w-full rounded-full bg-blue-600/30 blur-[100px]" />
+      </div>
       <div
-        className="pointer-events-none absolute -bottom-40 -right-40 h-[340px] w-[340px] rounded-full bg-indigo-600/20 blur-[100px] animate-float sm:h-[520px] sm:w-[520px]"
+        className="pointer-events-none absolute -bottom-40 -right-40 h-[340px] w-[340px] animate-float sm:h-[520px] sm:w-[520px]"
         style={{ animationDelay: "2s" }}
-      />
+      >
+        <div className="h-full w-full rounded-full bg-indigo-600/20 blur-[100px]" />
+      </div>
 
       <div className="relative z-10 mx-auto grid w-full max-w-7xl items-center gap-14 px-6 py-20 sm:px-8 sm:py-24 lg:grid-cols-2">
         <Reveal className="text-center lg:text-left">

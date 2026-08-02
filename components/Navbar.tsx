@@ -35,12 +35,12 @@ export default function Navbar() {
           </span>
         </a>
 
-        <div className="hidden items-center gap-8 md:flex">
+        <div className="hidden items-center gap-6 lg:flex">
           {links.map((l) => (
             <a
               key={l.label}
               href={l.href}
-              className="relative text-sm font-medium text-zinc-300 transition-colors duration-300 hover:text-white after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0 after:rounded-full after:bg-blue-500 after:transition-all after:duration-300 hover:after:w-full"
+              className="relative whitespace-nowrap text-sm font-medium text-zinc-300 transition-colors duration-300 hover:text-white after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0 after:rounded-full after:bg-blue-500 after:transition-all after:duration-300 hover:after:w-full"
             >
               {l.label}
             </a>
@@ -53,7 +53,7 @@ export default function Navbar() {
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
           aria-controls="mobile-menu"
-          className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-zinc-200 transition-colors duration-300 hover:bg-white/10 hover:text-white active:scale-95 md:hidden"
+          className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-zinc-200 transition-colors duration-300 hover:bg-white/10 hover:text-white active:scale-95 lg:hidden"
         >
           <svg
             className="h-6 w-6"
@@ -75,7 +75,7 @@ export default function Navbar() {
       {open && (
         <div
           id="mobile-menu"
-          className="animate-menu-drop border-t border-white/10 bg-zinc-950/95 px-6 pb-6 pt-2 backdrop-blur-xl md:hidden"
+          className="animate-menu-drop border-t border-white/10 bg-zinc-950/95 px-6 pb-6 pt-2 backdrop-blur-xl lg:hidden"
         >
           {links.map((l) => (
             <a

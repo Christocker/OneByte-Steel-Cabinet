@@ -28,7 +28,7 @@ export default function About() {
     <section id="about" className="mx-auto max-w-7xl border-t border-white/10 px-6 py-20 sm:px-8 sm:py-24">
       <Reveal className="text-center">
         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-500">About Us</p>
-        <h2 className="mt-3 text-5xl font-bold text-white sm:text-7xl">Who We Are</h2>
+        <h2 className="mt-3 text-5xl font-bold text-white sm:text-6xl lg:text-7xl">Who We Are</h2>
       </Reveal>
 
       <div className="mt-14 grid items-center gap-12 lg:grid-cols-2">
