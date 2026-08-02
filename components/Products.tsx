@@ -3,12 +3,12 @@ import type { Product } from "./ProductCard";
 
 const products: Product[] = [
   {
-    image: "/images/products/steeline-glass.jpg",
-    name: "Steeline Full Glass Cabinet",
+    image: "/images/products/full-glass.jpg",
+    name: "Full Glass Cabinet",
     price: "6,800",
     imageRatio: "3 / 4",
     description:
-      "A striking full-glass cabinet from the Steeline series, pairing clear swing glass doors with a rugged steel frame.",
+      "Full-glass cabinet with clear swing doors and a sturdy steel frame.",
     dimensions: "",
     features: [
       "Full glass swing doors",
@@ -18,12 +18,12 @@ const products: Product[] = [
     ],
   },
   {
-    image: "/images/products/steeline-metal.jpg",
-    name: "Steeline Full Metal Cabinet",
+    image: "/images/products/full-metal.jpg",
+    name: "Full Metal Cabinet",
     price: "5,800",
     imageRatio: "1 / 1",
     description:
-      "A fully enclosed all-metal cabinet built for maximum security and durability in any setting.",
+      "All-metal cabinet for maximum security and durability.",
     dimensions: "",
     features: [
       "All-metal construction",
@@ -38,7 +38,7 @@ const products: Product[] = [
     price: "6,000",
     imageRatio: "2 / 3",
     description:
-      "A clean white storage cabinet with sliding glass doors, ideal for offices, homes, and display use.",
+      "White storage cabinet with sliding glass doors.",
     dimensions: "",
     features: [
       "White powder-coated steel body",

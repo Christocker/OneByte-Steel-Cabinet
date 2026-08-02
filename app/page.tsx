@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import Products from "@/components/Products";
 import About from "@/components/About";
+import Faq from "@/components/Faq";
 
 export default function Home() {
   return (
@@ -11,6 +12,7 @@ export default function Home() {
       <Hero />
       <Products />
       <About />
+      <Faq />
 
       <footer id="contact" className="border-t border-white/10 bg-zinc-900/50 px-6 py-14 sm:px-8">
         <div className="mx-auto max-w-7xl text-center">

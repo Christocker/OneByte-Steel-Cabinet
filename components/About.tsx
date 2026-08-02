@@ -32,20 +32,15 @@ export default function About() {
       <div className="mt-14 grid items-center gap-12 lg:grid-cols-2">
         <div className="animate-fade-up">
           <p className="text-lg leading-relaxed text-zinc-400">
-            OneByte Steel Cabinets is a trusted dealer of premium steel
-            cabinets for homes, offices, schools, warehouses, and businesses.
-            We offer a wide selection of quality cabinets — from full glass and
-            full metal units to sliding glass and shelf-type styles — built
-            from heavy-gauge steel and finished to last, combining security,
-            durability, and a clean modern look.
+            OneByte Steel Cabinets sells premium steel cabinets for homes,
+            offices, schools, and businesses. Full glass, full metal, sliding
+            glass, and shelf-type styles — built from heavy-gauge steel to
+            last.
           </p>
           <p className="mt-5 text-lg leading-relaxed text-zinc-400">
-            Since 2024, we have been delivering quality cabinets at the most
-            affordable prices — we are one of the cheapest steel cabinet
-            sellers around — with friendly service from our base in Dasmariñas,
-            Cavite. Whether you need a full glass display cabinet, a secure
-            metal storage unit, or a custom shelf-type cabinet, we have it for
-            you.
+            Since 2024, we have been selling quality cabinets at the lowest
+            prices, with friendly service from our base in Dasmariñas, Cavite.
+            Whatever you need, we have it.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <a
