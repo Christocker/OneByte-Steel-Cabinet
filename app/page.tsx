@@ -4,6 +4,7 @@ import Hero from "@/components/Hero";
 import Products from "@/components/Products";
 import HowToOrder from "@/components/HowToOrder";
 import About from "@/components/About";
+import Gallery from "@/components/Gallery";
 import Faq from "@/components/Faq";
 import Reveal from "@/components/Reveal";
 
@@ -15,6 +16,7 @@ export default function Home() {
       <Products />
       <HowToOrder />
       <About />
+      <Gallery />
       <Faq />
 
       <footer id="contact" className="border-t border-white/10 bg-zinc-900/50 px-6 py-14 sm:px-8">
@@ -36,6 +38,18 @@ export default function Home() {
             Message us now for inquiries and quotes — we reply as fast as we
             can. Choose your preferred way to reach us.
           </p>
+
+          <div className="mx-auto mt-8 flex max-w-lg flex-col items-center gap-3 rounded-2xl border border-white/10 bg-zinc-900/80 px-6 py-5">
+            <div className="flex items-center gap-2 text-sm font-bold text-white">
+              <svg className="h-5 w-5 text-blue-400" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16zm1-13h-2v6l5.25 3.15 1-1.65-4.25-2.5V7z" />
+              </svg>
+              Store Hours
+            </div>
+            <p className="text-sm text-zinc-400">
+              Weekdays: 5:30 PM onwards · Weekends: Whole day
+            </p>
+          </div>
 
           <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <a
