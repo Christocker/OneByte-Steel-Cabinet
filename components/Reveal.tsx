@@ -17,31 +17,59 @@ export default function Reveal({ children, delay = 0, className = "" }: RevealPr
     const el = ref.current;
     if (!el || typeof IntersectionObserver === "undefined") return;
 
-    // Only animate content that starts below the viewport. Elements already
-    // on screen (hero, first section) render visible with no JS dependency.
+    // Only elements that start below the viewport get the animation.
     if (el.getBoundingClientRect().top < window.innerHeight * 0.9) return;
 
     setHidden(true);
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          setHidden(false);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0, rootMargin: "0px 0px -10% 0px" }
-    );
+    let revealed = false;
+    let observer: IntersectionObserver | null = null;
+    let ticking = false;
 
+    const show = () => {
+      if (revealed) return;
+      revealed = true;
+      setHidden(false);
+      observer?.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+
+    const check = () => {
+      ticking = false;
+      const r = el.getBoundingClientRect();
+      if (r.top < window.innerHeight * 0.92 && r.bottom > 0) show();
+    };
+
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(check);
+      }
+    };
+
+    observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) show();
+      },
+      { threshold: 0, rootMargin: "0px 0px -8% 0px" }
+    );
     observer.observe(el);
-    return () => observer.disconnect();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
   }, []);
 
   return (
     <div
       ref={ref}
       className={`${className} transition duration-700 ease-out ${
-        hidden ? "translate-y-10 opacity-0" : "translate-y-0 opacity-100"
+        hidden ? "translate-y-8 opacity-0" : "translate-y-0 opacity-100"
       }`}
       style={hidden ? { transitionDelay: `${delay}ms` } : undefined}
     >
