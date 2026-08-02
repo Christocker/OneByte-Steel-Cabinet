@@ -36,6 +36,11 @@ export default function Gallery() {
   const trackRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ id: number; startX: number; startLeft: number } | null>(null);
   const scrollRafRef = useRef<number | null>(null);
+  const currentRef = useRef(0);
+
+  useEffect(() => {
+    currentRef.current = current;
+  }, [current]);
 
   const close = useCallback(() => setOpen(null), []);
 
@@ -59,11 +64,10 @@ export default function Gallery() {
       const el = trackRef.current;
       if (!el || open === null) return;
       const clamped = Math.max(0, Math.min(photos.length - 1, i));
-      (el.children[clamped] as HTMLElement | undefined)?.scrollIntoView({
-        behavior: "smooth",
-        inline: "center",
-        block: "nearest",
-      });
+      const child = el.children[clamped] as HTMLElement | undefined;
+      if (!child) return;
+      const target = child.offsetLeft - (el.clientWidth - child.offsetWidth) / 2;
+      el.scrollTo({ left: target, behavior: "smooth" });
     },
     [open]
   );
@@ -73,17 +77,16 @@ export default function Gallery() {
     const id = requestAnimationFrame(() => {
       const el = trackRef.current;
       if (!el) return;
-      (el.children[open] as HTMLElement | undefined)?.scrollIntoView({
-        behavior: "auto",
-        inline: "center",
-        block: "nearest",
-      });
+      const child = el.children[open] as HTMLElement | undefined;
+      if (!child) return;
+      const target = child.offsetLeft - (el.clientWidth - child.offsetWidth) / 2;
+      el.scrollTo({ left: target });
     });
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") close();
-      if (e.key === "ArrowLeft") goTo(current - 1);
-      if (e.key === "ArrowRight") goTo(current + 1);
+      if (e.key === "ArrowLeft") goTo(currentRef.current - 1);
+      if (e.key === "ArrowRight") goTo(currentRef.current + 1);
     };
     window.addEventListener("keydown", onKey);
     const prevOverflow = document.body.style.overflow;
@@ -93,7 +96,7 @@ export default function Gallery() {
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prevOverflow;
     };
-  }, [open, current, close, goTo]);
+  }, [open, close, goTo]);
 
   const onScrollTrack = () => {
     if (scrollRafRef.current !== null) return;
@@ -110,6 +113,7 @@ export default function Gallery() {
     const el = trackRef.current;
     if (!el) return;
     dragRef.current = { id: e.pointerId, startX: e.clientX, startLeft: el.scrollLeft };
+    el.style.scrollSnapType = "none";
     try {
       el.setPointerCapture(e.pointerId);
     } catch {
@@ -128,13 +132,13 @@ export default function Gallery() {
     if (!dragRef.current) return;
     dragRef.current = null;
     const el = trackRef.current;
-    if (!el || open === null) return;
+    if (!el) return;
+    el.style.scrollSnapType = "";
+    if (open === null) return;
     const target = nearestIndex(el);
-    (el.children[target] as HTMLElement | undefined)?.scrollIntoView({
-      behavior: "smooth",
-      inline: "center",
-      block: "nearest",
-    });
+    const child = el.children[target] as HTMLElement | undefined;
+    if (!child) return;
+    el.scrollTo({ left: child.offsetLeft - (el.clientWidth - child.offsetWidth) / 2, behavior: "smooth" });
   };
 
   return (
@@ -274,7 +278,7 @@ export default function Gallery() {
               onPointerUp={endDrag}
               onPointerCancel={endDrag}
               onClick={(e) => e.stopPropagation()}
-              className="no-scrollbar flex h-full w-full cursor-grab select-none items-center gap-3 overflow-x-auto px-3 active:cursor-grabbing sm:gap-6 sm:px-8"
+              className="no-scrollbar flex h-full w-full cursor-grab select-none items-center gap-3 overflow-x-auto px-[7.5%] active:cursor-grabbing sm:gap-6 sm:px-[15%] lg:px-[20%]"
               style={{ touchAction: "pan-y" }}
             >
               {photos.map((p, i) => (
