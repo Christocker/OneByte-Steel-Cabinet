@@ -82,6 +82,10 @@ export default function About() {
             Dasmariñas, Cavite — drop by our store or message us anytime for
             inquiries and quotes.
           </p>
+          <p className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm leading-relaxed text-amber-300">
+            Please contact us first before visiting, so we can prepare your
+            order.
+          </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <a
               href="https://maps.app.goo.gl/hD3GWLsst9YMPEAh6"
