@@ -101,7 +101,7 @@ export default function Products() {
       </div>
 
       <Reveal
-        className="mt-14 rounded-3xl border border-beige-deep bg-beige-soft p-8 text-center shadow-sm"
+        className="mt-14 rounded-3xl border border-beige-deep bg-beige-soft p-8 text-center shadow-lg shadow-navy/15"
         delay={200}
       >
         <h3 className="text-xl font-bold text-navy sm:text-2xl">

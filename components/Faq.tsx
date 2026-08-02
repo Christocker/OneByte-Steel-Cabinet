@@ -45,7 +45,7 @@ export default function Faq() {
           return (
             <Reveal
               key={f.question}
-              className="overflow-hidden rounded-2xl border border-beige-deep bg-beige-soft shadow-sm hover:border-navy/40"
+              className="overflow-hidden rounded-2xl border border-beige-deep bg-beige-soft shadow-lg shadow-navy/15 hover:border-navy/40"
               delay={i * 80}
             >
               <button

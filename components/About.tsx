@@ -66,7 +66,7 @@ export default function About() {
           {facts.map((f, i) => (
             <Reveal
               key={f.title}
-              className="rounded-3xl border border-beige-deep bg-beige-soft p-6 shadow-sm hover:-translate-y-1 hover:border-navy/40 hover:shadow-xl hover:shadow-navy/20"
+              className="rounded-3xl border border-beige-deep bg-beige-soft p-6 shadow-lg shadow-navy/20 hover:-translate-y-1 hover:border-navy/40 hover:shadow-xl hover:shadow-navy/30"
               delay={i * 80}
             >
               <h3 className="text-lg font-bold text-navy">{f.title}</h3>
@@ -76,7 +76,7 @@ export default function About() {
         </div>
       </div>
 
-      <Reveal className="mt-16 grid items-center gap-8 rounded-3xl border border-beige-deep bg-beige-soft p-6 shadow-lg shadow-navy/10 sm:p-8 lg:grid-cols-[1fr_1.15fr]">
+      <Reveal className="mt-16 grid items-center gap-8 rounded-3xl border border-beige-deep bg-beige-soft p-6 shadow-xl shadow-navy/20 sm:p-8 lg:grid-cols-[1fr_1.15fr]">
         <div>
           <h3 className="text-2xl font-bold text-navy">Find Us</h3>
           <p className="mt-3 text-lg font-semibold text-navy-light">OneByte</p>

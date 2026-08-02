@@ -17,7 +17,7 @@ export default function Hero() {
       <div className="relative z-10 mx-auto grid w-full max-w-7xl items-center gap-14 px-6 py-20 sm:px-8 sm:py-24 lg:grid-cols-2">
         <Reveal className="text-center lg:text-left">
           <div className="animate-fade-up">
-            <span className="inline-flex items-center gap-2 rounded-full border border-beige-deep bg-beige-soft px-4 py-2 text-sm font-medium text-navy shadow-sm">
+            <span className="inline-flex items-center gap-2 rounded-full border border-beige-deep bg-beige-soft px-4 py-2 text-sm font-medium text-navy shadow-lg shadow-navy/15">
               <span className="h-2 w-2 rounded-full bg-navy animate-pulse" />
               OneByte Steel Cabinets
             </span>
