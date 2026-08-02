@@ -45,7 +45,7 @@ export default function Faq() {
           return (
             <Reveal
               key={f.question}
-              className="overflow-hidden rounded-2xl border border-white/10 bg-zinc-900/80 transition-all duration-300 hover:border-blue-500/40"
+              className="overflow-hidden rounded-2xl border border-white/10 bg-zinc-900/80 hover:border-blue-500/40"
               delay={i * 80}
             >
               <button

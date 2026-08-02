@@ -11,20 +11,26 @@ type RevealProps = {
 
 export default function Reveal({ children, delay = 0, className = "" }: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
+  const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+
+    // Only animate content that starts below the viewport. Elements already
+    // on screen (hero, first section) render visible with no JS dependency.
+    if (el.getBoundingClientRect().top < window.innerHeight * 0.9) return;
+
+    setHidden(true);
 
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true);
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setHidden(false);
           observer.disconnect();
         }
       },
-      { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
+      { threshold: 0, rootMargin: "0px 0px -10% 0px" }
     );
 
     observer.observe(el);
@@ -35,9 +41,9 @@ export default function Reveal({ children, delay = 0, className = "" }: RevealPr
     <div
       ref={ref}
       className={`${className} transition duration-700 ease-out ${
-        visible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
+        hidden ? "translate-y-10 opacity-0" : "translate-y-0 opacity-100"
       }`}
-      style={{ transitionDelay: `${delay}ms` }}
+      style={hidden ? { transitionDelay: `${delay}ms` } : undefined}
     >
       {children}
     </div>

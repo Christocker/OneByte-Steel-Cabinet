@@ -66,8 +66,8 @@ export default function About() {
           {facts.map((f, i) => (
             <Reveal
               key={f.title}
-              className="rounded-3xl border border-white/10 bg-zinc-900/80 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/40 hover:shadow-xl hover:shadow-blue-950/30"
-              delay={i * 100}
+              className="rounded-3xl border border-white/10 bg-zinc-900/80 p-6 hover:-translate-y-1 hover:border-blue-500/40 hover:shadow-xl hover:shadow-blue-950/30"
+              delay={i * 80}
             >
               <h3 className="text-lg font-bold text-white">{f.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-zinc-400">{f.text}</p>
