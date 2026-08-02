@@ -123,6 +123,15 @@ body {
   display: none;
 }
 
+/* Site header glides out of the way while a photo viewer is open */
+#site-header {
+  transition: transform 0.35s ease, opacity 0.35s ease;
+}
+body.lightbox-open #site-header {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+
 /* iOS-style scrollbar */
 ::-webkit-scrollbar {
   width: 10px;

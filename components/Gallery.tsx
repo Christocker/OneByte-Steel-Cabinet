@@ -4,6 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import type { PointerEvent as ReactPointerEvent } from "react";
 import Image from "next/image";
 import Reveal from "./Reveal";
+import { lockLightbox } from "@/lib/lightbox";
 
 type Photo = {
   src: string;
@@ -107,10 +108,12 @@ export default function Gallery() {
       if (e.key === "ArrowRight") goTo(indexRef.current + 1);
     };
     window.addEventListener("keydown", onKey);
+    const prevClass = document.body.className;
     const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    lockLightbox();
     return () => {
       window.removeEventListener("keydown", onKey);
+      document.body.className = prevClass;
       document.body.style.overflow = prevOverflow;
     };
   }, [open, close, goTo]);

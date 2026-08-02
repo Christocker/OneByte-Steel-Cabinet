@@ -21,7 +21,7 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="sticky top-0 z-40 w-full border-b-2 border-beige-deep bg-beige/85 backdrop-blur-xl">
+    <nav id="site-header" className="sticky top-0 z-40 w-full border-b-2 border-beige-deep bg-beige/85 backdrop-blur-xl">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 sm:px-8">
         <a href="#" onClick={closeMenu} className="flex items-center gap-3">
           <Image
