@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 
 export type Product = {
@@ -11,25 +11,70 @@ export type Product = {
   images: [string, string];
 };
 
+const CLOSE_MS = 250;
+
+type NaturalSize = { w: number; h: number };
+
 export default function ProductCard({ product }: { product: Product }) {
   const [openImage, setOpenImage] = useState<number | null>(null);
+  const [closing, setClosing] = useState(false);
+  const [naturalSize, setNaturalSize] = useState<NaturalSize | null>(null);
+  const [viewport, setViewport] = useState({ w: 0, h: 0 });
+
+  const open = useCallback((idx: number) => {
+    setClosing(false);
+    setNaturalSize(null);
+    setViewport({ w: window.innerWidth, h: window.innerHeight });
+    setOpenImage(idx);
+  }, []);
+
+  const close = useCallback(() => {
+    if (closing) return;
+    setClosing(true);
+    window.setTimeout(() => {
+      setOpenImage(null);
+      setClosing(false);
+    }, CLOSE_MS);
+  }, [closing]);
+
+  const move = useCallback(
+    (dir: 1 | -1) => {
+      if (openImage === null) return;
+      const next = Math.max(0, Math.min(product.images.length - 1, openImage + dir));
+      if (next !== openImage) open(next);
+    },
+    [openImage, product.images.length, open]
+  );
 
   useEffect(() => {
     if (openImage === null) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpenImage(null);
-      if (e.key === "ArrowLeft") setOpenImage((i) => (i === null ? i : Math.max(0, i - 1)));
-      if (e.key === "ArrowRight")
-        setOpenImage((i) => (i === null ? i : Math.min(product.images.length - 1, i + 1)));
+      if (e.key === "Escape") close();
+      if (e.key === "ArrowLeft") move(-1);
+      if (e.key === "ArrowRight") move(1);
     };
     window.addEventListener("keydown", onKey);
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    const onResize = () => setViewport({ w: window.innerWidth, h: window.innerHeight });
+    window.addEventListener("resize", onResize);
     return () => {
       window.removeEventListener("keydown", onKey);
+      window.removeEventListener("resize", onResize);
       document.body.style.overflow = prevOverflow;
     };
-  }, [openImage, product.images.length]);
+  }, [openImage, close, move]);
+
+  const displaySize = useMemo(() => {
+    if (!naturalSize || viewport.w === 0) return null;
+    const maxW = Math.min(viewport.w * 0.92, 1100);
+    const maxH = Math.min(viewport.h * 0.8, 900);
+    const scale = Math.min(maxW / naturalSize.w, maxH / naturalSize.h);
+    return {
+      w: Math.round(naturalSize.w * scale),
+      h: Math.round(naturalSize.h * scale),
+    };
+  }, [naturalSize, viewport]);
 
   return (
     <>
@@ -40,7 +85,7 @@ export default function ProductCard({ product }: { product: Product }) {
             <button
               key={src}
               type="button"
-              onClick={() => setOpenImage(idx)}
+              onClick={() => open(idx)}
               aria-label={`View ${product.name} photo ${idx + 1} of ${product.images.length} in full size`}
               className="group/thumb relative aspect-[3/4] w-full cursor-zoom-in overflow-hidden rounded-2xl bg-beige focus:outline-none focus-visible:ring-2 focus-visible:ring-navy"
             >
@@ -82,42 +127,22 @@ export default function ProductCard({ product }: { product: Product }) {
       {openImage !== null &&
         createPortal(
           <div
-            className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-navy/95 backdrop-blur-sm"
-            onClick={() => setOpenImage(null)}
+            className={`fixed inset-0 z-50 flex items-center justify-center bg-navy/95 backdrop-blur-sm ${
+              closing ? "animate-fade-out" : "animate-fade-in"
+            }`}
+            onClick={close}
             role="dialog"
             aria-modal="true"
             aria-label={`${product.name} photo viewer`}
           >
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setOpenImage(null);
-            }}
-            aria-label="Close photo viewer"
-            className="absolute right-4 top-4 z-20 rounded-full bg-white/10 p-3 text-white transition-colors duration-300 hover:bg-white/20 active:scale-95"
-          >
-            <svg
-              className="h-5 w-5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              strokeLinecap="round"
-            >
-              <path d="M6 6l12 12M18 6L6 18" />
-            </svg>
-          </button>
-
-          {product.images[openImage - 1] && (
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                setOpenImage(openImage - 1);
+                close();
               }}
-              aria-label="Previous photo"
-              className="absolute left-2 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition-colors duration-300 hover:bg-white/20 active:scale-95 sm:left-4"
+              aria-label="Close photo viewer"
+              className="absolute right-4 top-4 z-20 rounded-full bg-white/10 p-3 text-white transition-colors duration-300 hover:bg-white/20 active:scale-95"
             >
               <svg
                 className="h-5 w-5"
@@ -126,56 +151,91 @@ export default function ProductCard({ product }: { product: Product }) {
                 stroke="currentColor"
                 strokeWidth={2}
                 strokeLinecap="round"
-                strokeLinejoin="round"
               >
-                <path d="M15 18l-6-6 6-6" />
+                <path d="M6 6l12 12M18 6L6 18" />
               </svg>
             </button>
-          )}
 
-          {product.images[openImage + 1] && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setOpenImage(openImage + 1);
-              }}
-              aria-label="Next photo"
-              className="absolute right-2 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition-colors duration-300 hover:bg-white/20 active:scale-95 sm:right-4"
+            {product.images[openImage - 1] && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  move(-1);
+                }}
+                aria-label="Previous photo"
+                className="absolute left-2 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition-colors duration-300 hover:bg-white/20 active:scale-95 sm:left-4"
+              >
+                <svg
+                  className="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+              </button>
+            )}
+
+            {product.images[openImage + 1] && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  move(1);
+                }}
+                aria-label="Next photo"
+                className="absolute right-2 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition-colors duration-300 hover:bg-white/20 active:scale-95 sm:right-4"
+              >
+                <svg
+                  className="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M9 6l6 6-6 6" />
+                </svg>
+              </button>
+            )}
+
+            <div
+              className="relative overflow-hidden rounded-2xl shadow-2xl shadow-black/40"
+              onClick={(e) => e.stopPropagation()}
             >
-              <svg
-                className="h-5 w-5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
+              <div
+                className="relative"
+                style={
+                  displaySize
+                    ? { width: displaySize.w, height: displaySize.h }
+                    : { width: "min(92vw, 1100px)", height: "70vh" }
+                }
               >
-                <path d="M9 6l6 6-6 6" />
-              </svg>
-            </button>
-          )}
-
-          <div
-            className="relative flex h-full max-h-[80vh] w-full max-w-[92vw] items-center justify-center sm:max-h-[85vh]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="relative h-full w-full max-h-[80vh] sm:max-h-[85vh]">
-              <Image
-                src={product.images[openImage]}
-                alt={`${product.name} — photo ${openImage + 1}`}
-                fill
-                sizes="92vw"
-                className="animate-zoom-in object-contain"
-                draggable={false}
-              />
+                <Image
+                  src={product.images[openImage]}
+                  alt={`${product.name} — photo ${openImage + 1}`}
+                  fill
+                  sizes="92vw"
+                  className={`object-contain ${closing ? "" : "animate-zoom-in"}`}
+                  draggable={false}
+                  onLoad={(e) => {
+                    const img = e.currentTarget;
+                    if (img.naturalWidth && img.naturalHeight) {
+                      setNaturalSize({ w: img.naturalWidth, h: img.naturalHeight });
+                    }
+                  }}
+                />
+              </div>
             </div>
-          </div>
 
-          <p className="absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium text-white backdrop-blur">
-            {openImage + 1} / {product.images.length}
-          </p>
+            <p className="absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium text-white backdrop-blur">
+              {openImage + 1} / {product.images.length}
+            </p>
           </div>,
           document.body
         )}

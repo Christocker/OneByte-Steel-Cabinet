@@ -34,6 +34,7 @@ type DragSample = { x: number; t: number };
 
 export default function Gallery() {
   const [open, setOpen] = useState<number | null>(null);
+  const [closing, setClosing] = useState(false);
   const [index, setIndex] = useState(0);
   const [dragX, setDragX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -84,7 +85,13 @@ export default function Gallery() {
     return () => cancelAnimationFrame(id);
   }, [open, measure]);
 
-  const close = useCallback(() => setOpen(null), []);
+  const close = useCallback(() => {
+    setClosing(true);
+    window.setTimeout(() => {
+      setOpen(null);
+      setClosing(false);
+    }, 250);
+  }, []);
 
   const goTo = useCallback((i: number) => {
     setIndex(Math.max(0, Math.min(photos.length - 1, i)));
@@ -227,7 +234,9 @@ export default function Gallery() {
 
       {open !== null && (
         <div
-          className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-navy/95 backdrop-blur-sm"
+          className={`fixed inset-0 z-50 flex items-center justify-center bg-navy/95 backdrop-blur-sm ${
+            closing ? "animate-fade-out" : "animate-fade-in"
+          }`}
           onClick={close}
           role="dialog"
           aria-modal="true"
