@@ -46,6 +46,7 @@ export default function Gallery() {
   const trackRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ x: number; dragX0: number; samples: DragSample[] } | null>(null);
   const indexRef = useRef(0);
+  const movedRef = useRef(false);
 
   useEffect(() => {
     indexRef.current = index;
@@ -88,7 +89,7 @@ export default function Gallery() {
   const goTo = useCallback((i: number) => {
     setIndex(Math.max(0, Math.min(photos.length - 1, i)));
     setDragX(0);
-    setTransDur(600);
+    setTransDur(650);
   }, []);
 
   useEffect(() => {
@@ -116,6 +117,7 @@ export default function Gallery() {
       // ignore — capture not supported
     }
     dragRef.current = { x: e.clientX, dragX0: dragX, samples: [] };
+    movedRef.current = false;
     setIsDragging(true);
   };
 
@@ -123,6 +125,7 @@ export default function Gallery() {
     const d = dragRef.current;
     if (!d) return;
     const dx = e.clientX - d.x;
+    if (Math.abs(dx) > 6) movedRef.current = true;
     let next = d.dragX0 + dx;
     if (index === 0 && next > 0) next *= 0.35;
     else if (index === photos.length - 1 && next < 0) next *= 0.35;
@@ -146,9 +149,19 @@ export default function Gallery() {
     else if (Math.abs(v) > 0.45) target = index + (v > 0 ? -1 : 1);
     target = Math.max(0, Math.min(photos.length - 1, target));
     const dist = Math.abs(target - index);
-    setTransDur(Math.min(700, Math.max(350, 350 + dist * 120)));
+    setTransDur(Math.min(850, Math.max(520, 520 + dist * 140)));
     setIndex(target);
     setDragX(0);
+  };
+
+  const onContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    const c = containerRef.current;
+    if (!c || movedRef.current) return;
+    const rect = c.getBoundingClientRect();
+    const relX = e.clientX - rect.left - rect.width / 2;
+    const jump = Math.round(relX / step);
+    if (jump !== 0) goTo(index + jump);
   };
 
   const translateX = baseOffset - index * step + dragX;
@@ -285,7 +298,7 @@ export default function Gallery() {
 
             <div
               ref={containerRef}
-              onClick={(e) => e.stopPropagation()}
+              onClick={onContainerClick}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
               onPointerUp={endDrag}
@@ -301,7 +314,7 @@ export default function Gallery() {
                   transition:
                     suppress || isDragging
                       ? "none"
-                      : `transform ${transDur}ms cubic-bezier(0.22, 1, 0.36, 1)`,
+                      : `transform ${transDur}ms cubic-bezier(0.16, 1, 0.3, 1)`,
                   willChange: "transform",
                 }}
               >
