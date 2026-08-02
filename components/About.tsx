@@ -25,7 +25,7 @@ const facts = [
 
 export default function About() {
   return (
-    <section id="about" className="mx-auto max-w-7xl border-t border-beige-deep px-6 py-20 sm:px-8 sm:py-24">
+    <section id="about" className="mx-auto max-w-7xl border-t-2 border-beige-deep px-6 py-20 sm:px-8 sm:py-24">
       <Reveal className="text-center">
         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-navy">About Us</p>
         <h2 className="mt-3 text-5xl font-bold text-navy sm:text-6xl lg:text-7xl">Who We Are</h2>
@@ -66,7 +66,7 @@ export default function About() {
           {facts.map((f, i) => (
             <Reveal
               key={f.title}
-              className="rounded-3xl border border-beige-deep bg-beige-soft p-6 shadow-lg shadow-navy/20 hover:-translate-y-1 hover:border-navy/40 hover:shadow-xl hover:shadow-navy/30"
+              className="rounded-3xl border-2 border-beige-deep bg-beige-soft p-6 shadow-lg shadow-navy/20 hover:-translate-y-1 hover:border-navy/40 hover:shadow-xl hover:shadow-navy/30"
               delay={i * 80}
             >
               <h3 className="text-lg font-bold text-navy">{f.title}</h3>
@@ -76,7 +76,7 @@ export default function About() {
         </div>
       </div>
 
-      <Reveal className="mt-16 grid items-center gap-8 rounded-3xl border border-beige-deep bg-beige-soft p-6 shadow-xl shadow-navy/20 sm:p-8 lg:grid-cols-[1fr_1.15fr]">
+      <Reveal className="mt-16 grid items-center gap-8 rounded-3xl border-2 border-beige-deep bg-beige-soft p-6 shadow-xl shadow-navy/20 sm:p-8 lg:grid-cols-[1fr_1.15fr]">
         <div>
           <h3 className="text-2xl font-bold text-navy">Find Us</h3>
           <p className="mt-3 text-lg font-semibold text-navy-light">OneByte</p>

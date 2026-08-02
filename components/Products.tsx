@@ -79,7 +79,7 @@ const products: Product[] = [
 
 export default function Products() {
   return (
-    <section id="products" className="mx-auto max-w-7xl border-t border-beige-deep px-6 py-20 sm:px-8 sm:py-24">
+    <section id="products" className="mx-auto max-w-7xl border-t-2 border-beige-deep px-6 py-20 sm:px-8 sm:py-24">
       <Reveal className="text-center">
         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-navy">
           Available Now
@@ -101,7 +101,7 @@ export default function Products() {
       </div>
 
       <Reveal
-        className="mt-14 rounded-3xl border border-beige-deep bg-beige-soft p-8 text-center shadow-lg shadow-navy/15"
+        className="mt-14 rounded-3xl border-2 border-beige-deep bg-beige-soft p-8 text-center shadow-lg shadow-navy/15"
         delay={200}
       >
         <h3 className="text-xl font-bold text-navy sm:text-2xl">

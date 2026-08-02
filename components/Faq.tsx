@@ -29,7 +29,7 @@ export default function Faq() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <section id="faq" className="mx-auto max-w-4xl border-t border-beige-deep px-6 py-20 sm:px-8 sm:py-24">
+    <section id="faq" className="mx-auto max-w-4xl border-t-2 border-beige-deep px-6 py-20 sm:px-8 sm:py-24">
       <Reveal className="text-center">
         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-navy">
           FAQ
@@ -45,7 +45,7 @@ export default function Faq() {
           return (
             <Reveal
               key={f.question}
-              className="overflow-hidden rounded-2xl border border-beige-deep bg-beige-soft shadow-lg shadow-navy/15 hover:border-navy/40"
+              className="overflow-hidden rounded-2xl border-2 border-beige-deep bg-beige-soft shadow-lg shadow-navy/15 hover:border-navy/40"
               delay={i * 80}
             >
               <button

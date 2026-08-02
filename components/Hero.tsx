@@ -54,17 +54,19 @@ export default function Hero() {
         <Reveal delay={150}>
           <div className="animate-fade-up">
             <div className="relative mx-auto max-w-md animate-float">
-              <div className="absolute -inset-6 rounded-[2.5rem] bg-gradient-to-tr from-navy/25 to-navy-light/15 blur-2xl" />
-              <Image
-                src="/images/hero/hero.png"
-                alt="OneByte Steel Cabinet"
-                width={1254}
-                height={1254}
-                sizes="(max-width: 768px) 90vw, 500px"
-                className="relative h-auto w-full rounded-[2rem] border border-beige-deep shadow-2xl shadow-navy/20"
-                priority
-              />
-              <div className="absolute -bottom-5 left-6 flex items-center gap-3 rounded-2xl border border-beige-deep bg-beige-soft/95 px-5 py-3 shadow-lg shadow-navy/10">
+              <div className="absolute -inset-6 rounded-[2.5rem] bg-gradient-to-tr from-navy-light/20 to-navy/10 blur-2xl" />
+              <div className="rounded-[2.25rem] border-2 border-beige-deep bg-beige-soft p-2 shadow-2xl shadow-navy/30 sm:p-3">
+                <Image
+                  src="/images/hero/hero.png"
+                  alt="OneByte Steel Cabinet"
+                  width={1254}
+                  height={1254}
+                  sizes="(max-width: 768px) 90vw, 500px"
+                  className="relative h-auto w-full rounded-[1.75rem]"
+                  priority
+                />
+              </div>
+              <div className="absolute -bottom-5 left-6 flex items-center gap-3 rounded-2xl border-2 border-beige-deep bg-beige-soft px-5 py-3 shadow-xl shadow-navy/25">
                 <svg className="h-6 w-6 text-navy" viewBox="0 0 24 24" fill="currentColor">
                   <path
                     fillRule="evenodd"

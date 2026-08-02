@@ -19,7 +19,7 @@ export default function Home() {
       <Gallery />
       <Faq />
 
-      <footer id="contact" className="border-t border-beige-deep bg-beige-soft px-6 py-14 sm:px-8">
+      <footer id="contact" className="border-t-2 border-beige-deep bg-beige-soft px-6 py-14 sm:px-8">
         <Reveal className="mx-auto max-w-7xl text-center">
           <Image
             src="/images/logo/onebyte-logo.jpg"

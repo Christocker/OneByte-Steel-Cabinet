@@ -35,7 +35,7 @@ function StepNumber({ number }: { number: string }) {
 function PaymentOptions() {
   return (
     <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-      <div className="rounded-2xl border border-emerald-600/30 bg-emerald-100/60 p-5 text-left">
+      <div className="rounded-2xl border-2 border-emerald-700/30 bg-emerald-100/70 p-5 text-left">
         <p className="text-base font-bold text-emerald-900">Via Lalamove</p>
         <span className="mt-2 inline-flex rounded-full bg-emerald-600/90 px-3 py-1 text-sm font-semibold text-white">
           Pay at pick up
@@ -44,7 +44,7 @@ function PaymentOptions() {
           Lalamove won&apos;t leave until the payment is complete.
         </p>
       </div>
-      <div className="rounded-2xl border border-navy/30 bg-navy/5 p-5 text-left">
+      <div className="rounded-2xl border-2 border-navy/40 bg-navy/5 p-5 text-left">
         <p className="text-base font-bold text-navy">We Deliver</p>
         <span className="mt-2 inline-flex rounded-full bg-navy px-3 py-1 text-sm font-semibold text-white">
           Pay after delivery
@@ -59,7 +59,7 @@ function PaymentOptions() {
 
 export default function HowToOrder() {
   return (
-    <section id="how-to-order" className="mx-auto max-w-7xl border-t border-beige-deep px-6 py-24 sm:px-8 sm:py-28">
+    <section id="how-to-order" className="mx-auto max-w-7xl border-t-2 border-beige-deep px-6 py-24 sm:px-8 sm:py-28">
       <Reveal className="text-center">
         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-navy">
           How to Order

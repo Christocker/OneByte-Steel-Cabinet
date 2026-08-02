@@ -167,7 +167,7 @@ export default function Gallery() {
   const translateX = baseOffset - index * step + dragX;
 
   return (
-    <section id="gallery" className="mx-auto max-w-7xl border-t border-beige-deep px-6 py-20 sm:px-8 sm:py-24">
+    <section id="gallery" className="mx-auto max-w-7xl border-t-2 border-beige-deep px-6 py-20 sm:px-8 sm:py-24">
       <Reveal className="text-center">
         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-navy">
           Gallery
@@ -192,7 +192,7 @@ export default function Gallery() {
                 setOpen(i);
               }}
               aria-label={`View photo ${i + 1} of ${photos.length}`}
-              className="group relative mb-4 block w-full break-inside-avoid overflow-hidden rounded-2xl border border-beige-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-navy"
+              className="group relative mb-4 block w-full break-inside-avoid overflow-hidden rounded-2xl border-2 border-beige-deep shadow-lg shadow-navy/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-navy"
             >
               <Image
                 src={p.src}

@@ -21,7 +21,7 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="sticky top-0 z-40 w-full border-b border-beige-deep bg-beige/85 backdrop-blur-xl">
+    <nav className="sticky top-0 z-40 w-full border-b-2 border-beige-deep bg-beige/85 backdrop-blur-xl">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 sm:px-8">
         <a href="#" onClick={closeMenu} className="flex items-center gap-3">
           <Image
@@ -54,7 +54,7 @@ export default function Navbar() {
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
           aria-controls="mobile-menu"
-          className="flex h-11 w-11 items-center justify-center rounded-xl border border-beige-deep bg-beige-soft text-navy transition-colors duration-300 hover:bg-beige-deep active:scale-95 lg:hidden"
+          className="flex h-11 w-11 items-center justify-center rounded-xl border-2 border-beige-deep bg-beige-soft text-navy transition-colors duration-300 hover:bg-beige-deep active:scale-95 lg:hidden"
         >
           <svg
             className="h-6 w-6"
@@ -76,7 +76,7 @@ export default function Navbar() {
       {open && (
         <div
           id="mobile-menu"
-          className="animate-menu-drop border-t border-beige-deep bg-beige-soft/95 px-6 pb-6 pt-2 backdrop-blur-xl lg:hidden"
+          className="animate-menu-drop border-t-2 border-beige-deep bg-beige-soft/95 px-6 pb-6 pt-2 backdrop-blur-xl lg:hidden"
         >
           {links.map((l) => (
             <a

@@ -9,7 +9,7 @@ export type Product = {
 
 export default function ProductCard({ product }: { product: Product }) {
   return (
-    <article className="group overflow-hidden rounded-3xl border border-beige-deep bg-beige-soft shadow-xl shadow-navy/20 transition-all duration-500 ease-out hover:-translate-y-2 hover:border-navy/40 hover:shadow-2xl hover:shadow-navy/30">
+    <article className="group overflow-hidden rounded-3xl border-2 border-beige-deep bg-beige-soft shadow-xl shadow-navy/20 transition-all duration-500 ease-out hover:-translate-y-2 hover:border-navy/40 hover:shadow-2xl hover:shadow-navy/30">
       <div className="grid grid-cols-2 gap-2 p-3">
         {product.images.map((src) => (
           <div key={src} className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-beige">
