@@ -12,6 +12,8 @@ type Photo = {
   h: number;
 };
 
+const CLOSE_MS = 250;
+
 const photos: Photo[] = [
   { src: "/images/gallery/gallery-01.jpg", w: 1600, h: 900 },
   { src: "/images/gallery/gallery-02.jpg", w: 900, h: 1600 },
@@ -88,10 +90,12 @@ export default function Gallery() {
 
   const close = useCallback(() => {
     setClosing(true);
+    document.body.classList.remove("lightbox-open");
+    document.body.style.overflow = "";
     window.setTimeout(() => {
       setOpen(null);
       setClosing(false);
-    }, 250);
+    }, CLOSE_MS);
   }, []);
 
   const goTo = useCallback((i: number) => {

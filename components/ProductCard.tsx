@@ -60,6 +60,8 @@ export default function ProductCard({ product }: { product: Product }) {
   const close = useCallback(() => {
     if (!openRef.current || closing) return;
     setClosing(true);
+    document.body.classList.remove("lightbox-open");
+    document.body.style.overflow = "";
     window.setTimeout(() => {
       setOpen(false);
       setClosing(false);
