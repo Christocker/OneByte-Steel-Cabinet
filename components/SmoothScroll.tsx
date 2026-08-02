@@ -10,6 +10,33 @@ function easeInOutCubic(t: number) {
 
 export default function SmoothScroll() {
   useEffect(() => {
+    const html = document.documentElement;
+    let topRaf = 0;
+    let prevBehavior = "";
+
+    if ("scrollRestoration" in history) {
+      history.scrollRestoration = "manual";
+    }
+
+    if (window.scrollY > 0) {
+      const startY = window.scrollY;
+      const startTime = performance.now();
+      prevBehavior = html.style.scrollBehavior;
+      html.style.scrollBehavior = "auto";
+
+      function topScroll(now: number) {
+        const t = Math.min((now - startTime) / 500, 1);
+        window.scrollTo(0, startY * (1 - easeInOutCubic(t)));
+        if (t < 1) {
+          topRaf = requestAnimationFrame(topScroll);
+        } else {
+          html.style.scrollBehavior = prevBehavior;
+        }
+      }
+
+      topRaf = requestAnimationFrame(topScroll);
+    }
+
     function onClick(e: MouseEvent) {
       if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
 
@@ -57,7 +84,12 @@ export default function SmoothScroll() {
     }
 
     document.addEventListener("click", onClick);
-    return () => document.removeEventListener("click", onClick);
+
+    return () => {
+      cancelAnimationFrame(topRaf);
+      document.removeEventListener("click", onClick);
+      html.style.scrollBehavior = prevBehavior;
+    };
   }, []);
 
   return null;
