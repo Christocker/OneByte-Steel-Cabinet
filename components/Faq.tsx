@@ -25,7 +25,7 @@ const faqs = [
 ];
 
 export default function Faq() {
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
     <section id="faq" className="mx-auto max-w-4xl px-6 py-20 sm:px-8 sm:py-24">
