@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 type RevealProps = {
@@ -13,32 +13,33 @@ export default function Reveal({ children, delay = 0, className = "" }: RevealPr
   const ref = useRef<HTMLDivElement>(null);
   const [hidden, setHidden] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = ref.current;
     if (!el || typeof IntersectionObserver === "undefined") return;
 
-    // Only elements that start below the viewport get the animation.
+    // Elements already on screen (hero, first section) stay visible.
     if (el.getBoundingClientRect().top < window.innerHeight * 0.9) return;
 
     setHidden(true);
 
-    let revealed = false;
     let observer: IntersectionObserver | null = null;
+    let shown = false;
     let ticking = false;
 
     const show = () => {
-      if (revealed) return;
-      revealed = true;
+      if (shown) return;
+      shown = true;
       setHidden(false);
       observer?.disconnect();
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
+      window.clearTimeout(safety);
     };
 
     const check = () => {
       ticking = false;
       const r = el.getBoundingClientRect();
-      if (r.top < window.innerHeight * 0.92 && r.bottom > 0) show();
+      if (r.top < window.innerHeight * 0.95 && r.bottom > 0) show();
     };
 
     const onScroll = () => {
@@ -52,16 +53,20 @@ export default function Reveal({ children, delay = 0, className = "" }: RevealPr
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) show();
       },
-      { threshold: 0, rootMargin: "0px 0px -8% 0px" }
+      { threshold: 0, rootMargin: "0px 0px -10% 0px" }
     );
     observer.observe(el);
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
 
+    // Safety net: never leave content invisible if the observer misbehaves.
+    const safety = setTimeout(show, 2500);
+
     return () => {
       observer?.disconnect();
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
+      window.clearTimeout(safety);
     };
   }, []);
 
