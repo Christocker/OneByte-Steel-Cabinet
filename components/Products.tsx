@@ -4,48 +4,75 @@ import type { Product } from "./ProductCard";
 
 const products: Product[] = [
   {
-    image: "/images/products/full-glass.jpg",
-    name: "Full Glass Cabinet",
-    price: "6,800",
-    imageRatio: "3 / 4",
-    description:
-      "Full-glass cabinet with clear swing doors and a sturdy steel frame.",
-    dimensions: "",
-    features: [
-      "Full glass swing doors",
-      "Heavy-gauge steel body",
-      "Adjustable steel shelving",
-      "Secure locking system",
-    ],
-  },
-  {
-    image: "/images/products/full-metal.jpg",
-    name: "Full Metal Cabinet",
+    name: "Full Metal Cabinet — Light Gray",
     price: "5,800",
-    imageRatio: "1 / 1",
-    description:
-      "All-metal cabinet for maximum security and durability.",
-    dimensions: "",
-    features: [
-      "All-metal construction",
-      "Rust-resistant powder-coated finish",
-      "Swing-type metal doors",
-      "Secure locking system",
+    dimensions: "180 × 80 × 40 cm",
+    images: [
+      "/images/products/steeline-full-metal-light-gray-1.png",
+      "/images/products/steeline-full-metal-light-gray-2.png",
     ],
   },
   {
-    image: "/images/products/sliding-glass-white.jpg",
-    name: "Storage Cabinet with Sliding Glass Doors",
+    name: "Full Glass Sliding Cabinet — Gray & White",
+    price: "7,200",
+    dimensions: "185 × 90 × 40 cm",
+    images: [
+      "/images/products/worldcraft-full-glass-sliding-gray-white-1.jpg",
+      "/images/products/worldcraft-full-glass-sliding-gray-white-2.png",
+    ],
+  },
+  {
+    name: "Full Glass Sliding Cabinet — White",
+    price: "7,500",
+    dimensions: "185 × 90 × 40 cm",
+    images: [
+      "/images/products/worldcraft-full-glass-sliding-white-1.png",
+      "/images/products/worldcraft-full-glass-sliding-white-2.jpg",
+    ],
+  },
+  {
+    name: "Full Glass Cabinet — White",
+    price: "7,300",
+    dimensions: "185 × 90 × 40 cm",
+    images: [
+      "/images/products/worldcraft-full-glass-white-1.png",
+      "/images/products/worldcraft-full-glass-white-2.jpg",
+    ],
+  },
+  {
+    name: "Full Metal Cabinet — Gray & White",
     price: "6,000",
-    imageRatio: "2 / 3",
-    description:
-      "White storage cabinet with sliding glass doors.",
-    dimensions: "",
-    features: [
-      "White powder-coated steel body",
-      "Sliding glass doors",
-      "Spacious internal shelving",
-      "Smooth-glide runners",
+    dimensions: "185 × 85 × 40 cm",
+    images: [
+      "/images/products/worldcraft-full-metal-gray-white-1.png",
+      "/images/products/worldcraft-full-metal-gray-white-2.jpg",
+    ],
+  },
+  {
+    name: "Half Glass Cabinet — White",
+    price: "6,800",
+    dimensions: "185 × 90 × 40 cm",
+    images: [
+      "/images/products/worldcraft-half-glass-white-1.png",
+      "/images/products/worldcraft-half-glass-white-2.jpg",
+    ],
+  },
+  {
+    name: "Wardrobe Cabinet — Brown & Beige",
+    price: "7,500",
+    dimensions: "185 × 90 × 45 cm",
+    images: [
+      "/images/products/worldcraft-wardrobe-brown-beige-1.png",
+      "/images/products/worldcraft-wardrobe-brown-beige-2.png",
+    ],
+  },
+  {
+    name: "Wardrobe with Shelves — Woodgrain",
+    price: "7,200",
+    dimensions: "185 × 90 × 45 cm",
+    images: [
+      "/images/products/worldcraft-wardrobe-shelves-woodgrain-1.png",
+      "/images/products/worldcraft-wardrobe-shelves-woodgrain-2.png",
     ],
   },
 ];
@@ -55,19 +82,19 @@ export default function Products() {
     <section id="products" className="mx-auto max-w-7xl border-t border-white/10 px-6 py-20 sm:px-8 sm:py-24">
       <Reveal className="text-center">
         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-500">
-          Our Collection
+          Available Now
         </p>
         <h2 className="mt-3 text-5xl font-bold text-white sm:text-6xl lg:text-7xl">
-          Featured Products
+          Our Cabinets
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-lg text-zinc-400">
-          Best-selling steel cabinets, crafted to last.
+          Every cabinet we have in stock — size and price included.
         </p>
       </Reveal>
 
       <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {products.map((p, i) => (
-          <Reveal key={p.name} delay={i * 120}>
+          <Reveal key={p.name} delay={i * 80}>
             <ProductCard product={p} />
           </Reveal>
         ))}
@@ -75,15 +102,15 @@ export default function Products() {
 
       <Reveal
         className="mt-14 rounded-3xl border border-white/10 bg-zinc-900/80 p-8 text-center backdrop-blur"
-        delay={360}
+        delay={200}
       >
         <h3 className="text-xl font-bold text-white sm:text-2xl">
-          Looking for Other Designs?
+          Need a Different Style or Size?
         </h3>
         <p className="mx-auto mt-3 max-w-2xl text-lg leading-relaxed text-zinc-400">
-          These are just our best-sellers — we have many more styles and
-          sizes, including metal, glass, sliding, and shelf-type cabinets.
-          Message us and we{"'"}ll show you our full collection.
+          These are all our current cabinets — but we can get other styles,
+          sizes, and colors for you. Message us and we&apos;ll show you what&apos;s
+          available.
         </p>
         <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <a

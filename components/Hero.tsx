@@ -56,10 +56,10 @@ export default function Hero() {
             <div className="relative mx-auto max-w-md animate-float">
               <div className="absolute -inset-6 rounded-[2.5rem] bg-gradient-to-tr from-blue-600/40 to-indigo-500/20 blur-2xl" />
               <Image
-                src="/images/hero/hero-cabinet.jpeg"
+                src="/images/hero/hero.png"
                 alt="OneByte Steel Cabinet"
-                width={500}
-                height={650}
+                width={1254}
+                height={1254}
                 sizes="(max-width: 768px) 90vw, 500px"
                 className="relative h-auto w-full rounded-[2rem] border border-white/10 shadow-2xl shadow-black/50"
                 priority
