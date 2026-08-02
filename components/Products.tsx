@@ -79,15 +79,15 @@ const products: Product[] = [
 
 export default function Products() {
   return (
-    <section id="products" className="mx-auto max-w-7xl border-t border-white/10 px-6 py-20 sm:px-8 sm:py-24">
+    <section id="products" className="mx-auto max-w-7xl border-t border-beige-deep px-6 py-20 sm:px-8 sm:py-24">
       <Reveal className="text-center">
-        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-500">
+        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-navy">
           Available Now
         </p>
-        <h2 className="mt-3 text-5xl font-bold text-white sm:text-6xl lg:text-7xl">
+        <h2 className="mt-3 text-5xl font-bold text-navy sm:text-6xl lg:text-7xl">
           Our Cabinets
         </h2>
-        <p className="mx-auto mt-4 max-w-xl text-lg text-zinc-400">
+        <p className="mx-auto mt-4 max-w-xl text-lg text-navy/70">
           Every cabinet we have in stock — size and price included.
         </p>
       </Reveal>
@@ -101,13 +101,13 @@ export default function Products() {
       </div>
 
       <Reveal
-        className="mt-14 rounded-3xl border border-white/10 bg-zinc-900/80 p-8 text-center backdrop-blur"
+        className="mt-14 rounded-3xl border border-beige-deep bg-beige-soft p-8 text-center shadow-sm"
         delay={200}
       >
-        <h3 className="text-xl font-bold text-white sm:text-2xl">
+        <h3 className="text-xl font-bold text-navy sm:text-2xl">
           Need a Different Style or Size?
         </h3>
-        <p className="mx-auto mt-3 max-w-2xl text-lg leading-relaxed text-zinc-400">
+        <p className="mx-auto mt-3 max-w-2xl text-lg leading-relaxed text-navy/70">
           These are all our current cabinets — but we can get other styles,
           sizes, and colors for you. Message us and we&apos;ll show you what&apos;s
           available.
@@ -117,7 +117,7 @@ export default function Products() {
             href="https://www.facebook.com/profile.php?id=61572768444647"
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full rounded-2xl bg-blue-600 px-8 py-4 text-center font-semibold text-white transition-all duration-300 hover:bg-blue-500 active:scale-95 sm:w-auto"
+            className="w-full rounded-2xl bg-navy px-8 py-4 text-center font-semibold text-white transition-all duration-300 hover:bg-navy-light active:scale-95 sm:w-auto"
           >
             Message Us on Facebook
           </a>
@@ -125,7 +125,7 @@ export default function Products() {
             href="https://wa.me/639183811094"
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full rounded-2xl border border-white/15 bg-white/5 px-8 py-4 text-center font-semibold text-white backdrop-blur transition-all duration-300 hover:bg-white hover:text-black active:scale-95 sm:w-auto"
+            className="w-full rounded-2xl border border-navy/25 bg-beige-soft px-8 py-4 text-center font-semibold text-navy backdrop-blur transition-all duration-300 hover:bg-navy hover:text-white active:scale-95 sm:w-auto"
           >
             Chat on WhatsApp
           </a>

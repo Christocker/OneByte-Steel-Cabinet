@@ -21,7 +21,7 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="sticky top-0 z-40 w-full border-b border-white/10 bg-zinc-950/70 backdrop-blur-xl">
+    <nav className="sticky top-0 z-40 w-full border-b border-beige-deep bg-beige/85 backdrop-blur-xl">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 sm:px-8">
         <a href="#" onClick={closeMenu} className="flex items-center gap-3">
           <Image
@@ -29,10 +29,10 @@ export default function Navbar() {
             alt="OneByte Steel Cabinets logo"
             width={48}
             height={48}
-            className="h-10 w-10 rounded-xl shadow-lg shadow-black/40 sm:h-12 sm:w-12"
+            className="h-10 w-10 rounded-xl shadow-lg shadow-navy/20 sm:h-12 sm:w-12"
           />
-          <span className="text-lg font-bold text-white sm:text-xl">
-            OneByte <span className="text-blue-500">Steel</span> Cabinets
+          <span className="text-lg font-bold text-navy sm:text-xl">
+            OneByte <span className="text-navy-light">Steel</span> Cabinets
           </span>
         </a>
 
@@ -41,7 +41,7 @@ export default function Navbar() {
             <a
               key={l.label}
               href={l.href}
-              className="relative whitespace-nowrap text-sm font-medium text-zinc-300 transition-colors duration-300 hover:text-white after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0 after:rounded-full after:bg-blue-500 after:transition-all after:duration-300 hover:after:w-full"
+              className="relative whitespace-nowrap text-sm font-medium text-navy/70 transition-colors duration-300 hover:text-navy after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0 after:rounded-full after:bg-navy after:transition-all after:duration-300 hover:after:w-full"
             >
               {l.label}
             </a>
@@ -54,7 +54,7 @@ export default function Navbar() {
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
           aria-controls="mobile-menu"
-          className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-zinc-200 transition-colors duration-300 hover:bg-white/10 hover:text-white active:scale-95 lg:hidden"
+          className="flex h-11 w-11 items-center justify-center rounded-xl border border-beige-deep bg-beige-soft text-navy transition-colors duration-300 hover:bg-beige-deep active:scale-95 lg:hidden"
         >
           <svg
             className="h-6 w-6"
@@ -76,14 +76,14 @@ export default function Navbar() {
       {open && (
         <div
           id="mobile-menu"
-          className="animate-menu-drop border-t border-white/10 bg-zinc-950/95 px-6 pb-6 pt-2 backdrop-blur-xl lg:hidden"
+          className="animate-menu-drop border-t border-beige-deep bg-beige-soft/95 px-6 pb-6 pt-2 backdrop-blur-xl lg:hidden"
         >
           {links.map((l) => (
             <a
               key={l.label}
               href={l.href}
               onClick={closeMenu}
-              className="block rounded-xl px-4 py-3.5 text-base font-medium text-zinc-300 transition-colors duration-200 hover:bg-white/5 hover:text-white"
+              className="block rounded-xl px-4 py-3.5 text-base font-medium text-navy/70 transition-colors duration-200 hover:bg-navy/5 hover:text-navy"
             >
               {l.label}
             </a>

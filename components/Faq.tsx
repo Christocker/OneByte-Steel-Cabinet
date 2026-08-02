@@ -29,12 +29,12 @@ export default function Faq() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <section id="faq" className="mx-auto max-w-4xl border-t border-white/10 px-6 py-20 sm:px-8 sm:py-24">
+    <section id="faq" className="mx-auto max-w-4xl border-t border-beige-deep px-6 py-20 sm:px-8 sm:py-24">
       <Reveal className="text-center">
-        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-500">
+        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-navy">
           FAQ
         </p>
-        <h2 className="mt-3 text-5xl font-bold text-white sm:text-6xl lg:text-7xl">
+        <h2 className="mt-3 text-5xl font-bold text-navy sm:text-6xl lg:text-7xl">
           Frequently Asked Questions
         </h2>
       </Reveal>
@@ -45,7 +45,7 @@ export default function Faq() {
           return (
             <Reveal
               key={f.question}
-              className="overflow-hidden rounded-2xl border border-white/10 bg-zinc-900/80 hover:border-blue-500/40"
+              className="overflow-hidden rounded-2xl border border-beige-deep bg-beige-soft shadow-sm hover:border-navy/40"
               delay={i * 80}
             >
               <button
@@ -54,11 +54,11 @@ export default function Faq() {
                 aria-expanded={open}
                 className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
               >
-                <span className="text-base font-semibold text-white sm:text-lg">
+                <span className="text-base font-semibold text-navy sm:text-lg">
                   {f.question}
                 </span>
                 <svg
-                  className={`h-5 w-5 flex-shrink-0 text-blue-500 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+                  className={`h-5 w-5 flex-shrink-0 text-navy transition-transform duration-300 ${open ? "rotate-180" : ""}`}
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -76,7 +76,7 @@ export default function Faq() {
                 }`}
               >
                 <div className="overflow-hidden">
-                  <p className="px-6 pb-6 leading-relaxed text-zinc-400">
+                  <p className="px-6 pb-6 leading-relaxed text-navy/70">
                     {f.answer}
                   </p>
                 </div>

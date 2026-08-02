@@ -167,15 +167,15 @@ export default function Gallery() {
   const translateX = baseOffset - index * step + dragX;
 
   return (
-    <section id="gallery" className="mx-auto max-w-7xl border-t border-white/10 px-6 py-20 sm:px-8 sm:py-24">
+    <section id="gallery" className="mx-auto max-w-7xl border-t border-beige-deep px-6 py-20 sm:px-8 sm:py-24">
       <Reveal className="text-center">
-        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-500">
+        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-navy">
           Gallery
         </p>
-        <h2 className="mt-3 text-5xl font-bold text-white sm:text-6xl lg:text-7xl">
+        <h2 className="mt-3 text-5xl font-bold text-navy sm:text-6xl lg:text-7xl">
           In Use
         </h2>
-        <p className="mx-auto mt-4 max-w-xl text-lg text-zinc-400">
+        <p className="mx-auto mt-4 max-w-xl text-lg text-navy/70">
           Photos of our cabinets at customers&apos; homes and offices.
         </p>
       </Reveal>
@@ -192,7 +192,7 @@ export default function Gallery() {
                 setOpen(i);
               }}
               aria-label={`View photo ${i + 1} of ${photos.length}`}
-              className="group relative mb-4 block w-full break-inside-avoid overflow-hidden rounded-2xl border border-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              className="group relative mb-4 block w-full break-inside-avoid overflow-hidden rounded-2xl border border-beige-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-navy"
             >
               <Image
                 src={p.src}
@@ -203,9 +203,9 @@ export default function Gallery() {
                 className="h-auto w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                 loading="lazy"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/60 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <div className="absolute inset-0 bg-gradient-to-t from-navy/50 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
               <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                <span className="rounded-full bg-zinc-950/70 p-3 backdrop-blur">
+                <span className="rounded-full bg-navy/70 p-3 backdrop-blur">
                   <svg
                     className="h-5 w-5 text-white"
                     viewBox="0 0 24 24"
@@ -227,7 +227,7 @@ export default function Gallery() {
 
       {open !== null && (
         <div
-          className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/95 backdrop-blur-sm"
+          className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-navy/95 backdrop-blur-sm"
           onClick={close}
           role="dialog"
           aria-modal="true"
@@ -338,8 +338,8 @@ export default function Gallery() {
                 ))}
               </div>
 
-              <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-zinc-950/90 via-zinc-950/40 to-transparent sm:w-24" />
-              <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-zinc-950/90 via-zinc-950/40 to-transparent sm:w-24" />
+              <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-navy/90 via-navy/40 to-transparent sm:w-24" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-navy/90 via-navy/40 to-transparent sm:w-24" />
             </div>
 
             <p className="absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium text-zinc-200 backdrop-blur">
