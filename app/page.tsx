@@ -29,8 +29,11 @@ export default function Home() {
           <p className="mt-2 text-sm text-zinc-400">
             Selling since 2024 · Dasmariñas, Cavite
           </p>
-          <p className="mt-1 text-sm text-zinc-400">
-            For inquiries and quotes, reach us through Facebook, Viber, WhatsApp, or call.
+
+          <h2 className="mt-10 text-4xl font-bold text-white sm:text-5xl">Contact Us</h2>
+          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-zinc-400">
+            Message us now for inquiries and quotes — we reply as fast as we
+            can. Choose your preferred way to reach us.
           </p>
 
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">

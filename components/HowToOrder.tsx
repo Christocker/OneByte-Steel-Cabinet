@@ -62,7 +62,7 @@ export default function HowToOrder() {
         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-500">
           How to Order
         </p>
-        <h2 className="mt-3 text-5xl font-bold text-white sm:text-6xl">
+        <h2 className="mt-3 text-5xl font-bold text-white sm:text-7xl">
           Ordering is Easy
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-xl text-zinc-400">
@@ -116,9 +116,7 @@ export default function HowToOrder() {
 
       <div className="mt-16 animate-fade-up text-center">
         <a
-          href="https://www.facebook.com/profile.php?id=61572768444647"
-          target="_blank"
-          rel="noopener noreferrer"
+          href="#contact"
           className="inline-flex items-center gap-3 rounded-2xl bg-blue-600 px-12 py-5 text-lg font-semibold text-white transition-all duration-300 hover:bg-blue-500 hover:shadow-xl hover:shadow-blue-600/40 active:scale-95"
         >
           Start Your Order
