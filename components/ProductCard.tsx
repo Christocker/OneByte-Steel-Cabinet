@@ -10,6 +10,7 @@ export type Product = {
   description: string;
   dimensions: string;
   features: string[];
+  imageRatio: string;
 };
 
 export default function ProductCard({ product }: { product: Product }) {
@@ -17,7 +18,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
   return (
     <div className="group overflow-hidden rounded-3xl border border-white/10 bg-zinc-900/80 shadow-xl shadow-black/40 transition-all duration-500 ease-out hover:-translate-y-2 hover:border-white/20 hover:shadow-2xl hover:shadow-blue-950/40">
-      <div className="relative h-64 w-full overflow-hidden sm:h-72">
+      <div className="relative w-full overflow-hidden" style={{ aspectRatio: product.imageRatio }}>
         <Image
           src={product.image}
           alt={product.name}

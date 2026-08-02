@@ -6,6 +6,7 @@ const products: Product[] = [
     image: "/images/products/steeline-glass.jpg",
     name: "Steeline Full Glass Cabinet",
     price: "6,800",
+    imageRatio: "3 / 4",
     description:
       "A striking full-glass cabinet from the Steeline series, pairing clear swing glass doors with a rugged steel frame.",
     dimensions: "",
@@ -20,6 +21,7 @@ const products: Product[] = [
     image: "/images/products/steeline-metal.jpg",
     name: "Steeline Full Metal Cabinet",
     price: "5,800",
+    imageRatio: "1 / 1",
     description:
       "A fully enclosed all-metal cabinet built for maximum security and durability in any setting.",
     dimensions: "",
@@ -34,6 +36,7 @@ const products: Product[] = [
     image: "/images/products/sliding-glass-white.jpg",
     name: "Storage Cabinet with Sliding Glass Doors",
     price: "6,000",
+    imageRatio: "2 / 3",
     description:
       "A clean white storage cabinet with sliding glass doors, ideal for offices, homes, and display use.",
     dimensions: "",
