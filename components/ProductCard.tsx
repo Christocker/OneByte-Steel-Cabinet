@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 export type Product = {
   name: string;
@@ -78,14 +79,15 @@ export default function ProductCard({ product }: { product: Product }) {
         </div>
       </article>
 
-      {openImage !== null && (
-        <div
-          className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-navy/95 backdrop-blur-sm"
-          onClick={() => setOpenImage(null)}
-          role="dialog"
-          aria-modal="true"
-          aria-label={`${product.name} photo viewer`}
-        >
+      {openImage !== null &&
+        createPortal(
+          <div
+            className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-navy/95 backdrop-blur-sm"
+            onClick={() => setOpenImage(null)}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${product.name} photo viewer`}
+          >
           <button
             type="button"
             onClick={(e) => {
@@ -174,8 +176,9 @@ export default function ProductCard({ product }: { product: Product }) {
           <p className="absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium text-white backdrop-blur">
             {openImage + 1} / {product.images.length}
           </p>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </>
   );
 }
