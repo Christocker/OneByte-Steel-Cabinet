@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import Image from "next/image";
 import Reveal from "./Reveal";
@@ -30,116 +30,128 @@ const photos: Photo[] = [
   { src: "/images/gallery/gallery-16.jpg", w: 1200, h: 1600 },
 ];
 
+type DragSample = { x: number; t: number };
+
 export default function Gallery() {
   const [open, setOpen] = useState<number | null>(null);
-  const [current, setCurrent] = useState(0);
+  const [index, setIndex] = useState(0);
+  const [dragX, setDragX] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [suppress, setSuppress] = useState(true);
+  const [transDur, setTransDur] = useState(600);
+  const [step, setStep] = useState(0);
+  const [baseOffset, setBaseOffset] = useState(0);
+
+  const containerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const dragRef = useRef<{ id: number; startX: number; startLeft: number } | null>(null);
-  const scrollRafRef = useRef<number | null>(null);
-  const currentRef = useRef(0);
+  const dragRef = useRef<{ x: number; dragX0: number; samples: DragSample[] } | null>(null);
+  const indexRef = useRef(0);
 
   useEffect(() => {
-    currentRef.current = current;
-  }, [current]);
+    indexRef.current = index;
+  }, [index]);
+
+  const measure = useCallback(() => {
+    const c = containerRef.current;
+    const t = trackRef.current;
+    if (!c || !t || t.children.length === 0) return;
+    const slide = t.children[0] as HTMLElement;
+    const nextStep =
+      t.children.length > 1
+        ? (t.children[1] as HTMLElement).offsetLeft - slide.offsetLeft
+        : slide.offsetWidth;
+    setStep(nextStep);
+    setBaseOffset(Math.max(0, (c.clientWidth - slide.offsetWidth) / 2));
+  }, []);
+
+  useEffect(() => {
+    const c = containerRef.current;
+    if (!c) return;
+    const ro = new ResizeObserver(() => {
+      if (open !== null) measure();
+    });
+    ro.observe(c);
+    return () => ro.disconnect();
+  }, [open, measure]);
+
+  useLayoutEffect(() => {
+    if (open === null) return;
+    const id = requestAnimationFrame(() => {
+      measure();
+      setSuppress(false);
+    });
+    return () => cancelAnimationFrame(id);
+  }, [open, measure]);
 
   const close = useCallback(() => setOpen(null), []);
 
-  const nearestIndex = useCallback((el: HTMLElement) => {
-    const center = el.scrollLeft + el.clientWidth / 2;
-    let best = 0;
-    let bestDist = Infinity;
-    for (let i = 0; i < el.children.length; i++) {
-      const c = el.children[i] as HTMLElement;
-      const dist = Math.abs(c.offsetLeft + c.offsetWidth / 2 - center);
-      if (dist < bestDist) {
-        bestDist = dist;
-        best = i;
-      }
-    }
-    return best;
+  const goTo = useCallback((i: number) => {
+    setIndex(Math.max(0, Math.min(photos.length - 1, i)));
+    setDragX(0);
+    setTransDur(600);
   }, []);
-
-  const goTo = useCallback(
-    (i: number) => {
-      const el = trackRef.current;
-      if (!el || open === null) return;
-      const clamped = Math.max(0, Math.min(photos.length - 1, i));
-      const child = el.children[clamped] as HTMLElement | undefined;
-      if (!child) return;
-      const target = child.offsetLeft - (el.clientWidth - child.offsetWidth) / 2;
-      el.scrollTo({ left: target, behavior: "smooth" });
-    },
-    [open]
-  );
 
   useEffect(() => {
     if (open === null) return;
-    const id = requestAnimationFrame(() => {
-      const el = trackRef.current;
-      if (!el) return;
-      const child = el.children[open] as HTMLElement | undefined;
-      if (!child) return;
-      const target = child.offsetLeft - (el.clientWidth - child.offsetWidth) / 2;
-      el.scrollTo({ left: target });
-    });
-
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") close();
-      if (e.key === "ArrowLeft") goTo(currentRef.current - 1);
-      if (e.key === "ArrowRight") goTo(currentRef.current + 1);
+      if (e.key === "ArrowLeft") goTo(indexRef.current - 1);
+      if (e.key === "ArrowRight") goTo(indexRef.current + 1);
     };
     window.addEventListener("keydown", onKey);
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
-      cancelAnimationFrame(id);
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prevOverflow;
     };
   }, [open, close, goTo]);
 
-  const onScrollTrack = () => {
-    if (scrollRafRef.current !== null) return;
-    scrollRafRef.current = requestAnimationFrame(() => {
-      scrollRafRef.current = null;
-      const el = trackRef.current;
-      if (!el || open === null) return;
-      setCurrent(nearestIndex(el));
-    });
-  };
-
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (e.pointerType !== "mouse") return;
-    const el = trackRef.current;
-    if (!el) return;
-    dragRef.current = { id: e.pointerId, startX: e.clientX, startLeft: el.scrollLeft };
-    el.style.scrollSnapType = "none";
+    const c = containerRef.current;
+    if (!c) return;
     try {
-      el.setPointerCapture(e.pointerId);
+      c.setPointerCapture(e.pointerId);
     } catch {
       // ignore — capture not supported
     }
+    dragRef.current = { x: e.clientX, dragX0: dragX, samples: [] };
+    setIsDragging(true);
   };
 
   const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
     const d = dragRef.current;
-    const el = trackRef.current;
-    if (!d || !el) return;
-    el.scrollLeft = d.startLeft - (e.clientX - d.startX);
+    if (!d) return;
+    const dx = e.clientX - d.x;
+    let next = d.dragX0 + dx;
+    if (index === 0 && next > 0) next *= 0.35;
+    else if (index === photos.length - 1 && next < 0) next *= 0.35;
+    setDragX(next);
+    d.samples.push({ x: e.clientX, t: performance.now() });
+    if (d.samples.length > 4) d.samples.shift();
   };
 
   const endDrag = () => {
-    if (!dragRef.current) return;
+    const d = dragRef.current;
+    if (!d) return;
     dragRef.current = null;
-    const el = trackRef.current;
-    if (!el) return;
-    el.style.scrollSnapType = "";
-    if (open === null) return;
-    const target = nearestIndex(el);
-    const child = el.children[target] as HTMLElement | undefined;
-    if (!child) return;
-    el.scrollTo({ left: child.offsetLeft - (el.clientWidth - child.offsetWidth) / 2, behavior: "smooth" });
+    setIsDragging(false);
+    const n = d.samples.length;
+    const v =
+      n >= 2
+        ? (d.samples[n - 1].x - d.samples[n - 2].x) / (d.samples[n - 1].t - d.samples[n - 2].t)
+        : 0;
+    let target = index;
+    if (Math.abs(dragX) > step * 0.25) target = index + (dragX > 0 ? -1 : 1);
+    else if (Math.abs(v) > 0.45) target = index + (v > 0 ? -1 : 1);
+    target = Math.max(0, Math.min(photos.length - 1, target));
+    const dist = Math.abs(target - index);
+    setTransDur(Math.min(700, Math.max(350, 350 + dist * 120)));
+    setIndex(target);
+    setDragX(0);
   };
+
+  const translateX = baseOffset - index * step + dragX;
 
   return (
     <section id="gallery" className="mx-auto max-w-7xl border-t border-white/10 px-6 py-20 sm:px-8 sm:py-24">
@@ -162,7 +174,8 @@ export default function Gallery() {
               key={p.src}
               type="button"
               onClick={() => {
-                setCurrent(i);
+                setIndex(i);
+                setSuppress(true);
                 setOpen(i);
               }}
               aria-label={`View photo ${i + 1} of ${photos.length}`}
@@ -230,7 +243,7 @@ export default function Gallery() {
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                goTo(current - 1);
+                goTo(index - 1);
               }}
               aria-label="Previous photo"
               className="absolute left-2 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition-colors duration-300 hover:bg-white/20 active:scale-95 sm:left-4"
@@ -252,7 +265,7 @@ export default function Gallery() {
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                goTo(current + 1);
+                goTo(index + 1);
               }}
               aria-label="Next photo"
               className="absolute right-2 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition-colors duration-300 hover:bg-white/20 active:scale-95 sm:right-4"
@@ -271,41 +284,53 @@ export default function Gallery() {
             </button>
 
             <div
-              ref={trackRef}
-              onScroll={onScrollTrack}
+              ref={containerRef}
+              onClick={(e) => e.stopPropagation()}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
               onPointerUp={endDrag}
               onPointerCancel={endDrag}
-              onClick={(e) => e.stopPropagation()}
-              className="no-scrollbar flex h-full w-full cursor-grab select-none items-center gap-3 overflow-x-auto px-[7.5%] active:cursor-grabbing sm:gap-6 sm:px-[15%] lg:px-[20%]"
+              className="relative h-full w-full overflow-hidden"
               style={{ touchAction: "pan-y" }}
             >
-              {photos.map((p, i) => (
-                <div
-                  key={p.src}
-                  className={`flex h-full w-[85%] flex-shrink-0 snap-center items-center justify-center transition-all duration-500 ease-out sm:w-[70%] lg:w-[60%] ${
-                    i === current ? "opacity-100 scale-100" : "opacity-50 scale-[0.9]"
-                  }`}
-                >
-                  <Image
-                    src={p.src}
-                    alt={`OneByte cabinet at a customer's home — photo ${i + 1}`}
-                    width={p.w}
-                    height={p.h}
-                    sizes="90vw"
-                    className="max-h-[70vh] w-auto max-w-full rounded-2xl object-contain shadow-2xl shadow-black/60"
-                    draggable={false}
-                  />
-                </div>
-              ))}
+              <div
+                ref={trackRef}
+                className="flex h-full w-full cursor-grab select-none items-center gap-3 active:cursor-grabbing sm:gap-6"
+                style={{
+                  transform: `translate3d(${translateX}px, 0, 0)`,
+                  transition:
+                    suppress || isDragging
+                      ? "none"
+                      : `transform ${transDur}ms cubic-bezier(0.22, 1, 0.36, 1)`,
+                  willChange: "transform",
+                }}
+              >
+                {photos.map((p, i) => (
+                  <div
+                    key={p.src}
+                    className={`flex h-full w-[85%] flex-shrink-0 items-center justify-center transition-opacity duration-500 sm:w-[70%] lg:w-[60%] ${
+                      i === index ? "opacity-100" : "opacity-40"
+                    }`}
+                  >
+                    <Image
+                      src={p.src}
+                      alt={`OneByte cabinet at a customer's home — photo ${i + 1}`}
+                      width={p.w}
+                      height={p.h}
+                      sizes="90vw"
+                      className="max-h-[70vh] w-auto max-w-full rounded-2xl object-contain shadow-2xl shadow-black/60"
+                      draggable={false}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-zinc-950/90 via-zinc-950/40 to-transparent sm:w-24" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-zinc-950/90 via-zinc-950/40 to-transparent sm:w-24" />
             </div>
 
-            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-zinc-950/90 via-zinc-950/40 to-transparent sm:w-24" />
-            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-zinc-950/90 via-zinc-950/40 to-transparent sm:w-24" />
-
             <p className="absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium text-zinc-200 backdrop-blur">
-              {current + 1} / {photos.length}
+              {index + 1} / {photos.length}
             </p>
           </div>
         </div>
