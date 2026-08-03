@@ -33,13 +33,27 @@ export default function ProductCard({ product }: { product: Product }) {
   const [transDur, setTransDur] = useState(600);
   const [step, setStep] = useState(0);
   const [baseOffset, setBaseOffset] = useState(0);
+  const [zoom, setZoom] = useState(1);
+  const [panX, setPanX] = useState(0);
+  const [panY, setPanY] = useState(0);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const dragRef = useRef<{ x: number; dragX0: number; samples: DragSample[] } | null>(null);
+  const dragRef = useRef<{
+    x: number;
+    y: number;
+    dragX0: number;
+    panX0: number;
+    panY0: number;
+    mode: "slide" | "zoom";
+    samples: DragSample[];
+  } | null>(null);
   const indexRef = useRef(0);
   const movedRef = useRef(false);
   const openRef = useRef(false);
+  const zoomRef = useRef(1);
+  const panRef = useRef({ x: 0, y: 0 });
+  const zoomBoxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     indexRef.current = index;
@@ -49,11 +63,22 @@ export default function ProductCard({ product }: { product: Product }) {
     openRef.current = open;
   }, [open]);
 
+  useEffect(() => {
+    zoomRef.current = zoom;
+  }, [zoom]);
+
+  useEffect(() => {
+    panRef.current = { x: panX, y: panY };
+  }, [panX, panY]);
+
   const openCarousel = useCallback((startIdx: number) => {
     setClosing(false);
     setIndex(startIdx);
     setDragX(0);
     setSuppress(true);
+    setZoom(1);
+    setPanX(0);
+    setPanY(0);
     setOpen(true);
   }, []);
 
@@ -124,6 +149,50 @@ export default function ProductCard({ product }: { product: Product }) {
     };
   }, [open, close, goTo]);
 
+  const panBounds = useCallback(() => {
+    const c = containerRef.current;
+    const b = zoomBoxRef.current;
+    if (!c || !b) return { x: 0, y: 0 };
+    const cr = c.getBoundingClientRect();
+    const br = b.getBoundingClientRect();
+    return {
+      x: Math.max(0, (br.width - cr.width) / 2),
+      y: Math.max(0, (br.height - cr.height) / 2),
+    };
+  }, []);
+
+  const clampPan = useCallback(
+    (x: number, y: number) => {
+      const b = panBounds();
+      return {
+        x: Math.max(-b.x, Math.min(b.x, x)),
+        y: Math.max(-b.y, Math.min(b.y, y)),
+      };
+    },
+    [panBounds]
+  );
+
+  const applyZoom = useCallback(
+    (next: number) => {
+      const clamped = Math.min(3, Math.max(1, next));
+      setZoom(clamped);
+      if (clamped === 1) {
+        setPanX(0);
+        setPanY(0);
+      } else {
+        const c = clampPan(panRef.current.x, panRef.current.y);
+        setPanX(c.x);
+        setPanY(c.y);
+      }
+    },
+    [clampPan]
+  );
+
+  const toggleZoom = useCallback(() => {
+    if (zoomRef.current > 1) applyZoom(1);
+    else applyZoom(2.5);
+  }, [applyZoom]);
+
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (closing) return;
     const c = containerRef.current;
@@ -133,7 +202,15 @@ export default function ProductCard({ product }: { product: Product }) {
     } catch {
       // ignore — capture not supported
     }
-    dragRef.current = { x: e.clientX, dragX0: dragX, samples: [] };
+    dragRef.current = {
+      x: e.clientX,
+      y: e.clientY,
+      dragX0: dragX,
+      panX0: panRef.current.x,
+      panY0: panRef.current.y,
+      mode: zoomRef.current > 1 ? "zoom" : "slide",
+      samples: [],
+    };
     movedRef.current = false;
     setIsDragging(true);
   };
@@ -142,6 +219,14 @@ export default function ProductCard({ product }: { product: Product }) {
     const d = dragRef.current;
     if (!d) return;
     const dx = e.clientX - d.x;
+    const dy = e.clientY - d.y;
+    if (d.mode === "zoom") {
+      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) movedRef.current = true;
+      const next = clampPan(d.panX0 + dx, d.panY0 + dy);
+      setPanX(next.x);
+      setPanY(next.y);
+      return;
+    }
     if (Math.abs(dx) > 6) movedRef.current = true;
     let next = d.dragX0 + dx;
     if (index === 0 && next > 0) next *= 0.35;
@@ -156,6 +241,7 @@ export default function ProductCard({ product }: { product: Product }) {
     if (!d) return;
     dragRef.current = null;
     setIsDragging(false);
+    if (d.mode === "zoom") return;
     const n = d.samples.length;
     const v =
       n >= 2
@@ -174,12 +260,33 @@ export default function ProductCard({ product }: { product: Product }) {
   const onContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
     const c = containerRef.current;
-    if (!c || movedRef.current) return;
+    if (!c || movedRef.current || zoomRef.current > 1 || e.detail > 1) return;
     const rect = c.getBoundingClientRect();
     const relX = e.clientX - rect.left - rect.width / 2;
     const jump = Math.round(relX / step);
     if (jump !== 0) goTo(index + jump);
   };
+
+  const onContainerDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    toggleZoom();
+  };
+
+  const onWheel = useCallback(
+    (e: WheelEvent) => {
+      e.preventDefault();
+      const factor = e.deltaY < 0 ? 0.25 : -0.25;
+      applyZoom(zoomRef.current + factor);
+    },
+    [applyZoom]
+  );
+
+  useEffect(() => {
+    const c = containerRef.current;
+    if (!open || !c) return;
+    c.addEventListener("wheel", onWheel, { passive: false });
+    return () => c.removeEventListener("wheel", onWheel);
+  }, [open, onWheel]);
 
   const translateX = baseOffset - index * step + dragX;
 
@@ -311,16 +418,19 @@ export default function ProductCard({ product }: { product: Product }) {
               <div
                 ref={containerRef}
                 onClick={onContainerClick}
+                onDoubleClick={onContainerDoubleClick}
                 onPointerDown={onPointerDown}
                 onPointerMove={onPointerMove}
                 onPointerUp={endDrag}
                 onPointerCancel={endDrag}
                 className="relative h-full w-full overflow-hidden"
-                style={{ touchAction: "pan-y" }}
+                style={{ touchAction: zoom > 1 ? "none" : "pan-y" }}
               >
                 <div
                   ref={trackRef}
-                  className="flex h-full w-full cursor-grab select-none items-center gap-3 active:cursor-grabbing sm:gap-6"
+                  className={`flex h-full w-full select-none items-center gap-3 sm:gap-6 ${
+                    zoom > 1 ? "cursor-grabbing" : "cursor-grab active:cursor-grabbing"
+                  }`}
                   style={{
                     transform: `translate3d(${translateX}px, 0, 0)`,
                     transition:
@@ -337,15 +447,25 @@ export default function ProductCard({ product }: { product: Product }) {
                         i === index ? "opacity-100" : "opacity-40"
                       }`}
                     >
-                      <Image
-                        src={src}
-                        alt={`${product.name} — photo ${i + 1}`}
-                        width={900}
-                        height={1200}
-                        sizes="90vw"
-                        className="max-h-[70vh] w-auto max-w-full rounded-2xl object-contain shadow-2xl shadow-black/60"
-                        draggable={false}
-                      />
+                      <div
+                        ref={i === index ? zoomBoxRef : undefined}
+                        className="transition-transform duration-300 ease-out will-change-transform"
+                        style={{
+                          transform: `translate3d(${i === index ? panX : 0}px, ${
+                            i === index ? panY : 0
+                          }px, 0) scale(${i === index ? zoom : 1})`,
+                        }}
+                      >
+                        <Image
+                          src={src}
+                          alt={`${product.name} — photo ${i + 1}`}
+                          width={900}
+                          height={1200}
+                          sizes="90vw"
+                          className="max-h-[70vh] w-auto max-w-full rounded-2xl object-contain shadow-2xl shadow-black/60"
+                          draggable={false}
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -354,7 +474,63 @@ export default function ProductCard({ product }: { product: Product }) {
                 <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-navy/90 via-navy/40 to-transparent sm:w-24" />
               </div>
 
-              <p className="absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium text-white backdrop-blur">
+              <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    applyZoom(zoomRef.current - 0.5);
+                  }}
+                  aria-label="Zoom out"
+                  className="rounded-full bg-white/10 p-2.5 text-white backdrop-blur transition-colors duration-300 hover:bg-white/20 active:scale-95"
+                >
+                  <svg
+                    className="h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                  >
+                    <path d="M6 12h12" />
+                  </svg>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleZoom();
+                  }}
+                  aria-label="Reset zoom"
+                  className="min-w-[3.5rem] rounded-full bg-white/10 px-3 py-2 text-center text-sm font-semibold text-white backdrop-blur transition-colors duration-300 hover:bg-white/20 active:scale-95"
+                >
+                  {Math.round(zoom * 100)}%
+                </button>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    applyZoom(zoomRef.current + 0.5);
+                  }}
+                  aria-label="Zoom in"
+                  className="rounded-full bg-white/10 p-2.5 text-white backdrop-blur transition-colors duration-300 hover:bg-white/20 active:scale-95"
+                >
+                  <svg
+                    className="h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                  >
+                    <path d="M12 6v12M6 12h12" />
+                  </svg>
+                </button>
+              </div>
+
+              <p className="pointer-events-none absolute bottom-16 left-1/2 z-20 -translate-x-1/2 rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium text-white backdrop-blur">
                 {index + 1} / {product.images.length}
               </p>
             </div>
