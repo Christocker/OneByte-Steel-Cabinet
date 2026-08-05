@@ -155,22 +155,33 @@ async function writeSupabaseRow(config: SupabaseConfig, productId: string, stock
     Prefer: "resolution=merge-duplicates,return=minimal",
   };
   if (config.authorization) headers.Authorization = config.authorization;
-  const body: Record<string, unknown> = {
-    product_id: productId,
-    stock,
-    updated_at: new Date().toISOString(),
-  };
-  if (price !== undefined && price.length > 0) body.price = price;
-  const response = await fetch(`${config.baseUrl}/rest/v1/cabinet_inventory?on_conflict=product_id`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(body),
-    cache: "no-store",
-  });
 
-  if (!response.ok) {
-    throw new Error(`Inventory storage update failed with status ${response.status}.`);
+  const upsert = async (includePrice: boolean) => {
+    const body: Record<string, unknown> = {
+      product_id: productId,
+      stock,
+      updated_at: new Date().toISOString(),
+    };
+    if (includePrice && price !== undefined && price.length > 0) body.price = price;
+    const response = await fetch(`${config.baseUrl}/rest/v1/cabinet_inventory?on_conflict=product_id`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+      cache: "no-store",
+    });
+    return response.status;
+  };
+
+  const firstStatus = await upsert(true);
+  if (firstStatus === 200 || firstStatus === 201 || firstStatus === 204) return;
+
+  if (firstStatus === 400) {
+    const secondStatus = await upsert(false);
+    if (secondStatus === 200 || secondStatus === 201 || secondStatus === 204) return;
+    throw new Error(`Inventory storage update failed with status ${secondStatus}.`);
   }
+
+  throw new Error(`Inventory storage update failed with status ${firstStatus}.`);
 }
 
 export async function getInventory(): Promise<InventoryProduct[]> {
