@@ -1,9 +1,21 @@
 import ProductCard from "./ProductCard";
 import Reveal from "./Reveal";
-import { getInventory } from "@/lib/inventory";
+import { getInventory, InventoryConfigurationError } from "@/lib/inventory";
+import { products } from "@/lib/products";
+
+async function getPublicInventory() {
+  try {
+    return await getInventory();
+  } catch (error) {
+    if (!(error instanceof InventoryConfigurationError)) throw error;
+
+    // Keep the storefront available with a conservative zero-stock state until storage is configured.
+    return products.map((product) => ({ ...product, stock: 0 }));
+  }
+}
 
 export default async function Products() {
-  const inventory = await getInventory();
+  const inventory = await getPublicInventory();
 
   return (
     <section id="products" className="mx-auto max-w-7xl border-t-2 border-beige-deep px-6 py-20 sm:px-8 sm:py-24">

@@ -11,6 +11,8 @@ npm run dev
 
 The development-only inventory fallback is stored in `data/inventory.json`. Production deployments must use Supabase; the local file is not used when `NODE_ENV=production`.
 
+If production storage variables are missing, the public storefront fails safe with zero stock instead of returning a server error. Admin inventory saves remain unavailable until Supabase is configured.
+
 ## Admin Setup
 
 1. Create a Supabase project.
