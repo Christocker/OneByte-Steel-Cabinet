@@ -8,6 +8,8 @@ import Gallery from "@/components/Gallery";
 import Faq from "@/components/Faq";
 import Reveal from "@/components/Reveal";
 
+export const dynamic = "force-dynamic";
+
 export default function Home() {
   return (
 <main className="min-h-screen bg-beige text-navy">

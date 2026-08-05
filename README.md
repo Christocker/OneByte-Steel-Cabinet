@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OneByte Steel Cabinets
 
-## Getting Started
+Next.js App Router website for OneByte Steel Cabinets, including a protected inventory dashboard.
 
-First, run the development server:
+## Development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The development-only inventory fallback is stored in `data/inventory.json`. Production deployments must use Supabase; the local file is not used when `NODE_ENV=production`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Admin Setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Create a Supabase project.
+2. Run `supabase/migrations/001_cabinet_inventory.sql` in the Supabase SQL editor.
+3. Generate a password hash without storing the password in the repository:
 
-## Learn More
+```bash
+npm run hash-password
+```
 
-To learn more about Next.js, take a look at the following resources:
+4. Set the generated output and the other values in `.env.local` for local development and in Vercel for production:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```text
+ADMIN_USERNAME=your-admin-username
+ADMIN_PASSWORD_HASH=the-scrypt-value-from-the-command
+SESSION_SECRET=a-random-secret-at-least-32-characters-long
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SECRET_KEY=your-server-only-supabase-secret-key
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+`SUPABASE_SERVICE_ROLE_KEY` is also accepted for existing Supabase projects using the legacy key name. Never expose either server key with a `NEXT_PUBLIC_` prefix or commit any `.env` file.
 
-## Deploy on Vercel
+Open `/admin` to sign in. Sessions are signed, expiring, HttpOnly cookies. Inventory writes are accepted only from an authenticated admin and validated as non-negative integers before being persisted.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Verification
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run lint
+npx tsc --noEmit
+npm run build
+```
+
+The public home page reads inventory with uncached server requests, so a refresh reflects the latest saved quantities and status indicators.

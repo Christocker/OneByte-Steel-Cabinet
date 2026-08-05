@@ -11,19 +11,13 @@ import {
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { lockLightbox } from "@/lib/lightbox";
-
-export type Product = {
-  name: string;
-  price: string;
-  dimensions: string;
-  images: [string, string];
-};
+import type { InventoryProduct } from "@/lib/products";
 
 type DragSample = { x: number; t: number };
 
 const CLOSE_MS = 250;
 
-export default function ProductCard({ product }: { product: Product }) {
+export default function ProductCard({ product }: { product: InventoryProduct }) {
   const [open, setOpen] = useState(false);
   const [closing, setClosing] = useState(false);
   const [index, setIndex] = useState(0);
@@ -333,9 +327,28 @@ export default function ProductCard({ product }: { product: Product }) {
           <div className="mt-2 flex items-baseline justify-between gap-3">
             <p className="text-2xl font-extrabold text-navy-light">₱{product.price}</p>
             <p className="text-xs uppercase tracking-wider text-navy/50">H × W × D</p>
-          </div>
-          <p className="mt-1 text-sm font-medium text-navy/70">{product.dimensions}</p>
-        </div>
+           </div>
+           <p className="mt-1 text-sm font-medium text-navy/70">{product.dimensions}</p>
+           <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-beige-deep/70 pt-4">
+             <p className="text-sm font-semibold text-navy">
+               Stock: <span className="text-navy-light">{product.stock}</span>
+             </p>
+             <span
+               className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${
+                 product.stock > 0
+                   ? "bg-emerald-100 text-emerald-800"
+                   : "bg-red-100 text-red-800"
+               }`}
+             >
+               <span
+                 className={`h-2 w-2 rounded-full ${
+                   product.stock > 0 ? "bg-emerald-600" : "bg-red-600"
+                 }`}
+               />
+               {product.stock > 0 ? "In Stock" : "Out of Stock"}
+             </span>
+           </div>
+         </div>
       </article>
 
       {open &&
