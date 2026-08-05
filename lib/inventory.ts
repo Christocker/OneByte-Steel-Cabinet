@@ -122,19 +122,30 @@ async function writeLocalRow(productId: string, stock: number, price?: string) {
 async function readSupabaseRows(config: SupabaseConfig) {
   const headers: HeadersInit = { apikey: config.key };
   if (config.authorization) headers.Authorization = config.authorization;
-  const response = await fetch(
-    `${config.baseUrl}/rest/v1/cabinet_inventory?select=product_id,stock,price,updated_at`,
-    {
-      headers,
-      cache: "no-store",
-    }
-  );
 
-  if (!response.ok) {
-    throw new Error(`Inventory storage request failed with status ${response.status}.`);
+  const fetchRows = async (includePrice: boolean) => {
+    const select = includePrice
+      ? "product_id,stock,price,updated_at"
+      : "product_id,stock,updated_at";
+    const response = await fetch(
+      `${config.baseUrl}/rest/v1/cabinet_inventory?select=${select}`,
+      { headers, cache: "no-store" }
+    );
+    return { status: response.status, data: (await response.json()) as unknown };
+  };
+
+  const first = await fetchRows(true);
+  if (first.status === 200) return parseStoredRows(first.data);
+
+  if (first.status === 400) {
+    const fallback = await fetchRows(false);
+    if (fallback.status !== 200) {
+      throw new Error(`Inventory storage request failed with status ${fallback.status}.`);
+    }
+    return parseStoredRows(fallback.data);
   }
 
-  return parseStoredRows((await response.json()) as unknown);
+  throw new Error(`Inventory storage request failed with status ${first.status}.`);
 }
 
 async function writeSupabaseRow(config: SupabaseConfig, productId: string, stock: number, price?: string) {
