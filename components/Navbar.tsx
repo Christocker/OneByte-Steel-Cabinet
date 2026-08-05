@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 
 const links = [
@@ -46,6 +47,12 @@ export default function Navbar() {
               {l.label}
             </a>
           ))}
+          <Link
+            href="/admin"
+            className="rounded-xl border border-navy/25 px-4 py-2 text-sm font-semibold text-navy/70 transition-all duration-300 hover:bg-navy hover:text-white active:scale-95"
+          >
+            Admin
+          </Link>
         </div>
 
         <button
@@ -88,6 +95,13 @@ export default function Navbar() {
               {l.label}
             </a>
           ))}
+          <Link
+            href="/admin"
+            onClick={closeMenu}
+            className="block rounded-xl border border-navy/25 px-4 py-3.5 text-base font-medium text-navy/70 transition-colors duration-200 hover:bg-navy/5 hover:text-navy"
+          >
+            Admin
+          </Link>
         </div>
       )}
     </nav>
