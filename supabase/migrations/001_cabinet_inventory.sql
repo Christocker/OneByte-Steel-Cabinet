@@ -8,6 +8,8 @@ alter table public.cabinet_inventory enable row level security;
 
 revoke all on table public.cabinet_inventory from anon, authenticated;
 
+grant select, insert, update on table public.cabinet_inventory to service_role;
+
 insert into public.cabinet_inventory (product_id, stock)
 values
   ('full-metal-light-gray', 0),
