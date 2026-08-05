@@ -4,10 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import type { InventoryProduct } from "@/lib/products";
-import { getStockInputError, parseStockValue } from "@/lib/inventory-validation";
+import { getStockInputError, getPriceInputError, parseStockValue } from "@/lib/inventory-validation";
 
 function initialDrafts(products: InventoryProduct[]) {
   return Object.fromEntries(products.map((product) => [product.id, String(product.stock)]));
+}
+
+function initialPriceDrafts(products: InventoryProduct[]) {
+  return Object.fromEntries(products.map((product) => [product.id, product.price]));
 }
 
 export default function AdminDashboard({
@@ -19,6 +23,7 @@ export default function AdminDashboard({
 }) {
   const [products, setProducts] = useState(initialProducts);
   const [drafts, setDrafts] = useState(() => initialDrafts(initialProducts));
+  const [priceDrafts, setPriceDrafts] = useState(() => initialPriceDrafts(initialProducts));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
@@ -49,12 +54,28 @@ export default function AdminDashboard({
     changeDraft(productId, String(next));
   }
 
+  function changePrice(productId: string, value: string) {
+    const inputError = getPriceInputError(value);
+    if (inputError) {
+      setErrors((current) => ({ ...current, [productId]: inputError }));
+      return;
+    }
+
+    setPriceDrafts((current) => ({ ...current, [productId]: value }));
+    setErrors((current) => ({
+      ...current,
+      [productId]: "",
+    }));
+    setSavedId(null);
+    setNotice("");
+  }
+
   async function saveStock(event: FormEvent<HTMLFormElement>, productId: string) {
     event.preventDefault();
     const draft = drafts[productId] ?? "";
-    const inputError = getStockInputError(draft);
-    if (inputError) {
-      setErrors((current) => ({ ...current, [productId]: inputError }));
+    const stockError = getStockInputError(draft);
+    if (stockError) {
+      setErrors((current) => ({ ...current, [productId]: stockError }));
       return;
     }
 
@@ -63,6 +84,15 @@ export default function AdminDashboard({
       setErrors((current) => ({
         ...current,
         [productId]: "Use a valid whole-number stock quantity.",
+      }));
+      return;
+    }
+
+    const price = priceDrafts[productId]?.trim();
+    if (price !== undefined && getPriceInputError(price)) {
+      setErrors((current) => ({
+        ...current,
+        [productId]: "Enter a valid price.",
       }));
       return;
     }
@@ -76,9 +106,9 @@ export default function AdminDashboard({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
-        body: JSON.stringify({ productId, stock }),
+        body: JSON.stringify({ productId, stock, price }),
       });
-      const result = (await response.json().catch(() => ({}))) as { error?: unknown };
+      const result = (await response.json().catch(() => ({}))) as { error?: unknown; product?: InventoryProduct };
 
       if (response.status === 401) {
         window.location.assign("/admin/login");
@@ -88,8 +118,9 @@ export default function AdminDashboard({
         throw new Error(typeof result.error === "string" ? result.error : "Inventory could not be saved.");
       }
 
+      const updated = result.product as InventoryProduct | undefined;
       setProducts((current) =>
-        current.map((product) => (product.id === productId ? { ...product, stock } : product))
+        current.map((p) => (p.id === productId ? { ...p, stock, price: updated?.price ?? p.price } : p))
       );
       setDrafts((current) => ({ ...current, [productId]: String(stock) }));
       setErrors((current) => ({ ...current, [productId]: "" }));
@@ -232,6 +263,10 @@ export default function AdminDashboard({
                     <p className="text-right text-sm font-medium text-navy/60">{product.dimensions}</p>
                   </div>
 
+                  <p className="mt-3 text-sm font-semibold text-navy/70">
+                    Price: <span className="text-navy-light">₱{product.price}</span>
+                  </p>
+
                   <form onSubmit={(event) => saveStock(event, product.id)} className="mt-5">
                     <label htmlFor={`stock-${product.id}`} className="text-sm font-semibold text-navy">
                       Set quantity
@@ -264,6 +299,20 @@ export default function AdminDashboard({
                       >
                         +
                       </button>
+                    </div>
+
+                    <div className="mt-4">
+                      <label htmlFor={`price-${product.id}`} className="text-sm font-semibold text-navy">
+                        Set price
+                      </label>
+                      <input
+                        id={`price-${product.id}`}
+                        type="text"
+                        value={priceDrafts[product.id] ?? ""}
+                        onChange={(event) => changePrice(product.id, event.target.value)}
+                        aria-invalid={Boolean(error)}
+                        className="mt-2 h-12 w-full rounded-xl border-2 border-beige-deep bg-beige px-4 text-center text-lg font-bold text-navy outline-none transition-colors focus:border-navy aria-[invalid=true]:border-red-500"
+                      />
                     </div>
 
                     {error && (

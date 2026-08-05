@@ -8,6 +8,7 @@ const LOCAL_INVENTORY_FILE = path.join(process.cwd(), "data", "inventory.json");
 type StoredInventoryRow = {
   product_id: string;
   stock: number;
+  price?: string;
   updated_at?: string;
 };
 
@@ -70,7 +71,7 @@ function parseStoredRows(value: unknown): StoredInventoryRow[] {
     if (!row || typeof row !== "object") {
       throw new Error("Inventory storage returned an invalid row.");
     }
-    const candidate = row as { product_id?: unknown; stock?: unknown; updated_at?: unknown };
+    const candidate = row as { product_id?: unknown; stock?: unknown; price?: unknown; updated_at?: unknown };
     const stock = parseStockValue(candidate.stock);
     if (
       typeof candidate.product_id !== "string" ||
@@ -82,6 +83,7 @@ function parseStoredRows(value: unknown): StoredInventoryRow[] {
     return {
       product_id: candidate.product_id,
       stock,
+      ...(typeof candidate.price === "string" && candidate.price.length > 0 ? { price: candidate.price } : {}),
       ...(typeof candidate.updated_at === "string" ? { updated_at: candidate.updated_at } : {}),
     };
   });
@@ -99,14 +101,16 @@ async function readLocalRows() {
   }
 }
 
-async function writeLocalStock(productId: string, stock: number) {
+async function writeLocalRow(productId: string, stock: number, price?: string) {
   const current = await readLocalRows();
-  const byId = new Map(current.map((row) => [row.product_id, row.stock]));
-  byId.set(productId, stock);
-  const rows = products.map((product) => ({
-    product_id: product.id,
-    stock: byId.get(product.id) ?? 0,
-  }));
+  const byId = new Map(current.map((row) => [row.product_id, row]));
+  byId.set(productId, { product_id: productId, stock, ...(price ? { price } : {}) });
+  const rows = products.map((product) => {
+    const saved = byId.get(product.id);
+    const row: Record<string, unknown> = { product_id: product.id, stock: saved?.stock ?? 0 };
+    if (saved?.price) row.price = saved.price;
+    return row;
+  });
   const temporaryFile = `${LOCAL_INVENTORY_FILE}.${process.pid}.tmp`;
   await writeFile(temporaryFile, `${JSON.stringify(rows, null, 2)}\n`, {
     encoding: "utf8",
@@ -119,7 +123,7 @@ async function readSupabaseRows(config: SupabaseConfig) {
   const headers: HeadersInit = { apikey: config.key };
   if (config.authorization) headers.Authorization = config.authorization;
   const response = await fetch(
-    `${config.baseUrl}/rest/v1/cabinet_inventory?select=product_id,stock,updated_at`,
+    `${config.baseUrl}/rest/v1/cabinet_inventory?select=product_id,stock,price,updated_at`,
     {
       headers,
       cache: "no-store",
@@ -133,21 +137,23 @@ async function readSupabaseRows(config: SupabaseConfig) {
   return parseStoredRows((await response.json()) as unknown);
 }
 
-async function writeSupabaseStock(config: SupabaseConfig, productId: string, stock: number) {
+async function writeSupabaseRow(config: SupabaseConfig, productId: string, stock: number, price?: string) {
   const headers: HeadersInit = {
     apikey: config.key,
     "Content-Type": "application/json",
     Prefer: "resolution=merge-duplicates,return=minimal",
   };
   if (config.authorization) headers.Authorization = config.authorization;
+  const body: Record<string, unknown> = {
+    product_id: productId,
+    stock,
+    updated_at: new Date().toISOString(),
+  };
+  if (price !== undefined && price.length > 0) body.price = price;
   const response = await fetch(`${config.baseUrl}/rest/v1/cabinet_inventory?on_conflict=product_id`, {
     method: "POST",
     headers,
-    body: JSON.stringify({
-      product_id: productId,
-      stock,
-      updated_at: new Date().toISOString(),
-    }),
+    body: JSON.stringify(body),
     cache: "no-store",
   });
 
@@ -159,15 +165,19 @@ async function writeSupabaseStock(config: SupabaseConfig, productId: string, sto
 export async function getInventory(): Promise<InventoryProduct[]> {
   const config = getSupabaseConfig();
   const rows = config ? await readSupabaseRows(config) : await readLocalRows();
-  const stockById = new Map(rows.map((row) => [row.product_id, row.stock]));
+  const byProductId = new Map(rows.map((row) => [row.product_id, row]));
 
-  return products.map((product) => ({
-    ...product,
-    stock: stockById.get(product.id) ?? 0,
-  }));
+  return products.map((product) => {
+    const row = byProductId.get(product.id);
+    return {
+      ...product,
+      stock: row?.stock ?? 0,
+      price: row?.price || product.price,
+    };
+  });
 }
 
-export async function updateInventory(productId: string, value: unknown) {
+export async function updateInventory(productId: string, value: unknown, price?: string) {
   const product = products.find((candidate) => candidate.id === productId);
   if (!product) {
     throw new InventoryValidationError("That cabinet does not exist.");
@@ -179,8 +189,8 @@ export async function updateInventory(productId: string, value: unknown) {
   }
 
   const config = getSupabaseConfig();
-  if (config) await writeSupabaseStock(config, productId, stock);
-  else await writeLocalStock(productId, stock);
+  if (config) await writeSupabaseRow(config, productId, stock, price);
+  else await writeLocalRow(productId, stock, price);
 
-  return { ...product, stock };
+  return { ...product, stock, price: price ?? product.price };
 }

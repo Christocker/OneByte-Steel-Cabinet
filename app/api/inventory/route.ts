@@ -55,9 +55,12 @@ export async function PATCH(request: Request) {
 
   const values = body && typeof body === "object" ? body as Record<string, unknown> : {};
   const productId = typeof values.productId === "string" ? values.productId : "";
+  const priceValue = typeof values.price === "string" && values.price.trim().length > 0
+    ? values.price.trim()
+    : undefined;
 
   try {
-    const product = await updateInventory(productId, values.stock);
+    const product = await updateInventory(productId, values.stock, priceValue);
     revalidatePath("/");
     return json({ product });
   } catch (error) {

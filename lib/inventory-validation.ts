@@ -17,6 +17,19 @@ export function parseStockValue(value: unknown): number | null {
     : null;
 }
 
+export function parsePriceValue(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (trimmed.length === 0 || trimmed.length > 20) return null;
+  return trimmed;
+}
+
+export function getPriceInputError(value: string): string | null {
+  if (value.trim().length === 0) return "Enter a price.";
+  if (value.trim().length > 20) return "Price is too long.";
+  return null;
+}
+
 export function getStockInputError(value: string): string | null {
   if (value.length === 0) {
     return "Enter a stock quantity.";

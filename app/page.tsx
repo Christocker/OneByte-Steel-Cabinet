@@ -88,6 +88,13 @@ export default function Home() {
               +63 918 381 1094
             </a>
           </div>
+
+          <a
+            href="/admin"
+            className="mt-10 inline-block text-[11px] text-navy/20 transition-colors hover:text-navy/50"
+          >
+            Admin
+          </a>
         </Reveal>
       </footer>
     </main>
