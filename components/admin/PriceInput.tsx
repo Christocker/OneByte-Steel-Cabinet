@@ -12,7 +12,7 @@ type PriceInputProps = {
 };
 
 function shouldMask(text: string): boolean {
-  return /^\d/.test(text);
+  return /^\d+$/.test(text.replace(/,/g, ""));
 }
 
 export default function PriceInput({ id, value, onChange, invalid, describedBy }: PriceInputProps) {
