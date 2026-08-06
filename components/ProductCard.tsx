@@ -296,7 +296,7 @@ export default function ProductCard({ product }: { product: InventoryProduct }) 
               type="button"
               onClick={() => openCarousel(idx)}
               aria-label={`View ${product.name} photo ${idx + 1} of ${product.images.length} in full size`}
-              className="group/thumb relative aspect-square w-full cursor-zoom-in overflow-hidden rounded-2xl bg-beige focus:outline-none focus-visible:ring-2 focus-visible:ring-navy"
+              className="group/thumb relative aspect-[3/4] w-full cursor-zoom-in overflow-hidden rounded-2xl bg-beige focus:outline-none focus-visible:ring-2 focus-visible:ring-navy"
             >
               <Image
                 src={src}
