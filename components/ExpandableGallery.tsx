@@ -7,22 +7,18 @@ import type { InventoryProduct } from "@/lib/products";
 import ProductCard from "./ProductCard";
 import Reveal from "./Reveal";
 
-const STAGGER_IN_SECONDS = 0.04;
-const STAGGER_OUT_SECONDS = 0.04;
-const CARD_ENTRY_DELAY = 0.2;
-const CARD_IN_SECONDS = 0.45;
-const CARD_OUT_SECONDS = 0.3;
-const CONTAINER_IN_SECONDS = 0.5;
-const CONTAINER_OUT_SECONDS = 0.5;
-const CONTAINER_EASE: [number, number, number, number] = [0.42, 0, 0.58, 1];
-const CARD_EASE: [number, number, number, number] = [0.22, 0.61, 0.36, 1];
+const STAGGER_SECONDS = 0.04;
+const CARD_IN_SECONDS = 0.5;
+const CARD_OUT_SECONDS = 0.45;
+const CONTAINER_SECONDS = 0.55;
+const DRAWER_EASE: [number, number, number, number] = [0.4, 0, 0.2, 1];
 
 export default function ExpandableGallery({ products }: { products: InventoryProduct[] }) {
   const [open, setOpen] = useState(false);
-  const [closing, setClosing] = useState(false);
   const [columns, setColumns] = useState(3);
+  const [depths, setDepths] = useState<number[]>([]);
   const gridRef = useRef<HTMLDivElement>(null);
-  const closingTimer = useRef<number | null>(null);
+  const drawerRef = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
 
   useLayoutEffect(() => {
@@ -39,9 +35,16 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
   }, []);
 
   useLayoutEffect(() => {
-    return () => {
-      if (closingTimer.current) window.clearTimeout(closingTimer.current);
+    const drawer = drawerRef.current;
+    if (!drawer) return;
+    const measure = () => {
+      const cells = Array.from(drawer.children[0].children) as HTMLElement[];
+      setDepths(cells.map((el) => el.offsetTop));
     };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(drawer);
+    return () => ro.disconnect();
   }, []);
 
   const visibleCount = columns;
@@ -52,44 +55,24 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
 
   const cardVariants: Variants = {
     visible: (i: number): TargetAndTransition => ({
-      opacity: 1,
       y: 0,
-      scale: 1,
       transition: {
-        delay: reduce ? 0 : CARD_ENTRY_DELAY + i * STAGGER_IN_SECONDS,
+        delay: reduce ? 0 : i * STAGGER_SECONDS,
         duration: reduce ? 0.15 : CARD_IN_SECONDS,
-        ease: reduce ? "easeOut" : CARD_EASE,
+        ease: reduce ? "easeOut" : DRAWER_EASE,
       },
     }),
     hidden: (i: number): TargetAndTransition => ({
-      opacity: 0,
-      y: reduce ? 0 : 24,
-      scale: reduce ? 1 : 0.97,
+      y: -(depths[i] ?? 0),
       transition: {
-        delay: reduce ? 0 : (count - 1 - i) * STAGGER_OUT_SECONDS,
+        delay: reduce ? 0 : Math.max(0, count - 1 - i) * STAGGER_SECONDS,
         duration: reduce ? 0.15 : CARD_OUT_SECONDS,
         ease: "easeIn",
       },
     }),
   };
 
-  const collapse = () => {
-    setClosing(true);
-    const cardsDoneMs = ((count - 1) * STAGGER_OUT_SECONDS + CARD_OUT_SECONDS) * 1000;
-    closingTimer.current = window.setTimeout(() => {
-      setOpen(false);
-      setClosing(false);
-    }, cardsDoneMs + 20);
-  };
-
-  const toggle = () => {
-    if (closingTimer.current) window.clearTimeout(closingTimer.current);
-    if (open && !closing) collapse();
-    else {
-      setOpen(true);
-      setClosing(false);
-    }
-  };
+  const toggle = () => setOpen((prev) => !prev);
 
   if (!hasMore) {
     return (
@@ -115,26 +98,24 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
 
       <motion.div
         id="products-hidden-grid"
-        className="overflow-hidden"
+        ref={drawerRef}
+        className="relative overflow-hidden"
         initial={false}
         animate={{ height: open ? "auto" : 0 }}
         transition={
           reduce
             ? { duration: 0 }
-            : {
-                duration: open ? CONTAINER_IN_SECONDS : CONTAINER_OUT_SECONDS,
-                ease: CONTAINER_EASE,
-              }
+            : { duration: CONTAINER_SECONDS, ease: DRAWER_EASE }
         }
       >
-        <div className="mt-8 grid gap-8 pb-14 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 pt-8 pb-14 md:grid-cols-2 lg:grid-cols-3">
           {hidden.map((p, i) => (
             <motion.div
               key={p.id}
               variants={cardVariants}
               custom={i}
               initial={false}
-              animate={open && !closing ? "visible" : "hidden"}
+              animate={open ? "visible" : "hidden"}
             >
               <ProductCard product={p} />
             </motion.div>
@@ -172,7 +153,7 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
           </span>
           <motion.svg
             animate={{ rotate: open ? 180 : 0 }}
-            transition={{ duration: 0.4, ease: CONTAINER_EASE }}
+            transition={{ duration: 0.4, ease: DRAWER_EASE }}
             className="h-5 w-5"
             viewBox="0 0 24 24"
             fill="none"
