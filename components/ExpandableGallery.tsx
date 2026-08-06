@@ -97,15 +97,17 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
   };
 
   const toggle = () => {
-    const drawer = drawerRef.current;
-    if (drawer && !reduce) {
-      const html = document.documentElement;
-      followRef.current = {
-        y0: window.scrollY,
-        h0: drawer.getBoundingClientRect().height,
-        prevScrollBehavior: html.style.scrollBehavior,
-      };
-      html.style.scrollBehavior = "auto";
+    if (open && !reduce) {
+      const drawer = drawerRef.current;
+      if (drawer) {
+        const html = document.documentElement;
+        followRef.current = {
+          y0: window.scrollY,
+          h0: drawer.getBoundingClientRect().height,
+          prevScrollBehavior: html.style.scrollBehavior,
+        };
+        html.style.scrollBehavior = "auto";
+      }
     }
     setOpen((prev) => !prev);
   };
