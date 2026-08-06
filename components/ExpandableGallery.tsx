@@ -7,10 +7,10 @@ import type { InventoryProduct } from "@/lib/products";
 import ProductCard from "./ProductCard";
 import Reveal from "./Reveal";
 
-const STAGGER_SECONDS = 0.04;
-const CARD_IN_SECONDS = 0.5;
-const CARD_OUT_SECONDS = 0.45;
-const CONTAINER_SECONDS = 0.55;
+const STAGGER_SECONDS = 0.05;
+const CARD_IN_SECONDS = 0.7;
+const CARD_OUT_SECONDS = 0.6;
+const CONTAINER_SECONDS = 0.8;
 const DRAWER_EASE: [number, number, number, number] = [0.4, 0, 0.2, 1];
 
 export default function ExpandableGallery({ products }: { products: InventoryProduct[] }) {
