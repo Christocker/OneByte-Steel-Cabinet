@@ -59,13 +59,13 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
 
       <div
         id="products-hidden-grid"
-        className="expandable-container overflow-hidden pb-14"
+        className="expandable-container overflow-hidden"
         style={{
           maxHeight: expanded ? "8000px" : "0px",
           transition: "max-height 0.7s cubic-bezier(0.16, 1, 0.3, 1)",
         }}
       >
-        <div className="mt-8 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid gap-8 pb-14 md:grid-cols-2 lg:grid-cols-3">
           {hidden.map((p, i) => (
             <div
               key={p.id}
