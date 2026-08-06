@@ -8,7 +8,7 @@ const LOCAL_INVENTORY_FILE = path.join(process.cwd(), "data", "inventory.json");
 type StoredInventoryRow = {
   product_id: string;
   stock: number;
-  price?: number;
+  price?: string;
   updated_at?: string;
 };
 
@@ -62,16 +62,13 @@ function getSupabaseConfig(): SupabaseConfig | null {
   }
 }
 
-function parseStoredPrice(value: unknown): number | null {
+function parseStoredPrice(value: unknown): string | null {
   if (typeof value === "number") {
-    return Number.isSafeInteger(value) && value > 0 ? value : null;
+    return Number.isSafeInteger(value) && value > 0 ? String(value) : null;
   }
   if (typeof value === "string" && value.trim().length > 0) {
-    const cleaned = value.replace(/[, ]/g, "");
-    if (/^\d+$/.test(cleaned)) {
-      const parsed = Number(cleaned);
-      return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
-    }
+    const trimmed = value.trim();
+    return trimmed.length <= 100 ? trimmed : null;
   }
   return null;
 }
@@ -116,7 +113,7 @@ async function readLocalRows() {
   }
 }
 
-async function writeLocalRow(productId: string, stock: number, price?: number) {
+async function writeLocalRow(productId: string, stock: number, price?: string) {
   const current = await readLocalRows();
   const byId = new Map(current.map((row) => [row.product_id, row]));
   byId.set(productId, { product_id: productId, stock, ...(price ? { price } : {}) });
@@ -163,7 +160,7 @@ async function readSupabaseRows(config: SupabaseConfig) {
   throw new Error(`Inventory storage request failed with status ${first.status}.`);
 }
 
-async function writeSupabaseRow(config: SupabaseConfig, productId: string, stock: number, price?: number) {
+async function writeSupabaseRow(config: SupabaseConfig, productId: string, stock: number, price?: string) {
   const headers: HeadersInit = {
     apikey: config.key,
     "Content-Type": "application/json",
@@ -177,7 +174,7 @@ async function writeSupabaseRow(config: SupabaseConfig, productId: string, stock
       stock,
       updated_at: new Date().toISOString(),
     };
-    if (includePrice && price !== undefined && price > 0) body.price = price;
+    if (includePrice && price !== undefined && price.length > 0) body.price = price;
     const response = await fetch(`${config.baseUrl}/rest/v1/cabinet_inventory?on_conflict=product_id`, {
       method: "POST",
       headers,
@@ -225,11 +222,11 @@ export async function updateInventory(productId: string, value: unknown, price?:
     throw new InventoryValidationError("Stock must be a whole number from 0 upward.");
   }
 
-  let savedPrice: number | undefined;
+  let savedPrice: string | undefined;
   if (price !== undefined) {
     const parsedPrice = parsePriceValue(price);
     if (parsedPrice === null) {
-      throw new InventoryValidationError("Enter a valid price (numbers only).");
+      throw new InventoryValidationError("Enter a price.");
     }
     savedPrice = parsedPrice;
   }

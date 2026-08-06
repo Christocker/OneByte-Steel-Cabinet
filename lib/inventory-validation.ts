@@ -1,4 +1,5 @@
 export const MAX_STOCK = 2_147_483_647;
+export const MAX_PRICE_LENGTH = 100;
 
 export function parseStockValue(value: unknown): number | null {
   if (typeof value === "number") {
@@ -17,32 +18,22 @@ export function parseStockValue(value: unknown): number | null {
     : null;
 }
 
-function cleanPriceInput(value: string): string {
-  return value.replace(/,/g, "").trim();
-}
-
 export function getPriceSaveError(value: string): string | null {
-  const cleaned = cleanPriceInput(value);
-  if (cleaned.length === 0) {
-    return "Price must be greater than 0.";
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    return "Enter a price.";
   }
-  const parsed = Number(cleaned);
-  if (!Number.isFinite(parsed)) {
-    return "Enter a valid price (numbers only).";
-  }
-  if (parsed <= 0) {
-    return "Price must be greater than 0.";
+  if (trimmed.length > MAX_PRICE_LENGTH) {
+    return `Price must be ${MAX_PRICE_LENGTH} characters or fewer.`;
   }
   return null;
 }
 
-export function parsePriceValue(value: unknown): number | null {
+export function parsePriceValue(value: unknown): string | null {
   if (typeof value !== "string") return null;
-  const cleaned = cleanPriceInput(value);
-  if (cleaned.length === 0) return null;
-  const parsed = Number(cleaned);
-  if (!Number.isSafeInteger(parsed) || parsed <= 0) return null;
-  return parsed;
+  const trimmed = value.trim();
+  if (trimmed.length === 0 || trimmed.length > MAX_PRICE_LENGTH) return null;
+  return trimmed;
 }
 
 export function getStockInputError(value: string): string | null {
