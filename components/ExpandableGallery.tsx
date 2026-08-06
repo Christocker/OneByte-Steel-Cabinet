@@ -16,46 +16,13 @@ const CONTAINER_IN_SECONDS = 0.5;
 const CONTAINER_OUT_SECONDS = 0.5;
 const CONTAINER_EASE: [number, number, number, number] = [0.42, 0, 0.58, 1];
 const CARD_EASE: [number, number, number, number] = [0.22, 0.61, 0.36, 1];
-const NAV_OFFSET = 96;
-
-function easeInOutCubic(t: number) {
-  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-}
-
-function animateScroll(
-  targetY: number,
-  duration: number,
-  rafRef: { current: number | null },
-  onDone?: () => void
-) {
-  const startY = window.scrollY;
-  const distance = targetY - startY;
-  if (Math.abs(distance) < 1) {
-    onDone?.();
-    return;
-  }
-  const startTime = performance.now();
-  const step = (now: number) => {
-    const t = Math.min((now - startTime) / duration, 1);
-    window.scrollTo(0, startY + distance * easeInOutCubic(t));
-    if (t < 1) {
-      rafRef.current = requestAnimationFrame(step);
-    } else {
-      rafRef.current = null;
-      onDone?.();
-    }
-  };
-  rafRef.current = requestAnimationFrame(step);
-}
 
 export default function ExpandableGallery({ products }: { products: InventoryProduct[] }) {
   const [open, setOpen] = useState(false);
   const [closing, setClosing] = useState(false);
   const [columns, setColumns] = useState(3);
   const gridRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const scrollTimer = useRef<number | null>(null);
-  const scrollRaf = useRef<number | null>(null);
+  const closingTimer = useRef<number | null>(null);
   const reduce = useReducedMotion();
 
   useLayoutEffect(() => {
@@ -73,8 +40,7 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
 
   useLayoutEffect(() => {
     return () => {
-      if (scrollTimer.current) window.clearTimeout(scrollTimer.current);
-      if (scrollRaf.current) cancelAnimationFrame(scrollRaf.current);
+      if (closingTimer.current) window.clearTimeout(closingTimer.current);
     };
   }, []);
 
@@ -97,8 +63,8 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
     }),
     hidden: (i: number): TargetAndTransition => ({
       opacity: 0,
-      y: reduce ? 0 : 20,
-      scale: reduce ? 1 : 0.98,
+      y: reduce ? 0 : 24,
+      scale: reduce ? 1 : 0.97,
       transition: {
         delay: reduce ? 0 : (count - 1 - i) * STAGGER_OUT_SECONDS,
         duration: reduce ? 0.15 : CARD_OUT_SECONDS,
@@ -107,60 +73,22 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
     }),
   };
 
-  const cancelScroll = () => {
-    if (scrollRaf.current) cancelAnimationFrame(scrollRaf.current);
-    scrollRaf.current = null;
-  };
-
-  const beginScroll = (targetY: number, duration: number) => {
-    cancelScroll();
-    const cancel = () => cancelScroll();
-    window.addEventListener("wheel", cancel, { passive: true, once: true });
-    window.addEventListener("touchstart", cancel, { passive: true, once: true });
-    window.addEventListener("keydown", cancel, { passive: true, once: true });
-    animateScroll(targetY, duration, scrollRaf, () => {
-      window.removeEventListener("wheel", cancel);
-      window.removeEventListener("touchstart", cancel);
-      window.removeEventListener("keydown", cancel);
-    });
-  };
-
-  const expand = () => {
-    setOpen(true);
-    setClosing(false);
-    if (reduce) return;
-    const container = containerRef.current;
-    if (!container) return;
-    const growth = container.scrollHeight;
-    const maxY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-    const target = Math.min(window.scrollY + growth, maxY);
-    const durationMs =
-      (CARD_ENTRY_DELAY + (count - 1) * STAGGER_IN_SECONDS + CARD_IN_SECONDS) * 1000;
-    beginScroll(target, durationMs);
-  };
-
   const collapse = () => {
     setClosing(true);
     const cardsDoneMs = ((count - 1) * STAGGER_OUT_SECONDS + CARD_OUT_SECONDS) * 1000;
-    scrollTimer.current = window.setTimeout(() => {
+    closingTimer.current = window.setTimeout(() => {
       setOpen(false);
       setClosing(false);
     }, cardsDoneMs + 20);
-    const section = document.getElementById("products");
-    if (!section) return;
-    const targetY = section.getBoundingClientRect().top + window.scrollY - NAV_OFFSET;
-    if (reduce) {
-      window.scrollTo(0, targetY);
-      return;
-    }
-    beginScroll(targetY, cardsDoneMs + 20 + CONTAINER_OUT_SECONDS * 1000);
   };
 
   const toggle = () => {
-    if (scrollTimer.current) window.clearTimeout(scrollTimer.current);
-    cancelScroll();
+    if (closingTimer.current) window.clearTimeout(closingTimer.current);
     if (open && !closing) collapse();
-    else expand();
+    else {
+      setOpen(true);
+      setClosing(false);
+    }
   };
 
   if (!hasMore) {
@@ -186,7 +114,6 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
       </div>
 
       <motion.div
-        ref={containerRef}
         id="products-hidden-grid"
         className="overflow-hidden"
         initial={false}
