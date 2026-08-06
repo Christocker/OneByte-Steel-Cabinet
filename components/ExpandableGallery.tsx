@@ -13,6 +13,25 @@ const CARD_OUT_SECONDS = 0.35;
 const CONTAINER_IN_SECONDS = 0.75;
 const CONTAINER_OUT_SECONDS = 0.55;
 const EASE: [number, number, number, number] = [0.22, 0.61, 0.36, 1];
+const NAV_OFFSET = 96;
+
+function easeInOutCubic(t: number) {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+function smoothScrollTo(targetY: number) {
+  const startY = window.scrollY;
+  const distance = targetY - startY;
+  if (Math.abs(distance) < 1) return;
+  const duration = Math.min(Math.max(Math.abs(distance) * 0.5, 400), 900);
+  const startTime = performance.now();
+  const step = (now: number) => {
+    const t = Math.min((now - startTime) / duration, 1);
+    window.scrollTo(0, startY + distance * easeInOutCubic(t));
+    if (t < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
 
 export default function ExpandableGallery({ products }: { products: InventoryProduct[] }) {
   const [open, setOpen] = useState(false);
@@ -78,9 +97,12 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
       setClosing(false);
       scrollTimer.current = window.setTimeout(() => {
         const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        document
-          .getElementById("products")
-          ?.scrollIntoView({ behavior: reduced ? "auto" : "smooth" });
+        const section = document.getElementById("products");
+        if (section) {
+          const targetY = section.getBoundingClientRect().top + window.scrollY - NAV_OFFSET;
+          if (reduced) window.scrollTo(0, targetY);
+          else smoothScrollTo(targetY);
+        }
       }, CONTAINER_OUT_SECONDS * 1000 + 60);
     }, cardsDoneMs + 20);
   };
