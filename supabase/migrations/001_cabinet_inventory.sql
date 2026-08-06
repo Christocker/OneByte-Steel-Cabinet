@@ -1,7 +1,7 @@
 create table if not exists public.cabinet_inventory (
   product_id text primary key,
   stock integer not null default 0 check (stock >= 0),
-  price text,
+  price integer,
   updated_at timestamptz not null default timezone('utc', now())
 );
 

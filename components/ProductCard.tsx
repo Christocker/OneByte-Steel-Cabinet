@@ -12,6 +12,7 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { lockLightbox } from "@/lib/lightbox";
 import type { InventoryProduct } from "@/lib/products";
+import { formatCurrency } from "@/lib/format";
 
 type DragSample = { x: number; t: number };
 
@@ -325,7 +326,7 @@ export default function ProductCard({ product }: { product: InventoryProduct }) 
         <div className="px-5 pb-6 pt-2">
           <h3 className="text-lg font-bold text-navy">{product.name}</h3>
           <div className="mt-2 flex items-baseline justify-between gap-3">
-            <p className="text-2xl font-extrabold text-navy-light">₱{product.price}</p>
+            <p className="text-2xl font-extrabold text-navy-light">{formatCurrency(product.price)}</p>
             <p className="text-xs uppercase tracking-wider text-navy/50">H × W × D</p>
            </div>
            <p className="mt-1 text-sm font-medium text-navy/70">{product.dimensions}</p>

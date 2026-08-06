@@ -5,13 +5,15 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 import type { InventoryProduct } from "@/lib/products";
 import { getStockInputError, getPriceSaveError, parseStockValue } from "@/lib/inventory-validation";
+import { formatCurrency } from "@/lib/format";
+import PriceInput from "./PriceInput";
 
 function initialDrafts(products: InventoryProduct[]) {
   return Object.fromEntries(products.map((product) => [product.id, String(product.stock)]));
 }
 
 function initialPriceDrafts(products: InventoryProduct[]) {
-  return Object.fromEntries(products.map((product) => [product.id, product.price]));
+  return Object.fromEntries(products.map((product) => [product.id, String(product.price)]));
 }
 
 export default function AdminDashboard({
@@ -259,7 +261,7 @@ export default function AdminDashboard({
                   </div>
 
                   <p className="mt-3 text-sm font-semibold text-navy/70">
-                    Price: <span className="text-navy-light">₱{product.price}</span>
+                    Price: <span className="text-navy-light">{formatCurrency(product.price)}</span>
                   </p>
 
                   <form onSubmit={(event) => saveStock(event, product.id)} className="mt-5">
@@ -300,14 +302,12 @@ export default function AdminDashboard({
                       <label htmlFor={`price-${product.id}`} className="text-sm font-semibold text-navy">
                         Set price
                       </label>
-                      <input
+                      <PriceInput
                         id={`price-${product.id}`}
-                        type="text"
-                        inputMode="numeric"
                         value={priceDrafts[product.id] ?? ""}
-                        onChange={(event) => changePrice(product.id, event.target.value)}
-                        aria-invalid={Boolean(error)}
-                        className="mt-2 h-12 w-full rounded-xl border-2 border-beige-deep bg-beige px-4 text-center text-lg font-bold text-navy outline-none transition-colors focus:border-navy aria-[invalid=true]:border-red-500"
+                        onChange={(value) => changePrice(product.id, value)}
+                        invalid={Boolean(error)}
+                        describedBy={error ? `stock-error-${product.id}` : undefined}
                       />
                     </div>
 

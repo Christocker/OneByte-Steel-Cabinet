@@ -36,11 +36,13 @@ export function getPriceSaveError(value: string): string | null {
   return null;
 }
 
-export function parsePriceValue(value: unknown): string | null {
+export function parsePriceValue(value: unknown): number | null {
   if (typeof value !== "string") return null;
-  const trimmed = value.trim();
-  if (getPriceSaveError(trimmed) !== null) return null;
-  return trimmed;
+  const cleaned = cleanPriceInput(value);
+  if (cleaned.length === 0) return null;
+  const parsed = Number(cleaned);
+  if (!Number.isSafeInteger(parsed) || parsed <= 0) return null;
+  return parsed;
 }
 
 export function getStockInputError(value: string): string | null {
