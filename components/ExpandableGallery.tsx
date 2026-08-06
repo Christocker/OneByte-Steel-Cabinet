@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import type { TargetAndTransition, Variants } from "motion/react";
 import type { InventoryProduct } from "@/lib/products";
@@ -19,7 +19,20 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
   const [depths, setDepths] = useState<number[]>([]);
   const gridRef = useRef<HTMLDivElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
+  const followRef = useRef<{ y0: number; h0: number } | null>(null);
   const reduce = useReducedMotion();
+
+  useEffect(() => {
+    const onInput = () => {
+      followRef.current = null;
+    };
+    window.addEventListener("touchstart", onInput, { passive: true });
+    window.addEventListener("wheel", onInput, { passive: true });
+    return () => {
+      window.removeEventListener("touchstart", onInput);
+      window.removeEventListener("wheel", onInput);
+    };
+  }, []);
 
   useLayoutEffect(() => {
     const el = gridRef.current;
@@ -72,7 +85,16 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
     }),
   };
 
-  const toggle = () => setOpen((prev) => !prev);
+  const toggle = () => {
+    const drawer = drawerRef.current;
+    if (drawer && !reduce) {
+      followRef.current = {
+        y0: window.scrollY,
+        h0: drawer.getBoundingClientRect().height,
+      };
+    }
+    setOpen((prev) => !prev);
+  };
 
   if (!hasMore) {
     return (
@@ -107,6 +129,14 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
             ? { duration: 0 }
             : { duration: CONTAINER_SECONDS, ease: DRAWER_EASE }
         }
+        onUpdate={(latest) => {
+          const f = followRef.current;
+          if (!f || typeof latest.height !== "number") return;
+          window.scrollTo(0, f.y0 + latest.height - f.h0);
+        }}
+        onAnimationComplete={() => {
+          followRef.current = null;
+        }}
       >
         <div className="grid gap-8 pt-8 pb-14 md:grid-cols-2 lg:grid-cols-3">
           {hidden.map((p, i) => (
