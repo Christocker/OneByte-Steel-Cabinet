@@ -1,4 +1,4 @@
-import ProductCard from "./ProductCard";
+import ExpandableGallery from "./ExpandableGallery";
 import Reveal from "./Reveal";
 import { getInventory, InventoryConfigurationError } from "@/lib/inventory";
 import { products } from "@/lib/products";
@@ -27,17 +27,11 @@ export default async function Products() {
           Our Cabinets
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-lg text-navy/70">
-           Every cabinet in our collection — with live stock availability.
+          Every cabinet in our collection — with live stock availability.
         </p>
       </Reveal>
 
-      <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-         {inventory.map((p, i) => (
-           <Reveal key={p.id} delay={i * 80}>
-            <ProductCard product={p} />
-          </Reveal>
-        ))}
-      </div>
+      <ExpandableGallery products={inventory} />
     </section>
   );
 }

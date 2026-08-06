@@ -153,4 +153,8 @@ body.lightbox-open #site-header {
   .animate-pulse {
     animation: none;
   }
+  .expandable-card {
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
 }
