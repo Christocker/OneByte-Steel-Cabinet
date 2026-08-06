@@ -57,18 +57,9 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
         ))}
       </div>
 
-      {!expanded && (
-        <div
-          className="pointer-events-none relative z-10 -mt-24 h-24"
-          style={{
-            background: "linear-gradient(to top, var(--background), transparent)",
-          }}
-        />
-      )}
-
       <div
         id="products-hidden-grid"
-        className="expandable-container overflow-hidden"
+        className="expandable-container overflow-hidden pb-14"
         style={{
           maxHeight: expanded ? "8000px" : "0px",
           transition: "max-height 0.7s cubic-bezier(0.16, 1, 0.3, 1)",

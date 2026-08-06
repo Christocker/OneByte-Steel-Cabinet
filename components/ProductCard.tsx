@@ -287,7 +287,7 @@ export default function ProductCard({ product }: { product: InventoryProduct }) 
 
   return (
     <>
-      <article className="group overflow-hidden rounded-3xl border-2 border-beige-deep bg-beige-soft shadow-xl shadow-navy/20 transition-all duration-500 ease-out hover:-translate-y-2 hover:border-navy/40 hover:shadow-2xl hover:shadow-navy/30">
+      <article className="group relative overflow-hidden rounded-3xl border-2 border-beige-deep bg-beige-soft shadow-xl shadow-navy/20 transition-all duration-500 ease-out hover:-translate-y-2 hover:border-navy/40 hover:shadow-2xl hover:shadow-navy/30 hover:z-10">
         <p className="sr-only">{product.name}</p>
         <div className="grid grid-cols-2 gap-2 p-3">
           {product.images.map((src, idx) => (
