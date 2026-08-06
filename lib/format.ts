@@ -3,6 +3,11 @@ function groupDigits(digits: string): string {
   return (cleaned || "0").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
+export function formatPriceInput(raw: string): string {
+  const cleaned = raw.replace(/,/g, "");
+  return cleaned.replace(/\B(?=(\w{3})+(?!\w))/g, ",");
+}
+
 export function formatPriceDisplay(value: string | number): string {
   const text = typeof value === "number" ? String(value) : value.trim();
   if (text.length === 0) return "";
