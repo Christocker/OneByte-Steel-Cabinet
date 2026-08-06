@@ -1,7 +1,7 @@
 import { readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { products, type InventoryProduct } from "./products";
-import { parseStockValue } from "./inventory-validation";
+import { parsePriceValue, parseStockValue } from "./inventory-validation";
 
 const LOCAL_INVENTORY_FILE = path.join(process.cwd(), "data", "inventory.json");
 
@@ -210,9 +210,18 @@ export async function updateInventory(productId: string, value: unknown, price?:
     throw new InventoryValidationError("Stock must be a whole number from 0 upward.");
   }
 
+  let savedPrice: string | undefined;
+  if (price !== undefined) {
+    const parsedPrice = parsePriceValue(price);
+    if (parsedPrice === null) {
+      throw new InventoryValidationError("Enter a valid price (numbers only).");
+    }
+    savedPrice = parsedPrice;
+  }
+
   const config = getSupabaseConfig();
-  if (config) await writeSupabaseRow(config, productId, stock, price);
-  else await writeLocalRow(productId, stock, price);
+  if (config) await writeSupabaseRow(config, productId, stock, savedPrice);
+  else await writeLocalRow(productId, stock, savedPrice);
 
   return { ...product, stock, price: price ?? product.price };
 }

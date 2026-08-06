@@ -17,17 +17,30 @@ export function parseStockValue(value: unknown): number | null {
     : null;
 }
 
+function cleanPriceInput(value: string): string {
+  return value.replace(/,/g, "").trim();
+}
+
+export function getPriceSaveError(value: string): string | null {
+  const cleaned = cleanPriceInput(value);
+  if (cleaned.length === 0) {
+    return "Price must be greater than 0.";
+  }
+  const parsed = Number(cleaned);
+  if (!Number.isFinite(parsed)) {
+    return "Enter a valid price (numbers only).";
+  }
+  if (parsed <= 0) {
+    return "Price must be greater than 0.";
+  }
+  return null;
+}
+
 export function parsePriceValue(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
-  if (trimmed.length === 0 || trimmed.length > 20) return null;
+  if (getPriceSaveError(trimmed) !== null) return null;
   return trimmed;
-}
-
-export function getPriceInputError(value: string): string | null {
-  if (value.trim().length === 0) return "Enter a price.";
-  if (value.trim().length > 20) return "Price is too long.";
-  return null;
 }
 
 export function getStockInputError(value: string): string | null {

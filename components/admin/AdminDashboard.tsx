@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import type { InventoryProduct } from "@/lib/products";
-import { getStockInputError, getPriceInputError, parseStockValue } from "@/lib/inventory-validation";
+import { getStockInputError, getPriceSaveError, parseStockValue } from "@/lib/inventory-validation";
 
 function initialDrafts(products: InventoryProduct[]) {
   return Object.fromEntries(products.map((product) => [product.id, String(product.stock)]));
@@ -55,12 +55,6 @@ export default function AdminDashboard({
   }
 
   function changePrice(productId: string, value: string) {
-    const inputError = getPriceInputError(value);
-    if (inputError) {
-      setErrors((current) => ({ ...current, [productId]: inputError }));
-      return;
-    }
-
     setPriceDrafts((current) => ({ ...current, [productId]: value }));
     setErrors((current) => ({
       ...current,
@@ -88,11 +82,12 @@ export default function AdminDashboard({
       return;
     }
 
-    const price = priceDrafts[productId]?.trim();
-    if (price !== undefined && getPriceInputError(price)) {
+    const price = priceDrafts[productId] ?? "";
+    const priceError = getPriceSaveError(price);
+    if (priceError) {
       setErrors((current) => ({
         ...current,
-        [productId]: "Enter a valid price.",
+        [productId]: priceError,
       }));
       return;
     }
@@ -308,6 +303,7 @@ export default function AdminDashboard({
                       <input
                         id={`price-${product.id}`}
                         type="text"
+                        inputMode="numeric"
                         value={priceDrafts[product.id] ?? ""}
                         onChange={(event) => changePrice(product.id, event.target.value)}
                         aria-invalid={Boolean(error)}
