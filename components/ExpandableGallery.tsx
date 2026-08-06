@@ -68,29 +68,29 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
 
       <div
         id="products-hidden-grid"
-        className="grid gap-8 md:grid-cols-2 lg:grid-cols-3"
+        className="expandable-container overflow-hidden"
         style={{
-          marginTop: expanded ? "2rem" : "0px",
-          transition: "margin-top 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
+          maxHeight: expanded ? "8000px" : "0px",
+          transition: "max-height 0.7s cubic-bezier(0.16, 1, 0.3, 1)",
         }}
       >
-        {hidden.map((p, i) => (
-          <div
-            key={p.id}
-            className="expandable-card overflow-hidden"
-            style={{
-              maxHeight: expanded ? "800px" : "0px",
-              opacity: expanded ? 1 : 0,
-              transition:
-                "max-height 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease-out",
-              transitionDelay: expanded
-                ? `${i * 80}ms`
-                : `${Math.max(0, (hidden.length - 1 - i) * 50)}ms`,
-            }}
-          >
-            <ProductCard product={p} />
-          </div>
-        ))}
+        <div className="mt-8 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          {hidden.map((p, i) => (
+            <div
+              key={p.id}
+              className="expandable-card"
+              style={{
+                opacity: expanded ? 1 : 0,
+                transition: "opacity 0.5s ease-out",
+                transitionDelay: expanded
+                  ? `${i * 80}ms`
+                  : `${Math.max(0, (hidden.length - 1 - i) * 50)}ms`,
+              }}
+            >
+              <ProductCard product={p} />
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="mt-10 text-center">
