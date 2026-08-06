@@ -7,12 +7,15 @@ import type { InventoryProduct } from "@/lib/products";
 import ProductCard from "./ProductCard";
 import Reveal from "./Reveal";
 
-const STAGGER_SECONDS = 0.04;
-const CARD_IN_SECONDS = 0.5;
-const CARD_OUT_SECONDS = 0.35;
-const CONTAINER_IN_SECONDS = 0.75;
-const CONTAINER_OUT_SECONDS = 0.55;
-const EASE: [number, number, number, number] = [0.22, 0.61, 0.36, 1];
+const STAGGER_IN_SECONDS = 0.03;
+const STAGGER_OUT_SECONDS = 0.03;
+const CARD_ENTRY_DELAY = 0.3;
+const CARD_IN_SECONDS = 0.4;
+const CARD_OUT_SECONDS = 0.3;
+const CONTAINER_IN_SECONDS = 0.5;
+const CONTAINER_OUT_SECONDS = 0.5;
+const CONTAINER_EASE: [number, number, number, number] = [0.42, 0, 0.58, 1];
+const CARD_EASE: [number, number, number, number] = [0.22, 0.61, 0.36, 1];
 const NAV_OFFSET = 96;
 
 function easeInOutCubic(t: number) {
@@ -72,17 +75,17 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
       y: 0,
       scale: 1,
       transition: {
-        delay: reduce ? 0 : i * STAGGER_SECONDS,
+        delay: reduce ? 0 : CARD_ENTRY_DELAY + i * STAGGER_IN_SECONDS,
         duration: reduce ? 0.15 : CARD_IN_SECONDS,
-        ease: reduce ? "easeOut" : EASE,
+        ease: reduce ? "easeOut" : CARD_EASE,
       },
     }),
     hidden: (i: number): TargetAndTransition => ({
       opacity: 0,
-      y: reduce ? 0 : 20,
-      scale: reduce ? 1 : 0.97,
+      y: reduce ? 0 : 24,
+      scale: reduce ? 1 : 0.96,
       transition: {
-        delay: reduce ? 0 : (count - 1 - i) * STAGGER_SECONDS,
+        delay: reduce ? 0 : (count - 1 - i) * STAGGER_OUT_SECONDS,
         duration: reduce ? 0.15 : CARD_OUT_SECONDS,
         ease: "easeIn",
       },
@@ -91,7 +94,7 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
 
   const collapse = () => {
     setClosing(true);
-    const cardsDoneMs = ((count - 1) * STAGGER_SECONDS + CARD_OUT_SECONDS) * 1000;
+    const cardsDoneMs = ((count - 1) * STAGGER_OUT_SECONDS + CARD_OUT_SECONDS) * 1000;
     scrollTimer.current = window.setTimeout(() => {
       setOpen(false);
       setClosing(false);
@@ -149,7 +152,7 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
             ? { duration: 0 }
             : {
                 duration: open ? CONTAINER_IN_SECONDS : CONTAINER_OUT_SECONDS,
-                ease: EASE,
+                ease: CONTAINER_EASE,
               }
         }
       >
@@ -183,7 +186,7 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
               className="absolute w-full text-center"
               initial={false}
               animate={open ? { opacity: 0, y: -10 } : { opacity: 1, y: 0 }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
             >
               View All Cabinets
             </motion.span>
@@ -191,14 +194,14 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
               className="absolute w-full text-center"
               initial={false}
               animate={open ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
             >
               Show Less
             </motion.span>
           </span>
           <motion.svg
             animate={{ rotate: open ? 180 : 0 }}
-            transition={{ duration: 0.35, ease: EASE }}
+            transition={{ duration: 0.4, ease: CONTAINER_EASE }}
             className="h-5 w-5"
             viewBox="0 0 24 24"
             fill="none"
