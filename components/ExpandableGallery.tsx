@@ -19,18 +19,29 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
   const [depths, setDepths] = useState<number[]>([]);
   const gridRef = useRef<HTMLDivElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
-  const followRef = useRef<{ y0: number; h0: number } | null>(null);
+  const followRef = useRef<{
+    y0: number;
+    h0: number;
+    prevScrollBehavior: string | null;
+  } | null>(null);
   const reduce = useReducedMotion();
 
+  const clearFollow = () => {
+    const f = followRef.current;
+    if (f && f.prevScrollBehavior !== null) {
+      document.documentElement.style.scrollBehavior = f.prevScrollBehavior;
+    }
+    followRef.current = null;
+  };
+
   useEffect(() => {
-    const onInput = () => {
-      followRef.current = null;
-    };
+    const onInput = clearFollow;
     window.addEventListener("touchstart", onInput, { passive: true });
     window.addEventListener("wheel", onInput, { passive: true });
     return () => {
       window.removeEventListener("touchstart", onInput);
       window.removeEventListener("wheel", onInput);
+      clearFollow();
     };
   }, []);
 
@@ -88,10 +99,13 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
   const toggle = () => {
     const drawer = drawerRef.current;
     if (drawer && !reduce) {
+      const html = document.documentElement;
       followRef.current = {
         y0: window.scrollY,
         h0: drawer.getBoundingClientRect().height,
+        prevScrollBehavior: html.style.scrollBehavior,
       };
+      html.style.scrollBehavior = "auto";
     }
     setOpen((prev) => !prev);
   };
@@ -134,9 +148,7 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
           if (!f || typeof latest.height !== "number") return;
           window.scrollTo(0, f.y0 + latest.height - f.h0);
         }}
-        onAnimationComplete={() => {
-          followRef.current = null;
-        }}
+        onAnimationComplete={clearFollow}
       >
         <div className="grid gap-8 pt-8 pb-14 md:grid-cols-2 lg:grid-cols-3">
           {hidden.map((p, i) => (
