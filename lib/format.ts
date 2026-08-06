@@ -5,31 +5,33 @@ export function formatPriceDisplay(value: string | number): string {
   const cleaned = text.replace(/₱/g, "").trim();
   if (cleaned.length === 0) return "₱";
 
-  const noCommas = cleaned.replace(/,/g, "");
-  const splitAtDigit = noCommas.match(/^([^\d]*)(\d+.*)$/);
-
-  if (!splitAtDigit) {
+  // CASE 3 — does NOT start with a digit: preserve the string exactly
+  if (!/^\d/.test(cleaned)) {
     return `₱${cleaned}`;
   }
 
-  const prefix = splitAtDigit[1];
-  const rest = splitAtDigit[2];
-  const digitMatch = rest.match(/^(\d+)(.*)$/);
+  // CASE 1 & 2 — starts with a digit: format only the leading numeric run
+  const runMatch = cleaned.match(/^[\d,.]*/);
+  const leadingRun = runMatch?.[0] ?? "";
+  const suffix = cleaned.slice(leadingRun.length);
 
-  if (!digitMatch) {
-    return `₱${cleaned}`;
+  let integerPart = leadingRun.replace(/,/g, "");
+  let decimalPart = "";
+
+  const dotIndex = integerPart.indexOf(".");
+  if (dotIndex !== -1) {
+    decimalPart = integerPart.slice(dotIndex);
+    integerPart = integerPart.slice(0, dotIndex);
   }
 
-  const leadingDigits = digitMatch[1];
-  const suffix = digitMatch[2];
-  const grouped = leadingDigits.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const grouped = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
   const xMatch = suffix.match(/^([xX]+)(.*)$/);
   if (xMatch) {
-    return `₱${prefix}${grouped},${xMatch[1]}${xMatch[2] ?? ""}`;
+    return `₱${grouped}${decimalPart},${xMatch[1]}${xMatch[2] ?? ""}`;
   }
 
-  return `₱${prefix}${grouped}${suffix}`;
+  return `₱${grouped}${decimalPart}${suffix}`;
 }
 
 export function formatPriceInput(raw: string): string {
