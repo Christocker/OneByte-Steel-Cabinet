@@ -325,15 +325,13 @@ export default function ProductCard({ product }: { product: InventoryProduct }) 
 
         <div className="px-5 pb-6 pt-2">
           <h3 className="text-lg font-bold text-navy">{product.name}</h3>
+          <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-navy/40">Item #{product.itemNumber}</p>
           <div className="mt-2 flex items-baseline justify-between gap-3">
             <p className="text-2xl font-extrabold text-navy-light">{formatPriceDisplay(product.price)}</p>
             <p className="text-xs uppercase tracking-wider text-navy/50">H × W × D</p>
            </div>
-           <p className="mt-1 text-sm font-medium text-navy/70">{product.dimensions}</p>
-           <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-beige-deep/70 pt-4">
-             <p className="text-sm font-semibold text-navy">
-               Stock: <span className="text-navy-light">{product.stock}</span>
-             </p>
+           <p className="mt-1.5 text-[15px] font-semibold text-navy/80">{product.dimensions}</p>
+           <div className="mt-5 flex flex-wrap items-center justify-end gap-3 border-t border-beige-deep/70 pt-4">
              <span
                className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${
                  product.stock > 0

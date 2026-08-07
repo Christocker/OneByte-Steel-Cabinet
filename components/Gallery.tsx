@@ -15,22 +15,21 @@ type Photo = {
 const CLOSE_MS = 250;
 
 const photos: Photo[] = [
-  { src: "/images/gallery/gallery-01.jpg", w: 1600, h: 900 },
-  { src: "/images/gallery/gallery-02.jpg", w: 900, h: 1600 },
+  { src: "/images/gallery/gallery-01.jpg", w: 900, h: 1600 },
+  { src: "/images/gallery/gallery-02.jpg", w: 1200, h: 1600 },
   { src: "/images/gallery/gallery-03.jpg", w: 1200, h: 1600 },
-  { src: "/images/gallery/gallery-04.jpg", w: 1200, h: 1600 },
-  { src: "/images/gallery/gallery-05.jpg", w: 944, h: 1600 },
-  { src: "/images/gallery/gallery-06.jpg", w: 1600, h: 1200 },
+  { src: "/images/gallery/gallery-04.jpg", w: 944, h: 1600 },
+  { src: "/images/gallery/gallery-05.jpg", w: 1600, h: 1200 },
+  { src: "/images/gallery/gallery-06.jpg", w: 1200, h: 1600 },
   { src: "/images/gallery/gallery-07.jpg", w: 1200, h: 1600 },
-  { src: "/images/gallery/gallery-08.jpg", w: 1200, h: 1600 },
-  { src: "/images/gallery/gallery-09.jpg", w: 1600, h: 1200 },
+  { src: "/images/gallery/gallery-08.jpg", w: 1600, h: 1200 },
+  { src: "/images/gallery/gallery-09.jpg", w: 1200, h: 1600 },
   { src: "/images/gallery/gallery-10.jpg", w: 1200, h: 1600 },
   { src: "/images/gallery/gallery-11.jpg", w: 1200, h: 1600 },
   { src: "/images/gallery/gallery-12.jpg", w: 1200, h: 1600 },
   { src: "/images/gallery/gallery-13.jpg", w: 1200, h: 1600 },
   { src: "/images/gallery/gallery-14.jpg", w: 1200, h: 1600 },
   { src: "/images/gallery/gallery-15.jpg", w: 1200, h: 1600 },
-  { src: "/images/gallery/gallery-16.jpg", w: 1200, h: 1600 },
 ];
 
 type DragSample = { x: number; t: number };

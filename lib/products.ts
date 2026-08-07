@@ -1,5 +1,6 @@
 export type CabinetProduct = {
   id: string;
+  itemNumber: number;
   name: string;
   price: string;
   dimensions: string;
@@ -13,6 +14,7 @@ export type InventoryProduct = CabinetProduct & {
 export const products: CabinetProduct[] = [
   {
     id: "full-metal-light-gray",
+    itemNumber: 1,
     name: "Full Metal Cabinet — Light Gray",
     price: "5800",
     dimensions: "180 × 80 × 40 cm",
@@ -23,6 +25,7 @@ export const products: CabinetProduct[] = [
   },
   {
     id: "full-glass-sliding-gray-white",
+    itemNumber: 2,
     name: "Full Glass Sliding Cabinet — Gray & White",
     price: "7200",
     dimensions: "185 × 90 × 40 cm",
@@ -33,6 +36,7 @@ export const products: CabinetProduct[] = [
   },
   {
     id: "full-glass-sliding-white",
+    itemNumber: 3,
     name: "Full Glass Sliding Cabinet — White",
     price: "7500",
     dimensions: "185 × 90 × 40 cm",
@@ -43,6 +47,7 @@ export const products: CabinetProduct[] = [
   },
   {
     id: "full-glass-white",
+    itemNumber: 4,
     name: "Full Glass Cabinet — White",
     price: "7300",
     dimensions: "185 × 90 × 40 cm",
@@ -53,6 +58,7 @@ export const products: CabinetProduct[] = [
   },
   {
     id: "full-metal-gray-white",
+    itemNumber: 5,
     name: "Full Metal Cabinet — Gray & White",
     price: "6000",
     dimensions: "185 × 85 × 40 cm",
@@ -63,6 +69,7 @@ export const products: CabinetProduct[] = [
   },
   {
     id: "half-glass-white",
+    itemNumber: 6,
     name: "Half Glass Cabinet — White",
     price: "6800",
     dimensions: "185 × 90 × 40 cm",
@@ -73,6 +80,7 @@ export const products: CabinetProduct[] = [
   },
   {
     id: "wardrobe-brown-beige",
+    itemNumber: 7,
     name: "Wardrobe Cabinet — Brown & Beige",
     price: "7500",
     dimensions: "185 × 90 × 45 cm",
@@ -83,6 +91,7 @@ export const products: CabinetProduct[] = [
   },
   {
     id: "wardrobe-shelves-woodgrain",
+    itemNumber: 8,
     name: "Wardrobe with Shelves — Woodgrain",
     price: "7200",
     dimensions: "185 × 90 × 45 cm",
@@ -93,6 +102,7 @@ export const products: CabinetProduct[] = [
   },
   {
     id: "half-glass-light-gray",
+    itemNumber: 9,
     name: "Half Glass Cabinet — Light Gray",
     price: "5800",
     dimensions: "180 × 80 × 40 cm",
@@ -103,6 +113,7 @@ export const products: CabinetProduct[] = [
   },
   {
     id: "full-glass-coffee-beige",
+    itemNumber: 10,
     name: "Full Glass Cabinet — Coffee Beige",
     price: "7300",
     dimensions: "185 × 90 × 40 cm",
@@ -113,6 +124,7 @@ export const products: CabinetProduct[] = [
   },
   {
     id: "full-metal-white",
+    itemNumber: 11,
     name: "Full Metal Cabinet — White",
     price: "6800",
     dimensions: "185 × 85 × 40 cm",
@@ -123,6 +135,7 @@ export const products: CabinetProduct[] = [
   },
   {
     id: "half-glass-coffee-beige",
+    itemNumber: 12,
     name: "Half Glass Cabinet — Coffee Beige",
     price: "6800",
     dimensions: "185 × 90 × 40 cm",
@@ -133,6 +146,7 @@ export const products: CabinetProduct[] = [
   },
   {
     id: "multi-purpose-wardrobe",
+    itemNumber: 13,
     name: "Multi-Purpose Wardrobe",
     price: "7800",
     dimensions: "180 × 80 × 40 cm",
@@ -143,6 +157,7 @@ export const products: CabinetProduct[] = [
   },
   {
     id: "wardrobe-shelves-print-gray",
+    itemNumber: 14,
     name: "Wardrobe with Shelves — Print Gray",
     price: "6800",
     dimensions: "185 × 90 × 45 cm",
@@ -153,12 +168,57 @@ export const products: CabinetProduct[] = [
   },
   {
     id: "wardrobe-shelves-white",
+    itemNumber: 15,
     name: "Wardrobe with Shelves — White",
     price: "7600",
     dimensions: "185 × 90 × 45 cm",
     images: [
       "/images/products/worldcraft-wardrobe-shelves-white-1.png",
       "/images/products/worldcraft-wardrobe-shelves-white-2.png",
+    ],
+  },
+  {
+    id: "half-glass-black-woodgrain",
+    itemNumber: 16,
+    name: "Half Glass Cabinet — Black Woodgrain",
+    price: "6200",
+    dimensions: "185 × 90 × 40 cm",
+    images: [
+      "/images/products/worldcraft-half-glass-black-woodgrain-1.png",
+      "/images/products/worldcraft-half-glass-black-woodgrain-2.jpg",
+    ],
+  },
+  {
+    id: "wardrobe-hanger-white",
+    itemNumber: 17,
+    name: "Wardrobe with Hanger — White",
+    price: "7000",
+    dimensions: "185 × 90 × 45 cm",
+    images: [
+      "/images/products/worldcraft-wardrobe-hanger-white-1.png",
+      "/images/products/worldcraft-wardrobe-hanger-white-2.png",
+    ],
+  },
+  {
+    id: "full-glass-gray-white",
+    itemNumber: 18,
+    name: "Full Glass Cabinet — Gray & White",
+    price: "6000",
+    dimensions: "185 × 90 × 40 cm",
+    images: [
+      "/images/products/worldcraft-full-glass-gray-white-1.png",
+      "/images/products/worldcraft-full-glass-gray-white-2.jpg",
+    ],
+  },
+  {
+    id: "wardrobe-hanger-black-woodgrain",
+    itemNumber: 19,
+    name: "Wardrobe with Hanger — Black Woodgrain",
+    price: "6600",
+    dimensions: "185 × 90 × 45 cm",
+    images: [
+      "/images/products/worldcraft-wardrobe-hanger-black-woodgrain-1.png",
+      "/images/products/worldcraft-wardrobe-hanger-black-woodgrain-2.png",
     ],
   },
 ];
