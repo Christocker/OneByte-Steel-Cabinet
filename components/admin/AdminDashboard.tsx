@@ -216,6 +216,47 @@ export default function AdminDashboard({
           </div>
         </section>
 
+        <section
+          className="mt-10 overflow-hidden rounded-2xl border-2 border-beige-deep bg-beige-soft shadow-lg shadow-navy/10"
+          aria-label="Stock overview"
+        >
+          <div className="flex items-center justify-between border-b-2 border-beige-deep/70 bg-beige px-5 py-3">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-navy/60">Stock overview</h2>
+            <span className="text-xs font-medium text-navy/45">{products.length} cabinets</span>
+          </div>
+          <div className="max-h-[28rem] overflow-y-auto">
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 bg-beige-soft">
+                <tr className="border-b border-beige-deep/60 text-left text-xs font-semibold uppercase tracking-wider text-navy/50">
+                  <th scope="col" className="px-5 py-2.5">Cabinet</th>
+                  <th scope="col" className="px-5 py-2.5 text-right">Stocks</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-beige-deep/40">
+                {products.map((product) => (
+                  <tr key={product.id} className="transition-colors hover:bg-beige">
+                    <td className="px-5 py-2.5">
+                      <span className="font-semibold text-navy">{product.name}</span>
+                      <span className="ml-2 text-xs font-medium text-navy/35">Item #{product.itemNumber}</span>
+                    </td>
+                    <td className="px-5 py-2.5 text-right">
+                      <span
+                        className={`inline-flex min-w-[2.25rem] items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-bold ${
+                          product.stock > 0
+                            ? "bg-emerald-100 text-emerald-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {product.stock}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
         <p role="status" aria-live="polite" className="mt-8 min-h-6 text-sm font-semibold text-emerald-800">
           {notice}
         </p>
