@@ -252,8 +252,10 @@ export default function AdminDashboard({
 
                 <div className="p-5 sm:p-6">
                   <h2 className="min-h-14 text-lg font-bold leading-snug text-navy">{product.name}</h2>
-                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-navy/50">Brand: {product.brand}</p>
-                  <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-navy/40">Item #{product.itemNumber}</p>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center rounded-full bg-navy px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-beige-soft shadow-sm shadow-navy/20">Item #{product.itemNumber}</span>
+                    <span className="inline-flex items-center rounded-full border border-beige-deep bg-beige px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-navy/60">Brand: {product.brand}</span>
+                  </div>
                   <div className="mt-4 flex items-end justify-between gap-4 border-b border-beige-deep/70 pb-5">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-wider text-navy/50">Current stock</p>

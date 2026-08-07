@@ -325,7 +325,7 @@ export default function ProductCard({ product }: { product: InventoryProduct }) 
 
         <div className="px-5 pb-6 pt-2">
           <h3 className="text-lg font-bold text-navy">{product.name}</h3>
-          <p className="mt-1 mb-1 text-[11px] font-bold uppercase tracking-[0.22em] text-navy/50">Item #{product.itemNumber}</p>
+          <span className="mt-1.5 mb-2 inline-flex items-center rounded-full bg-navy px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-beige-soft shadow-sm shadow-navy/20">Item #{product.itemNumber}</span>
           <p className="text-2xl font-extrabold text-navy-light">{formatPriceDisplay(product.price)}</p>
           <p className="mt-1.5 text-[15px] font-semibold text-navy/80">{product.dimensions}</p>
           <p className="mt-0.5 text-[11px] font-medium uppercase tracking-wider text-navy/40">H × W × D</p>
