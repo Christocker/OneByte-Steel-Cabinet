@@ -29,8 +29,8 @@ export default async function Products() {
         <p className="mx-auto mt-4 max-w-xl text-lg text-navy/70">
           Every cabinet in our collection — with live stock availability.
         </p>
-        <p className="mx-auto mt-2 text-[13px] font-medium italic text-navy/45">
-          Prices may change without prior notice.
+        <p className="mx-auto mt-3 text-sm font-bold text-navy/60">
+          <span aria-hidden="true">⚠ </span>Prices may change without prior notice.
         </p>
       </Reveal>
 
