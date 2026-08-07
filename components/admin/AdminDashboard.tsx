@@ -252,6 +252,7 @@ export default function AdminDashboard({
 
                 <div className="p-5 sm:p-6">
                   <h2 className="min-h-14 text-lg font-bold leading-snug text-navy">{product.name}</h2>
+                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-navy/50">Brand: {product.brand}</p>
                   <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-navy/40">Item #{product.itemNumber}</p>
                   <div className="mt-4 flex items-end justify-between gap-4 border-b border-beige-deep/70 pb-5">
                     <div>
