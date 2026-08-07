@@ -240,14 +240,21 @@ export default function AdminDashboard({
                     sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
                     className="object-cover transition-transform duration-500 hover:scale-105"
                   />
-                  <span
-                    className={`absolute right-4 top-4 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold shadow-lg ${
-                      inStock ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    <span className={`h-2 w-2 rounded-full ${inStock ? "bg-emerald-600" : "bg-red-600"}`} />
-                    {inStock ? "In Stock" : "Out of Stock"}
-                  </span>
+                  {product.preorder ? (
+                    <span className="absolute right-4 top-4 inline-flex items-center gap-2 rounded-full bg-amber-100 px-3 py-1.5 text-xs font-bold text-amber-800 shadow-lg">
+                      <span className="h-2 w-2 rounded-full bg-amber-600" />
+                      Pre-Order
+                    </span>
+                  ) : (
+                    <span
+                      className={`absolute right-4 top-4 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold shadow-lg ${
+                        inStock ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      <span className={`h-2 w-2 rounded-full ${inStock ? "bg-emerald-600" : "bg-red-600"}`} />
+                      {inStock ? "In Stock" : "Out of Stock"}
+                    </span>
+                  )}
                 </div>
 
                 <div className="p-5 sm:p-6">

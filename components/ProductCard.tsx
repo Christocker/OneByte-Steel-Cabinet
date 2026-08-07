@@ -289,7 +289,7 @@ export default function ProductCard({ product }: { product: InventoryProduct }) 
     <>
       <article className="group relative overflow-hidden rounded-3xl border-2 border-beige-deep bg-beige-soft shadow-xl shadow-navy/20 transition-all duration-500 ease-out hover:-translate-y-2 hover:border-navy/40 hover:shadow-2xl hover:shadow-navy/30 hover:z-10">
         <p className="sr-only">{product.name}</p>
-        <div className="grid grid-cols-2 gap-2 p-3">
+        <div className={`grid gap-2 p-3 ${product.images.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
           {product.images.map((src, idx) => (
             <button
               key={src}
@@ -330,20 +330,27 @@ export default function ProductCard({ product }: { product: InventoryProduct }) 
           <p className="mt-1.5 text-[15px] font-semibold text-navy/80">{product.dimensions}</p>
           <p className="mt-0.5 text-[11px] font-medium uppercase tracking-wider text-navy/40">H × W × D</p>
           <div className="mt-5 flex flex-wrap items-center justify-end gap-3 border-t border-beige-deep/70 pt-4">
-            <span
-              className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${
-                product.stock > 0
-                  ? "bg-emerald-100 text-emerald-800"
-                  : "bg-red-100 text-red-800"
-              }`}
-            >
+            {product.preorder ? (
+              <span className="inline-flex items-center gap-2 rounded-full bg-amber-100 px-3 py-1.5 text-xs font-bold text-amber-800">
+                <span className="h-2 w-2 rounded-full bg-amber-600" />
+                Pre-Order
+              </span>
+            ) : (
               <span
-                className={`h-2 w-2 rounded-full ${
-                  product.stock > 0 ? "bg-emerald-600" : "bg-red-600"
+                className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${
+                  product.stock > 0
+                    ? "bg-emerald-100 text-emerald-800"
+                    : "bg-red-100 text-red-800"
                 }`}
-              />
-              {product.stock > 0 ? "In Stock" : "Out of Stock"}
-            </span>
+              >
+                <span
+                  className={`h-2 w-2 rounded-full ${
+                    product.stock > 0 ? "bg-emerald-600" : "bg-red-600"
+                  }`}
+                />
+                {product.stock > 0 ? "In Stock" : "Out of Stock"}
+              </span>
+            )}
           </div>
         </div>
       </article>

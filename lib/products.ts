@@ -5,7 +5,8 @@ export type CabinetProduct = {
   name: string;
   price: string;
   dimensions: string;
-  images: [string, string];
+  images: string[];
+  preorder?: boolean;
 };
 
 export type InventoryProduct = CabinetProduct & {
@@ -239,6 +240,55 @@ export const products: CabinetProduct[] = [
     images: [
       "/images/products/worldcraft-wardrobe-hanger-black-woodgrain-1.png",
       "/images/products/worldcraft-wardrobe-hanger-black-woodgrain-2.png",
+    ],
+  },
+  {
+    id: "lateral-filing-4-drawers",
+    itemNumber: 20,
+    brand: "OneByte",
+    name: "Lateral Filing Cabinet 4-Drawers",
+    price: "8100",
+    dimensions: "133.1 × 90 × 45 cm",
+    images: [
+      "/images/products/lateral-filing-4-drawers-1.jpg",
+    ],
+    preorder: true,
+  },
+  {
+    id: "lateral-filing-3-drawers",
+    itemNumber: 21,
+    brand: "OneByte",
+    name: "Lateral Filing Cabinet 3-Drawers",
+    price: "6700",
+    dimensions: "103.1 × 90 × 45 cm",
+    images: [
+      "/images/products/lateral-filing-3-drawers-1.jpg",
+    ],
+    preorder: true,
+  },
+  {
+    id: "steeline-full-glass-light-gray",
+    itemNumber: 22,
+    brand: "Steeline",
+    name: "Full Glass Cabinet — Light Gray",
+    price: "5800",
+    dimensions: "180 × 80 × 40 cm",
+    images: [
+      "/images/products/steeline-full-glass-light-gray-1.png",
+      "/images/products/steeline-full-glass-light-gray-2.jpg",
+    ],
+  },
+  {
+    id: "worldcraft-wardrobe-shelves-print-pink",
+    itemNumber: 23,
+    brand: "WorldCraft",
+    name: "Wardrobe with Shelves — Print Pink",
+    price: "6800",
+    dimensions: "185 × 90 × 45 cm",
+    images: [
+      "/images/products/worldcraft-wardrobe-shelves-print-pink-1.jpg",
+      "/images/products/worldcraft-wardrobe-shelves-print-pink-2.jpg",
+      "/images/products/worldcraft-wardrobe-shelves-print-pink-3.jpg",
     ],
   },
 ];
