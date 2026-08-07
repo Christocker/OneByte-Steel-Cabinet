@@ -238,6 +238,7 @@ export default function AdminDashboard({
                     <td className="px-5 py-2.5">
                       <span className="font-semibold text-navy">{product.name}</span>
                       <span className="ml-2 text-xs font-medium text-navy/35">Item #{product.itemNumber}</span>
+                      <span className="ml-2 text-xs font-semibold uppercase tracking-wide text-navy/45">{product.brand}</span>
                     </td>
                     <td className="px-5 py-2.5 text-right">
                       <span
