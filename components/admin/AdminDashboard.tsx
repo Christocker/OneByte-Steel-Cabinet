@@ -4,9 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import type { InventoryProduct } from "@/lib/products";
+import type { CatalogProduct } from "@/lib/catalog";
 import { getStockInputError, getPriceSaveError, parseStockValue } from "@/lib/inventory-validation";
 import { formatPriceDisplay } from "@/lib/format";
+import { getAvailability, getAvailabilityLabel, getAvailabilityColor, getAvailabilityDotColor } from "@/lib/availability";
 import PriceInput from "./PriceInput";
+import ProductForm, { type ProductFormData } from "./ProductForm";
 
 function initialDrafts(products: InventoryProduct[]) {
   return Object.fromEntries(products.map((product) => [product.id, String(product.stock)]));
@@ -30,6 +33,12 @@ export default function AdminDashboard({
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
+
+  // Product management state
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<CatalogProduct | null>(null);
+  const [deletingProduct, setDeletingProduct] = useState<CatalogProduct | null>(null);
+  const [catalogProducts, setCatalogProducts] = useState<CatalogProduct[]>([]);
 
   const totalStock = products.reduce((total, product) => total + product.stock, 0);
   const inStockCount = products.filter((product) => product.stock > 0).length;
@@ -144,6 +153,73 @@ export default function AdminDashboard({
     }
   }
 
+  // Product management functions
+  async function loadCatalog() {
+    try {
+      const res = await fetch("/api/products", { credentials: "same-origin" });
+      if (res.status === 401) { window.location.assign("/admin/login"); return; }
+      if (res.ok) {
+        const data = (await res.json()) as { products?: CatalogProduct[] };
+        if (data.products) setCatalogProducts(data.products);
+      }
+    } catch { /* ignore */ }
+  }
+
+  async function handleAddProduct(data: ProductFormData) {
+    const res = await fetch("/api/products", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify(data),
+    });
+    if (res.status === 401) { window.location.assign("/admin/login"); return; }
+    if (!res.ok) {
+      const err = (await res.json().catch(() => ({}))) as { error?: string };
+      throw new Error(err.error || "Unable to create product.");
+    }
+    setShowAddForm(false);
+    setNotice("Product created. The public listing is now up to date.");
+    await loadCatalog();
+    window.location.reload();
+  }
+
+  async function handleEditProduct(data: ProductFormData) {
+    if (!editingProduct) return;
+    const res = await fetch(`/api/products/${editingProduct.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify(data),
+    });
+    if (res.status === 401) { window.location.assign("/admin/login"); return; }
+    if (!res.ok) {
+      const err = (await res.json().catch(() => ({}))) as { error?: string };
+      throw new Error(err.error || "Unable to update product.");
+    }
+    setEditingProduct(null);
+    setNotice("Product updated. The public listing is now up to date.");
+    await loadCatalog();
+    window.location.reload();
+  }
+
+  async function handleDeleteProduct() {
+    if (!deletingProduct) return;
+    const res = await fetch(`/api/products/${deletingProduct.id}`, {
+      method: "DELETE",
+      credentials: "same-origin",
+    });
+    if (res.status === 401) { window.location.assign("/admin/login"); return; }
+    if (!res.ok) {
+      const err = (await res.json().catch(() => ({}))) as { error?: string };
+      setNotice(err.error || "Unable to delete product.");
+    } else {
+      setNotice("Product removed from the public catalog.");
+      await loadCatalog();
+    }
+    setDeletingProduct(null);
+    window.location.reload();
+  }
+
   return (
     <main className="min-h-screen bg-beige text-navy">
       <header className="border-b-2 border-beige-deep bg-beige-soft/90 backdrop-blur-xl">
@@ -255,6 +331,98 @@ export default function AdminDashboard({
                 ))}
               </tbody>
             </table>
+          </div>
+        </section>
+
+        {/* Product Management Section */}
+        <section className="mt-10" aria-label="Product management">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-navy">Product Management</h2>
+              <p className="mt-1 text-sm text-navy/60">Add, edit, or remove products from the catalog.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => { setShowAddForm(true); loadCatalog(); }}
+              className="inline-flex items-center gap-2 rounded-xl bg-navy px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-navy-light"
+            >
+              + Add Product
+            </button>
+          </div>
+
+          <div className="mt-5 overflow-hidden rounded-2xl border-2 border-beige-deep bg-beige-soft shadow-lg shadow-navy/10">
+            <div className="max-h-[32rem] overflow-y-auto">
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 bg-beige-soft">
+                  <tr className="border-b border-beige-deep/60 text-left text-xs font-semibold uppercase tracking-wider text-navy/50">
+                    <th scope="col" className="px-4 py-2.5">Product</th>
+                    <th scope="col" className="hidden px-4 py-2.5 sm:table-cell">Brand</th>
+                    <th scope="col" className="hidden px-4 py-2.5 md:table-cell">Price</th>
+                    <th scope="col" className="hidden px-4 py-2.5 lg:table-cell">Stock</th>
+                    <th scope="col" className="hidden px-4 py-2.5 lg:table-cell">Status</th>
+                    <th scope="col" className="px-4 py-2.5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-beige-deep/40">
+                  {products.map((product) => {
+                    const status = getAvailability(product.preorder ?? false, product.stock);
+                    const catalogItem = catalogProducts.find((c) => c.id === product.id);
+                    return (
+                      <tr key={product.id} className="transition-colors hover:bg-beige">
+                        <td className="px-4 py-2.5">
+                          <div className="flex items-center gap-3">
+                            <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-beige">
+                              {product.images[0] && (
+                                <Image src={product.images[0]} alt="" fill className="object-cover" sizes="40px" />
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="truncate font-semibold text-navy">{product.name}</p>
+                              <p className="text-xs text-navy/40">Item #{product.itemNumber}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="hidden px-4 py-2.5 sm:table-cell">
+                          <span className="text-xs font-semibold uppercase tracking-wide text-navy/50">{product.brand}</span>
+                        </td>
+                        <td className="hidden px-4 py-2.5 md:table-cell">
+                          <span className="font-medium text-navy">{formatPriceDisplay(product.price)}</span>
+                        </td>
+                        <td className="hidden px-4 py-2.5 lg:table-cell">
+                          <span className={`inline-flex min-w-[2rem] items-center justify-center rounded-full px-2 py-0.5 text-xs font-bold ${product.stock > 0 ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"}`}>
+                            {product.stock}
+                          </span>
+                        </td>
+                        <td className="hidden px-4 py-2.5 lg:table-cell">
+                          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold ${getAvailabilityColor(status)}`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${getAvailabilityDotColor(status)}`} />
+                            {getAvailabilityLabel(status)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2.5 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => { setEditingProduct(catalogItem ?? null); }}
+                              className="rounded-lg border border-navy/20 px-3 py-1.5 text-xs font-semibold text-navy transition-colors hover:bg-navy hover:text-white"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => { setDeletingProduct(catalogItem ?? null); }}
+                              className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 transition-colors hover:bg-red-50"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
 
@@ -384,6 +552,54 @@ export default function AdminDashboard({
           })}
         </section>
       </div>
+
+      {/* Add Product Modal */}
+      {showAddForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/50 p-4 backdrop-blur-sm">
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl border-2 border-beige-deep bg-beige-soft p-6 shadow-2xl">
+            <h2 className="mb-4 text-xl font-bold text-navy">Add New Product</h2>
+            <ProductForm mode="add" onSubmit={handleAddProduct} onCancel={() => setShowAddForm(false)} />
+          </div>
+        </div>
+      )}
+
+      {/* Edit Product Modal */}
+      {editingProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/50 p-4 backdrop-blur-sm">
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl border-2 border-beige-deep bg-beige-soft p-6 shadow-2xl">
+            <h2 className="mb-4 text-xl font-bold text-navy">Edit Product</h2>
+            <ProductForm mode="edit" initial={editingProduct} onSubmit={handleEditProduct} onCancel={() => setEditingProduct(null)} />
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl border-2 border-beige-deep bg-beige-soft p-6 shadow-2xl">
+            <h2 className="text-xl font-bold text-navy">Remove Product</h2>
+            <p className="mt-3 text-sm text-navy/70">
+              Are you sure you want to remove <strong>{deletingProduct.name}</strong>? It will be hidden from the public catalog.
+            </p>
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={handleDeleteProduct}
+                className="flex-1 rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-700"
+              >
+                Yes, remove
+              </button>
+              <button
+                type="button"
+                onClick={() => setDeletingProduct(null)}
+                className="flex-1 rounded-xl border-2 border-beige-deep px-4 py-3 text-sm font-semibold text-navy transition-colors hover:bg-beige"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
