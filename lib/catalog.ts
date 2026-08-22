@@ -279,5 +279,5 @@ export async function updateProduct(
 }
 
 export async function deleteProduct(id: string): Promise<void> {
-  return updateProduct(id, { active: false });
+  await updateProduct(id, { active: false });
 }

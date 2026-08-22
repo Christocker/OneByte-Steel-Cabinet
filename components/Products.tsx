@@ -1,7 +1,6 @@
 import ExpandableGallery from "./ExpandableGallery";
 import Reveal from "./Reveal";
 import { getInventory, InventoryConfigurationError } from "@/lib/inventory";
-import { products } from "@/lib/products";
 
 async function getPublicInventory() {
   try {
@@ -9,8 +8,8 @@ async function getPublicInventory() {
   } catch (error) {
     if (!(error instanceof InventoryConfigurationError)) throw error;
 
-    // Keep the storefront available with a conservative zero-stock state until storage is configured.
-    return products.map((product) => ({ ...product, stock: 0 }));
+    // Keep the storefront available with an empty state until storage is configured.
+    return [];
   }
 }
 

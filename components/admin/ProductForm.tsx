@@ -8,7 +8,7 @@ import { formatPriceDisplay } from "@/lib/format";
 
 type ProductFormProps = {
   mode: "add" | "edit";
-  initial?: CatalogProduct;
+  initial?: CatalogProduct & { stock?: number };
   onSubmit: (data: ProductFormData) => Promise<void>;
   onCancel: () => void;
 };
@@ -159,7 +159,7 @@ export default function ProductForm({ mode, initial, onSubmit, onCancel }: Produ
         <div className="mt-2 flex items-center gap-3">
           <button
             type="button"
-            onClick={() => setStock((s) => Math.max(0, s - 1))}
+            onClick={() => setStock((s: number) => Math.max(0, s - 1))}
             className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-beige-deep bg-beige text-lg font-bold text-navy transition-colors hover:bg-navy hover:text-white"
           >
             -
@@ -174,7 +174,7 @@ export default function ProductForm({ mode, initial, onSubmit, onCancel }: Produ
           />
           <button
             type="button"
-            onClick={() => setStock((s) => s + 1)}
+            onClick={() => setStock((s: number) => s + 1)}
             className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-beige-deep bg-beige text-lg font-bold text-navy transition-colors hover:bg-navy hover:text-white"
           >
             +
