@@ -13,6 +13,7 @@ import { createPortal } from "react-dom";
 import { lockLightbox } from "@/lib/lightbox";
 import type { InventoryProduct } from "@/lib/products";
 import { formatPriceDisplay } from "@/lib/format";
+import { getAvailability, getAvailabilityLabel, getAvailabilityColor, getAvailabilityDotColor } from "@/lib/availability";
 
 type DragSample = { x: number; t: number };
 
@@ -353,27 +354,15 @@ export default function ProductCard({ product }: { product: InventoryProduct }) 
           <p className="mt-1.5 text-[15px] font-semibold text-navy/80">{product.dimensions}</p>
           <p className="mt-0.5 text-[11px] font-medium uppercase tracking-wider text-navy/40">H × W × D</p>
           <div className="mt-auto flex flex-wrap items-center justify-end gap-3 border-t border-beige-deep/70 pt-4">
-            {product.preorder ? (
-              <span className="inline-flex items-center gap-2 rounded-full bg-amber-100 px-3 py-1.5 text-xs font-bold text-amber-800">
-                <span className="h-2 w-2 rounded-full bg-amber-600" />
-                Pre-Order
-              </span>
-            ) : (
-              <span
-                className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${
-                  product.stock > 0
-                    ? "bg-emerald-100 text-emerald-800"
-                    : "bg-red-100 text-red-800"
-                }`}
-              >
-                <span
-                  className={`h-2 w-2 rounded-full ${
-                    product.stock > 0 ? "bg-emerald-600" : "bg-red-600"
-                  }`}
-                />
-                {product.stock > 0 ? "In Stock" : "Out of Stock"}
-              </span>
-            )}
+            {(() => {
+              const status = getAvailability(product.preorder ?? false, product.stock);
+              return (
+                <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${getAvailabilityColor(status)}`}>
+                  <span className={`h-2 w-2 rounded-full ${getAvailabilityDotColor(status)}`} />
+                  {getAvailabilityLabel(status)}
+                </span>
+              );
+            })()}
           </div>
         </div>
       </article>
