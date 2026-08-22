@@ -84,40 +84,52 @@ function parseRow(row: unknown): CatalogProduct {
   };
 }
 
-async function readSupabaseAll(config: SupabaseConfig): Promise<CatalogProduct[]> {
-  const res = await fetch(
-    `${config.baseUrl}/rest/v1/cabinet_products?select=*&order=item_number.asc`,
-    { headers: headers(config), cache: "no-store" }
-  );
-  if (!res.ok) throw new Error(`Catalog fetch failed (${res.status}).`);
-  const data = (await res.json()) as unknown;
-  if (!Array.isArray(data)) throw new Error("Invalid catalog response.");
-  return data.map(parseRow);
+async function readSupabaseAll(config: SupabaseConfig): Promise<CatalogProduct[] | null> {
+  try {
+    const res = await fetch(
+      `${config.baseUrl}/rest/v1/cabinet_products?select=*&order=item_number.asc`,
+      { headers: headers(config), cache: "no-store" }
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as unknown;
+    if (!Array.isArray(data)) return null;
+    return data.map(parseRow);
+  } catch {
+    return null;
+  }
 }
 
-async function readSupabaseActive(config: SupabaseConfig): Promise<CatalogProduct[]> {
-  const res = await fetch(
-    `${config.baseUrl}/rest/v1/cabinet_products?select=*&active=eq.true&order=item_number.asc`,
-    { headers: headers(config), cache: "no-store" }
-  );
-  if (!res.ok) throw new Error(`Catalog fetch failed (${res.status}).`);
-  const data = (await res.json()) as unknown;
-  if (!Array.isArray(data)) throw new Error("Invalid catalog response.");
-  return data.map(parseRow);
+async function readSupabaseActive(config: SupabaseConfig): Promise<CatalogProduct[] | null> {
+  try {
+    const res = await fetch(
+      `${config.baseUrl}/rest/v1/cabinet_products?select=*&active=eq.true&order=item_number.asc`,
+      { headers: headers(config), cache: "no-store" }
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as unknown;
+    if (!Array.isArray(data)) return null;
+    return data.map(parseRow);
+  } catch {
+    return null;
+  }
 }
 
 async function readSupabaseOne(
   config: SupabaseConfig,
   id: string
 ): Promise<CatalogProduct | null> {
-  const res = await fetch(
-    `${config.baseUrl}/rest/v1/cabinet_products?select=*&id=eq.${encodeURIComponent(id)}`,
-    { headers: headers(config), cache: "no-store" }
-  );
-  if (!res.ok) throw new Error(`Catalog fetch failed (${res.status}).`);
-  const data = (await res.json()) as unknown;
-  if (!Array.isArray(data) || data.length === 0) return null;
-  return parseRow(data[0]);
+  try {
+    const res = await fetch(
+      `${config.baseUrl}/rest/v1/cabinet_products?select=*&id=eq.${encodeURIComponent(id)}`,
+      { headers: headers(config), cache: "no-store" }
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as unknown;
+    if (!Array.isArray(data) || data.length === 0) return null;
+    return parseRow(data[0]);
+  } catch {
+    return null;
+  }
 }
 
 async function writeSupabase(
@@ -164,17 +176,30 @@ async function writeLocal(products: CatalogProduct[]): Promise<void> {
 
 export async function getActiveProducts(): Promise<CatalogProduct[]> {
   const config = getSupabaseConfig();
-  return config ? readSupabaseActive(config) : (await readLocalAll()).filter((p) => p.active);
+  if (config) {
+    const rows = await readSupabaseActive(config);
+    if (rows) return rows;
+    // Table may not exist yet — fall back to local file
+  }
+  const all = await readLocalAll();
+  return all.filter((p) => p.active);
 }
 
 export async function getAllProducts(): Promise<CatalogProduct[]> {
   const config = getSupabaseConfig();
-  return config ? readSupabaseAll(config) : readLocalAll();
+  if (config) {
+    const rows = await readSupabaseAll(config);
+    if (rows) return rows;
+  }
+  return readLocalAll();
 }
 
 export async function getProductById(id: string): Promise<CatalogProduct | null> {
   const config = getSupabaseConfig();
-  if (config) return readSupabaseOne(config, id);
+  if (config) {
+    const row = await readSupabaseOne(config, id);
+    if (row) return row;
+  }
   const all = await readLocalAll();
   return all.find((p) => p.id === id) ?? null;
 }

@@ -1,0 +1,369 @@
+[
+  {
+    "id": "full-metal-light-gray",
+    "item_number": 1,
+    "brand": "Steeline",
+    "name": "Full Metal Cabinet — Light Gray",
+    "price": "5800",
+    "dimensions": "180 × 80 × 40 cm",
+    "images": [
+      "/images/products/steeline-full-metal-light-gray-1.png",
+      "/images/products/steeline-full-metal-light-gray-2.png"
+    ],
+    "preorder": false,
+    "active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "full-glass-sliding-gray-white",
+    "item_number": 2,
+    "brand": "WorldCraft",
+    "name": "Full Glass Sliding Cabinet — Gray & White",
+    "price": "7200",
+    "dimensions": "185 × 90 × 40 cm",
+    "images": [
+      "/images/products/worldcraft-full-glass-sliding-gray-white-1.jpg",
+      "/images/products/worldcraft-full-glass-sliding-gray-white-2.png"
+    ],
+    "preorder": false,
+    "active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "full-glass-sliding-white",
+    "item_number": 3,
+    "brand": "WorldCraft",
+    "name": "Full Glass Sliding Cabinet — White",
+    "price": "7500",
+    "dimensions": "185 × 90 × 40 cm",
+    "images": [
+      "/images/products/worldcraft-full-glass-sliding-white-1.png",
+      "/images/products/worldcraft-full-glass-sliding-white-2.jpg"
+    ],
+    "preorder": false,
+    "active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "full-glass-white",
+    "item_number": 4,
+    "brand": "WorldCraft",
+    "name": "Full Glass Cabinet — White",
+    "price": "7300",
+    "dimensions": "185 × 90 × 40 cm",
+    "images": [
+      "/images/products/worldcraft-full-glass-white-1.png",
+      "/images/products/worldcraft-full-glass-white-2.jpg"
+    ],
+    "preorder": false,
+    "active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "full-metal-gray-white",
+    "item_number": 5,
+    "brand": "WorldCraft",
+    "name": "Full Metal Cabinet — Gray & White",
+    "price": "6000",
+    "dimensions": "185 × 85 × 40 cm",
+    "images": [
+      "/images/products/worldcraft-full-metal-gray-white-1.png",
+      "/images/products/worldcraft-full-metal-gray-white-2.jpg"
+    ],
+    "preorder": false,
+    "active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "half-glass-white",
+    "item_number": 6,
+    "brand": "WorldCraft",
+    "name": "Half Glass Cabinet — White",
+    "price": "6800",
+    "dimensions": "185 × 90 × 40 cm",
+    "images": [
+      "/images/products/worldcraft-half-glass-white-1.png",
+      "/images/products/worldcraft-half-glass-white-2.jpg"
+    ],
+    "preorder": false,
+    "active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "wardrobe-brown-beige",
+    "item_number": 7,
+    "brand": "WorldCraft",
+    "name": "Wardrobe Cabinet — Brown & Beige",
+    "price": "7500",
+    "dimensions": "185 × 90 × 45 cm",
+    "images": [
+      "/images/products/worldcraft-wardrobe-brown-beige-1.png",
+      "/images/products/worldcraft-wardrobe-brown-beige-2.png"
+    ],
+    "preorder": false,
+    "active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "wardrobe-shelves-woodgrain",
+    "item_number": 8,
+    "brand": "WorldCraft",
+    "name": "Wardrobe with Shelves — Woodgrain",
+    "price": "7200",
+    "dimensions": "185 × 90 × 45 cm",
+    "images": [
+      "/images/products/worldcraft-wardrobe-shelves-woodgrain-1.png",
+      "/images/products/worldcraft-wardrobe-shelves-woodgrain-2.png"
+    ],
+    "preorder": false,
+    "active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "half-glass-light-gray",
+    "item_number": 9,
+    "brand": "Steeline",
+    "name": "Half Glass Cabinet — Light Gray",
+    "price": "5800",
+    "dimensions": "180 × 80 × 40 cm",
+    "images": [
+      "/images/products/steeline-half-glass-light-gray-1.png",
+      "/images/products/steeline-half-glass-light-gray-2.jpg"
+    ],
+    "preorder": false,
+    "active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "full-glass-coffee-beige",
+    "item_number": 10,
+    "brand": "WorldCraft",
+    "name": "Full Glass Cabinet — Coffee Beige",
+    "price": "7300",
+    "dimensions": "185 × 90 × 40 cm",
+    "images": [
+      "/images/products/worldcraft-full-glass-coffee-beige-1.png",
+      "/images/products/worldcraft-full-glass-coffee-beige-2.jpg"
+    ],
+    "preorder": false,
+    "active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "full-metal-white",
+    "item_number": 11,
+    "brand": "WorldCraft",
+    "name": "Full Metal Cabinet — White",
+    "price": "6800",
+    "dimensions": "185 × 85 × 40 cm",
+    "images": [
+      "/images/products/worldcraft-full-metal-white-1.png",
+      "/images/products/worldcraft-full-metal-white-2.png"
+    ],
+    "preorder": false,
+    "active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "half-glass-coffee-beige",
+    "item_number": 12,
+    "brand": "WorldCraft",
+    "name": "Half Glass Cabinet — Coffee Beige",
+    "price": "6800",
+    "dimensions": "185 × 90 × 40 cm",
+    "images": [
+      "/images/products/worldcraft-half-glass-coffee-beige-1.png",
+      "/images/products/worldcraft-half-glass-coffee-beige-2.jpg"
+    ],
+    "preorder": false,
+    "active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "multi-purpose-wardrobe",
+    "item_number": 13,
+    "brand": "WorldCraft",
+    "name": "Multi-Purpose Wardrobe",
+    "price": "7800",
+    "dimensions": "180 × 80 × 40 cm",
+    "images": [
+      "/images/products/worldcraft-multi-purpose-wardrobe-1.png",
+      "/images/products/worldcraft-multi-purpose-wardrobe-2.png"
+    ],
+    "preorder": false,
+    "active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "wardrobe-shelves-print-gray",
+    "item_number": 14,
+    "brand": "WorldCraft",
+    "name": "Wardrobe with Shelves — Print Gray",
+    "price": "6800",
+    "dimensions": "185 × 90 × 45 cm",
+    "images": [
+      "/images/products/worldcraft-wardrobe-shelves-print-gray-1.png",
+      "/images/products/worldcraft-wardrobe-shelves-print-gray-2.jpg"
+    ],
+    "preorder": false,
+    "active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "wardrobe-shelves-white",
+    "item_number": 15,
+    "brand": "WorldCraft",
+    "name": "Wardrobe with Shelves — White",
+    "price": "7600",
+    "dimensions": "185 × 90 × 45 cm",
+    "images": [
+      "/images/products/worldcraft-wardrobe-shelves-white-1.png",
+      "/images/products/worldcraft-wardrobe-shelves-white-2.png"
+    ],
+    "preorder": false,
+    "active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "half-glass-black-woodgrain",
+    "item_number": 16,
+    "brand": "WorldCraft",
+    "name": "Half Glass Cabinet — Black Woodgrain",
+    "price": "6200",
+    "dimensions": "185 × 90 × 40 cm",
+    "images": [
+      "/images/products/worldcraft-half-glass-black-woodgrain-1.png",
+      "/images/products/worldcraft-half-glass-black-woodgrain-2.jpg"
+    ],
+    "preorder": false,
+    "active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "wardrobe-hanger-white",
+    "item_number": 17,
+    "brand": "WorldCraft",
+    "name": "Wardrobe with Hanger — White",
+    "price": "7000",
+    "dimensions": "185 × 90 × 45 cm",
+    "images": [
+      "/images/products/worldcraft-wardrobe-hanger-white-1.png",
+      "/images/products/worldcraft-wardrobe-hanger-white-2.png"
+    ],
+    "preorder": false,
+    "active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "full-glass-gray-white",
+    "item_number": 18,
+    "brand": "WorldCraft",
+    "name": "Full Glass Cabinet — Gray & White",
+    "price": "6000",
+    "dimensions": "185 × 90 × 40 cm",
+    "images": [
+      "/images/products/worldcraft-full-glass-gray-white-1.png",
+      "/images/products/worldcraft-full-glass-gray-white-2.jpg"
+    ],
+    "preorder": false,
+    "active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "wardrobe-hanger-black-woodgrain",
+    "item_number": 19,
+    "brand": "WorldCraft",
+    "name": "Wardrobe with Hanger — Black Woodgrain",
+    "price": "6600",
+    "dimensions": "185 × 90 × 45 cm",
+    "images": [
+      "/images/products/worldcraft-wardrobe-hanger-black-woodgrain-1.png",
+      "/images/products/worldcraft-wardrobe-hanger-black-woodgrain-2.png"
+    ],
+    "preorder": false,
+    "active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "lateral-filing-4-drawers",
+    "item_number": 20,
+    "brand": "OneByte",
+    "name": "Lateral Filing Cabinet 4-Drawers",
+    "price": "8100",
+    "dimensions": "133.1 × 90 × 45 cm",
+    "images": [
+      "/images/products/lateral-filing-4-drawers-1.jpg"
+    ],
+    "preorder": true,
+    "active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "lateral-filing-3-drawers",
+    "item_number": 21,
+    "brand": "OneByte",
+    "name": "Lateral Filing Cabinet 3-Drawers",
+    "price": "6700",
+    "dimensions": "103.1 × 90 × 45 cm",
+    "images": [
+      "/images/products/lateral-filing-3-drawers-1.jpg"
+    ],
+    "preorder": true,
+    "active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "steeline-full-glass-light-gray",
+    "item_number": 22,
+    "brand": "Steeline",
+    "name": "Full Glass Cabinet — Light Gray",
+    "price": "5800",
+    "dimensions": "180 × 80 × 40 cm",
+    "images": [
+      "/images/products/steeline-full-glass-light-gray-1.png",
+      "/images/products/steeline-full-glass-light-gray-2.jpg"
+    ],
+    "preorder": false,
+    "active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "worldcraft-wardrobe-shelves-print-pink",
+    "item_number": 23,
+    "brand": "WorldCraft",
+    "name": "Wardrobe with Shelves — Print Pink",
+    "price": "6800",
+    "dimensions": "185 × 90 × 45 cm",
+    "images": [
+      "/images/products/worldcraft-wardrobe-shelves-print-pink-1.jpg",
+      "/images/products/worldcraft-wardrobe-shelves-print-pink-2.jpg",
+      "/images/products/worldcraft-wardrobe-shelves-print-pink-3.jpg"
+    ],
+    "preorder": false,
+    "active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  }
+]
