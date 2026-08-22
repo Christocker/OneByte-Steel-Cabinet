@@ -1,6 +1,7 @@
 import { readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { products, type InventoryProduct } from "./products";
+import { type InventoryProduct } from "./products";
+import { getActiveProducts, getProductById, type CatalogProduct } from "./catalog";
 import { parsePriceValue, parseStockValue } from "./inventory-validation";
 
 const LOCAL_INVENTORY_FILE = path.join(process.cwd(), "data", "inventory.json");
@@ -117,7 +118,8 @@ async function writeLocalRow(productId: string, stock: number, price?: string) {
   const current = await readLocalRows();
   const byId = new Map(current.map((row) => [row.product_id, row]));
   byId.set(productId, { product_id: productId, stock, ...(price ? { price } : {}) });
-  const rows = products.map((product) => {
+  const catalogProducts = await getActiveProducts();
+  const rows = catalogProducts.map((product) => {
     const saved = byId.get(product.id);
     const row: Record<string, unknown> = { product_id: product.id, stock: saved?.stock ?? 0 };
     if (saved?.price) row.price = saved.price;
@@ -196,23 +198,34 @@ async function writeSupabaseRow(config: SupabaseConfig, productId: string, stock
   throw new Error(`Inventory storage update failed with status ${firstStatus}.`);
 }
 
+function catalogToInventory(product: CatalogProduct, stock: number, priceOverride?: string): InventoryProduct {
+  return {
+    id: product.id,
+    itemNumber: product.item_number,
+    brand: product.brand,
+    name: product.name,
+    price: priceOverride || product.price,
+    dimensions: product.dimensions,
+    images: product.images,
+    preorder: product.preorder || undefined,
+    stock,
+  };
+}
+
 export async function getInventory(): Promise<InventoryProduct[]> {
+  const catalogProducts = await getActiveProducts();
   const config = getSupabaseConfig();
   const rows = config ? await readSupabaseRows(config) : await readLocalRows();
   const byProductId = new Map(rows.map((row) => [row.product_id, row]));
 
-  return products.map((product) => {
+  return catalogProducts.map((product) => {
     const row = byProductId.get(product.id);
-    return {
-      ...product,
-      stock: row?.stock ?? 0,
-      price: row?.price || product.price,
-    };
+    return catalogToInventory(product, row?.stock ?? 0, row?.price);
   });
 }
 
 export async function updateInventory(productId: string, value: unknown, price?: string) {
-  const product = products.find((candidate) => candidate.id === productId);
+  const product = await getProductById(productId);
   if (!product) {
     throw new InventoryValidationError("That cabinet does not exist.");
   }
@@ -235,5 +248,5 @@ export async function updateInventory(productId: string, value: unknown, price?:
   if (config) await writeSupabaseRow(config, productId, stock, savedPrice);
   else await writeLocalRow(productId, stock, savedPrice);
 
-  return { ...product, stock, price: savedPrice ?? product.price };
+  return catalogToInventory(product, stock, savedPrice);
 }
