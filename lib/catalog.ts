@@ -116,8 +116,8 @@ function parseRow(row: unknown): CatalogProduct {
     price: String(r.price ?? "0"),
     dimensions: String(r.dimensions ?? ""),
     images: Array.isArray(r.images) ? (r.images as string[]) : [],
-    preorder: Boolean(r.preorder),
-    active: Boolean(r.active ?? true),
+    preorder: r.preorder === true || r.preorder === "true",
+    active: r.active === true || r.active === "true",
     created_at: String(r.created_at ?? ""),
     updated_at: String(r.updated_at ?? ""),
   };
