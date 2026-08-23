@@ -182,10 +182,14 @@ export default function AdminDashboard({
       const err = (await res.json().catch(() => ({}))) as { error?: string };
       throw new Error(err.error || "Unable to create product.");
     }
+    const result = (await res.json()) as { product?: InventoryProduct };
+    if (result.product) {
+      setProducts((prev) => [...prev, result.product!]);
+      setDrafts((prev) => ({ ...prev, [result.product!.id]: String(result.product!.stock) }));
+      setPriceDrafts((prev) => ({ ...prev, [result.product!.id]: String(result.product!.price) }));
+    }
     setShowAddForm(false);
     setNotice("Product created. The public listing is now up to date.");
-    await loadCatalog();
-    window.location.reload();
   }
 
   async function handleEditProduct(data: ProductFormData) {
@@ -201,10 +205,27 @@ export default function AdminDashboard({
       const err = (await res.json().catch(() => ({}))) as { error?: string };
       throw new Error(err.error || "Unable to update product.");
     }
+    // Also update stock/price via inventory API if changed
+    if (data.stock !== editingProduct.stock || data.price !== editingProduct.price) {
+      await fetch("/api/inventory", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ productId: editingProduct.id, stock: data.stock, price: data.price }),
+      });
+    }
+    const result = (await res.json()) as { product?: CatalogProduct };
+    if (result.product) {
+      setProducts((prev) => prev.map((p) =>
+        p.id === editingProduct.id
+          ? { ...p, name: result.product!.name, brand: result.product!.brand, price: result.product!.price, dimensions: result.product!.dimensions, images: result.product!.images, preorder: result.product!.preorder, stock: data.stock }
+          : p
+      ));
+      setDrafts((prev) => ({ ...prev, [editingProduct.id]: String(data.stock) }));
+      setPriceDrafts((prev) => ({ ...prev, [editingProduct.id]: data.price }));
+    }
     setEditingProduct(null);
     setNotice("Product updated. The public listing is now up to date.");
-    await loadCatalog();
-    window.location.reload();
   }
 
   async function handleDeleteProduct() {
@@ -218,11 +239,12 @@ export default function AdminDashboard({
       const err = (await res.json().catch(() => ({}))) as { error?: string };
       setNotice(err.error || "Unable to delete product.");
     } else {
+      setProducts((prev) => prev.filter((p) => p.id !== deletingProduct.id));
+      setDrafts((prev) => { const n = { ...prev }; delete n[deletingProduct.id]; return n; });
+      setPriceDrafts((prev) => { const n = { ...prev }; delete n[deletingProduct.id]; return n; });
       setNotice("Product removed from the public catalog.");
-      await loadCatalog();
     }
     setDeletingProduct(null);
-    window.location.reload();
   }
 
   return (
@@ -348,7 +370,7 @@ export default function AdminDashboard({
             </div>
             <button
               type="button"
-              onClick={() => { setShowAddForm(true); loadCatalog(); }}
+              onClick={() => setShowAddForm(true)}
               className="inline-flex items-center gap-2 rounded-xl bg-navy px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-navy-light"
             >
               + Add Product
