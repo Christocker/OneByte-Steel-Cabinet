@@ -62,12 +62,15 @@ export async function POST(request: Request) {
   if (dimensions.length > 100) return json({ error: "Dimensions must be 100 characters or fewer." }, 400);
   if (!Number.isInteger(stock) || stock < 0) return json({ error: "Stock must be a non-negative integer." }, 400);
 
-  const id = name
+  const baseId = name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 
-  if (!id) return json({ error: "Could not generate a product ID." }, 400);
+  if (!baseId) return json({ error: "Could not generate a product ID." }, 400);
+
+  // Add timestamp suffix to ensure uniqueness
+  const id = `${baseId}-${Date.now()}`;
 
   try {
     const product = await createProduct({
