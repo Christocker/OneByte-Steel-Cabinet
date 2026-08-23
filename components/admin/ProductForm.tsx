@@ -192,7 +192,7 @@ export default function ProductForm({ mode, initial, onSubmit, onCancel }: Produ
             />
           </div>
           <div>
-            <span className="text-[11px] font-medium text-navy/40">Depth</span>
+            <span className="text-[11px] font-medium text-navy/40">Length</span>
             <input
               type="number"
               value={dimD}
