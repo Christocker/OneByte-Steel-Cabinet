@@ -608,7 +608,12 @@ export default function AdminDashboard({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/50 p-4 backdrop-blur-sm">
           <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl border-2 border-beige-deep bg-beige-soft p-6 shadow-2xl">
             <h2 className="mb-4 text-xl font-bold text-navy">Edit Product</h2>
-            <ProductForm mode="edit" initial={editingProduct} onSubmit={handleEditProduct} onCancel={() => setEditingProduct(null)} />
+            <ProductForm
+              mode="edit"
+              initial={{ ...editingProduct, stock: products.find((p) => p.id === editingProduct.id)?.stock ?? 0 }}
+              onSubmit={handleEditProduct}
+              onCancel={() => setEditingProduct(null)}
+            />
           </div>
         </div>
       )}
