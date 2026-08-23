@@ -72,11 +72,6 @@ export async function POST(request: Request) {
   // Add timestamp suffix to ensure uniqueness
   const id = `${baseId}-${Date.now()}`;
 
-  // Use client-provided item number (computed from the loaded product list)
-  const nextItemNumber = typeof v.nextItemNumber === "number" && v.nextItemNumber > 0
-    ? v.nextItemNumber
-    : undefined;
-
   try {
     const product = await createProduct({
       id,
@@ -87,7 +82,6 @@ export async function POST(request: Request) {
       images,
       stock,
       preorder,
-      nextItemNumber,
     });
     revalidatePath("/");
     return json({ product }, 201);

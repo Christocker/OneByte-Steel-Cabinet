@@ -247,12 +247,12 @@ export async function getProductById(id: string): Promise<CatalogProduct | null>
 }
 
 export async function getNextItemNumber(): Promise<number> {
-  // Query only active products directly from DB to avoid filtering issues
+  // Query ALL items (active or not) and return max + 1 for guaranteed uniqueness
   const config = getSupabaseConfig();
   if (config) {
     try {
       const res = await fetch(
-        `${config.baseUrl}/rest/v1/cabinet_products?select=item_number&active=eq.true&order=item_number.desc&limit=1`,
+        `${config.baseUrl}/rest/v1/cabinet_products?select=item_number&order=item_number.desc&limit=1`,
         { headers: headers(config), cache: "no-store" }
       );
       if (res.ok) {
@@ -267,9 +267,8 @@ export async function getNextItemNumber(): Promise<number> {
   }
   // Fallback: read from local catalog
   const all = await readLocalAll();
-  const active = all.filter((p) => p.active);
-  if (active.length === 0) return 1;
-  return Math.max(...active.map((p) => p.item_number)) + 1;
+  if (all.length === 0) return 1;
+  return Math.max(...all.map((p) => p.item_number)) + 1;
 }
 
 export type CreateProductInput = {
