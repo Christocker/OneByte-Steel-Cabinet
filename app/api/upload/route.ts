@@ -21,6 +21,25 @@ function getSupabaseConfig() {
   return { baseUrl: url.replace(/\/+$/, ""), key };
 }
 
+async function ensureBucket(config: { baseUrl: string; key: string }, bucket: string) {
+  const headers = { apikey: config.key, Authorization: `Bearer ${config.key}` };
+  // Check if bucket exists
+  const listRes = await fetch(`${config.baseUrl}/storage/v1/bucket`, {
+    method: "GET",
+    headers,
+  });
+  if (listRes.ok) {
+    const buckets = (await listRes.json()) as { id: string }[];
+    if (buckets.some((b) => b.id === bucket)) return;
+  }
+  // Create bucket if missing
+  await fetch(`${config.baseUrl}/storage/v1/bucket`, {
+    method: "POST",
+    headers: { ...headers, "Content-Type": "application/json" },
+    body: JSON.stringify({ id: bucket, name: bucket, public: true }),
+  });
+}
+
 export async function POST(request: Request) {
   if (!(await isAdmin())) {
     return json({ error: "Authentication required." }, 401);
@@ -34,6 +53,9 @@ export async function POST(request: Request) {
   if (!config) {
     return json({ error: "Storage is not configured." }, 503);
   }
+
+  // Ensure the storage bucket exists
+  await ensureBucket(config, BUCKET);
 
   let formData: FormData;
   try {
