@@ -73,13 +73,13 @@ async function ensureTable(config: SupabaseConfig): Promise<void> {
   // Try a simple query to check if the table exists
   try {
     const res = await fetch(
-      `${config.baseUrl}/rest/v1/cabinet_products?select=id&limit=0`,
+      `${config.baseUrl}/rest/v1/cabinet_products?select=id&limit=1`,
       { headers: headers(config), cache: "no-store" }
     );
     if (res.ok) { tableEnsured = true; return; }
   } catch { /* table missing */ }
 
-  // Use Supabase client to create the table
+  // Table doesn't exist — create it via Supabase client SQL
   const { createClient } = await import("@supabase/supabase-js");
   const supabase = createClient(config.baseUrl, config.key);
 
@@ -98,25 +98,9 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.cabinet_products TO service
 `;
 
   const { error } = await supabase.rpc("exec_sql", { query: sql });
-
-  if (error) {
-    // exec_sql might not exist — try direct SQL via pg endpoint
-    const pgRes = await fetch(`${config.baseUrl}/pg`, {
-      method: "POST",
-      headers: {
-        apikey: config.key,
-        Authorization: `Bearer ${config.key}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ query: sql }),
-    });
-
-    if (!pgRes.ok) {
-      throw new CatalogError(
-        "Could not auto-create the product table. Please run the migration manually in your Supabase SQL Editor."
-      );
-    }
-  }
+  if (error) throw new CatalogError(
+    "Could not auto-create the product table. Please run the migration manually in your Supabase SQL Editor."
+  );
 
   tableEnsured = true;
 }
