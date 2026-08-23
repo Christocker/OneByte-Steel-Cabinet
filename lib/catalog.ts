@@ -203,6 +203,7 @@ async function writeSupabase(
     body: body ? JSON.stringify(body) : undefined,
     cache: "no-store",
   });
+  if (res.status === 204 || res.status === 409) return null; // 409 = already exists, treat as success
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     throw new Error(`Catalog write failed (${res.status}): ${text}`);
