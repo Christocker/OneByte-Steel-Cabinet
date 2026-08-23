@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import type { InventoryProduct } from "@/lib/products";
 import type { CatalogProduct } from "@/lib/catalog";
 import { getStockInputError, getPriceSaveError, parseStockValue } from "@/lib/inventory-validation";
@@ -39,6 +39,11 @@ export default function AdminDashboard({
   const [editingProduct, setEditingProduct] = useState<CatalogProduct | null>(null);
   const [deletingProduct, setDeletingProduct] = useState<CatalogProduct | null>(null);
   const [catalogProducts, setCatalogProducts] = useState<CatalogProduct[]>([]);
+
+  // Load catalog on mount so edit/delete work immediately
+  useEffect(() => {
+    loadCatalog();
+  }, []);
 
   const totalStock = products.reduce((total, product) => total + product.stock, 0);
   const inStockCount = products.filter((product) => product.stock > 0).length;
@@ -366,7 +371,19 @@ export default function AdminDashboard({
                 <tbody className="divide-y divide-beige-deep/40">
                   {products.map((product) => {
                     const status = getAvailability(product.preorder ?? false, product.stock);
-                    const catalogItem = catalogProducts.find((c) => c.id === product.id);
+                    const catalogItem: CatalogProduct = {
+                      id: product.id,
+                      item_number: product.itemNumber,
+                      brand: product.brand,
+                      name: product.name,
+                      price: product.price,
+                      dimensions: product.dimensions,
+                      images: product.images,
+                      preorder: product.preorder ?? false,
+                      active: true,
+                      created_at: "",
+                      updated_at: "",
+                    };
                     return (
                       <tr key={product.id} className="transition-colors hover:bg-beige">
                         <td className="px-4 py-2.5">
