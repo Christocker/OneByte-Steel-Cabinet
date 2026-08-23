@@ -79,6 +79,10 @@ async function ensureTable(config: SupabaseConfig): Promise<void> {
     if (res.ok) { tableEnsured = true; return; }
   } catch { /* table missing */ }
 
+  // Use Supabase client to create the table
+  const { createClient } = await import("@supabase/supabase-js");
+  const supabase = createClient(config.baseUrl, config.key);
+
   const sql = `
 CREATE TABLE IF NOT EXISTS public.cabinet_products (
   id text PRIMARY KEY, item_number integer NOT NULL UNIQUE,
@@ -93,58 +97,28 @@ REVOKE ALL ON TABLE public.cabinet_products FROM anon, authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.cabinet_products TO service_role;
 `;
 
-  // Extract project ref from URL (e.g. https://zlgsezzyiyvrludcebvr.supabase.co -> zlgsezzyiyvrludcebvr)
-  const urlMatch = config.baseUrl.match(/https?:\/\/([a-z0-9]+)\.supabase\.co/);
-  const projectRef = urlMatch?.[1];
+  const { error } = await supabase.rpc("exec_sql", { query: sql }).single().select();
 
-  // Try Management API first (most reliable)
-  if (projectRef) {
-    try {
-      const mgmtRes = await fetch(
-        `https://api.supabase.com/v1/projects/${projectRef}/database/query`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${config.key}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ query: sql }),
-        }
-      );
-      if (mgmtRes.ok) { tableEnsured = true; return; }
-    } catch { /* try next */ }
-  }
-
-  // Try /pg endpoint
-  try {
+  if (error) {
+    // exec_sql might not exist — try direct SQL via pg endpoint
     const pgRes = await fetch(`${config.baseUrl}/pg`, {
       method: "POST",
       headers: {
-        ...headers(config),
+        apikey: config.key,
+        Authorization: `Bearer ${config.key}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ query: sql }),
     });
-    if (pgRes.ok) { tableEnsured = true; return; }
-  } catch { /* try next */ }
 
-  // Try RPC endpoint with a SQL function
-  try {
-    const rpcBody = { query: sql };
-    const rpcRes = await fetch(`${config.baseUrl}/rest/v1/rpc`, {
-      method: "POST",
-      headers: {
-        ...headers(config),
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(rpcBody),
-    });
-    if (rpcRes.ok) { tableEnsured = true; return; }
-  } catch { /* failed */ }
+    if (!pgRes.ok) {
+      throw new CatalogError(
+        "Could not auto-create the product table. Please run the migration manually in your Supabase SQL Editor."
+      );
+    }
+  }
 
-  throw new CatalogError(
-    "Could not auto-create the product table. Please run the migration manually in your Supabase SQL Editor."
-  );
+  tableEnsured = true;
 }
 
 function parseRow(row: unknown): CatalogProduct {
