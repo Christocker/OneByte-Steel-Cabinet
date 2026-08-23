@@ -190,20 +190,22 @@ export default function ProductForm({ mode, initial, onSubmit, onCancel }: Produ
 
       <div>
         <label className="text-sm font-semibold text-navy">Pre-Order</label>
-        <button
-          type="button"
-          onClick={() => setPreorder(!preorder)}
-          className={`mt-2 relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-300 ${
-            preorder ? "bg-amber-500" : "bg-navy/20"
-          }`}
-        >
-          <span
-            className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-300 ${
-              preorder ? "translate-x-7" : "translate-x-1"
+        <div className="mt-2 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setPreorder(!preorder)}
+            className={`relative inline-flex h-7 w-14 flex-shrink-0 items-center rounded-full transition-colors duration-300 ${
+              preorder ? "bg-amber-500" : "bg-navy/20"
             }`}
-          />
-        </button>
-        <span className="ml-3 text-sm font-medium text-navy">{preorder ? "ON" : "OFF"}</span>
+          >
+            <span
+              className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-300 ${
+                preorder ? "translate-x-7" : "translate-x-1"
+              }`}
+            />
+          </button>
+          <span className="text-sm font-medium text-navy">{preorder ? "ON" : "OFF"}</span>
+        </div>
       </div>
 
       <div>
