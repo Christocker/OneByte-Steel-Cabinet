@@ -264,8 +264,9 @@ export async function getProductById(id: string): Promise<CatalogProduct | null>
 
 export async function getNextItemNumber(): Promise<number> {
   const all = await getAllProducts();
-  if (all.length === 0) return 1;
-  return Math.max(...all.map((p) => p.item_number)) + 1;
+  const active = all.filter((p) => p.active);
+  if (active.length === 0) return 1;
+  return Math.max(...active.map((p) => p.item_number)) + 1;
 }
 
 export type CreateProductInput = {
