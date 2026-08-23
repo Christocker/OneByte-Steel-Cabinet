@@ -306,7 +306,7 @@ export async function createProduct(input: CreateProductInput): Promise<CatalogP
     // Use client-provided item number, or query DB as fallback
     let itemNumber = input.nextItemNumber ?? await getNextItemNumber();
     let saved = false;
-    for (let attempt = 0; attempt < 5; attempt++) {
+    for (let attempt = 0; attempt < 50; attempt++) {
       const product: CatalogProduct = {
         id: input.id,
         item_number: itemNumber,
@@ -330,21 +330,7 @@ export async function createProduct(input: CreateProductInput): Promise<CatalogP
     }
 
     if (!saved) {
-      // Last resort: try upsert
-      const product: CatalogProduct = {
-        id: input.id,
-        item_number: itemNumber,
-        brand: input.brand,
-        name: input.name,
-        price: input.price,
-        dimensions: input.dimensions,
-        images: input.images,
-        preorder: input.preorder,
-        active: true,
-        created_at: now,
-        updated_at: now,
-      };
-      await writeSupabase(config, "POST", "cabinet_products?on_conflict=id", product as unknown as Record<string, unknown>);
+      throw new CatalogError("Could not create product after multiple attempts. Please try a different name.");
     }
 
     // Also create inventory row
