@@ -97,7 +97,7 @@ REVOKE ALL ON TABLE public.cabinet_products FROM anon, authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.cabinet_products TO service_role;
 `;
 
-  const { error } = await supabase.rpc("exec_sql", { query: sql }).single().select();
+  const { error } = await supabase.rpc("exec_sql", { query: sql });
 
   if (error) {
     // exec_sql might not exist — try direct SQL via pg endpoint
