@@ -206,7 +206,8 @@ export default function AdminDashboard({
       throw new Error(err.error || "Unable to update product.");
     }
     // Also update stock/price via inventory API if changed
-    if (data.stock !== editingProduct.stock || data.price !== editingProduct.price) {
+    const currentProduct = products.find((p) => p.id === editingProduct.id);
+    if (currentProduct && (data.stock !== currentProduct.stock || data.price !== currentProduct.price)) {
       await fetch("/api/inventory", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
