@@ -247,7 +247,26 @@ export async function getProductById(id: string): Promise<CatalogProduct | null>
 }
 
 export async function getNextItemNumber(): Promise<number> {
-  const all = await getAllProducts();
+  // Query only active products directly from DB to avoid filtering issues
+  const config = getSupabaseConfig();
+  if (config) {
+    try {
+      const res = await fetch(
+        `${config.baseUrl}/rest/v1/cabinet_products?select=item_number&active=eq.true&order=item_number.desc&limit=1`,
+        { headers: headers(config), cache: "no-store" }
+      );
+      if (res.ok) {
+        const data = (await res.json()) as unknown;
+        if (Array.isArray(data) && data.length > 0) {
+          const max = Number((data[0] as Record<string, unknown>).item_number ?? 0);
+          return max + 1;
+        }
+        return 1;
+      }
+    } catch { /* fall through to local */ }
+  }
+  // Fallback: read from local catalog
+  const all = await readLocalAll();
   const active = all.filter((p) => p.active);
   if (active.length === 0) return 1;
   return Math.max(...active.map((p) => p.item_number)) + 1;
