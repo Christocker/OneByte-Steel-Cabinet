@@ -171,11 +171,16 @@ export default function AdminDashboard({
   }
 
   async function handleAddProduct(data: ProductFormData) {
+    // Compute next item number from the already-loaded product list
+    const nextItemNumber = products.length > 0
+      ? Math.max(...products.map((p) => p.itemNumber)) + 1
+      : 1;
+
     const res = await fetch("/api/products", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "same-origin",
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, nextItemNumber }),
     });
     if (res.status === 401) { window.location.assign("/admin/login"); return; }
     if (!res.ok) {

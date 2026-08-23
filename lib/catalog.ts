@@ -281,6 +281,7 @@ export type CreateProductInput = {
   images: string[];
   stock: number;
   preorder: boolean;
+  nextItemNumber?: number;
 };
 
 export type UpdateProductInput = {
@@ -302,7 +303,8 @@ export async function createProduct(input: CreateProductInput): Promise<CatalogP
     await ensureTable(config);
 
     // Try to insert with increasing item numbers on conflict
-    let itemNumber = await getNextItemNumber();
+    // Use client-provided item number, or query DB as fallback
+    let itemNumber = input.nextItemNumber ?? await getNextItemNumber();
     let saved = false;
     for (let attempt = 0; attempt < 5; attempt++) {
       const product: CatalogProduct = {
