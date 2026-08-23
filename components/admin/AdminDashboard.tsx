@@ -182,11 +182,22 @@ export default function AdminDashboard({
       const err = (await res.json().catch(() => ({}))) as { error?: string };
       throw new Error(err.error || "Unable to create product.");
     }
-    const result = (await res.json()) as { product?: InventoryProduct };
+    const result = (await res.json()) as { product?: CatalogProduct };
     if (result.product) {
-      setProducts((prev) => [...prev, result.product!]);
-      setDrafts((prev) => ({ ...prev, [result.product!.id]: String(result.product!.stock) }));
-      setPriceDrafts((prev) => ({ ...prev, [result.product!.id]: String(result.product!.price) }));
+      const newProduct: InventoryProduct = {
+        id: result.product.id,
+        itemNumber: result.product.item_number,
+        brand: result.product.brand,
+        name: result.product.name,
+        price: result.product.price,
+        dimensions: result.product.dimensions,
+        images: result.product.images,
+        preorder: result.product.preorder || undefined,
+        stock: data.stock,
+      };
+      setProducts((prev) => [...prev, newProduct]);
+      setDrafts((prev) => ({ ...prev, [newProduct.id]: String(data.stock) }));
+      setPriceDrafts((prev) => ({ ...prev, [newProduct.id]: data.price }));
     }
     setShowAddForm(false);
     setNotice("Product created. The public listing is now up to date.");
