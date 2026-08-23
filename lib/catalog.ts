@@ -203,12 +203,12 @@ async function writeSupabase(
     body: body ? JSON.stringify(body) : undefined,
     cache: "no-store",
   });
-  if (res.status === 204 || res.status === 409) return null; // 409 = already exists, treat as success
+  if (res.status === 204) return null;
+  if (res.status === 409) throw new Error("duplicate key"); // let caller handle retry
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     throw new Error(`Catalog write failed (${res.status}): ${text}`);
   }
-  if (res.status === 204) return null;
   return res.json();
 }
 
@@ -291,26 +291,57 @@ export type UpdateProductInput = {
 };
 
 export async function createProduct(input: CreateProductInput): Promise<CatalogProduct> {
-  const itemNumber = await getNextItemNumber();
   const now = new Date().toISOString();
-  const product: CatalogProduct = {
-    id: input.id,
-    item_number: itemNumber,
-    brand: input.brand,
-    name: input.name,
-    price: input.price,
-    dimensions: input.dimensions,
-    images: input.images,
-    preorder: input.preorder,
-    active: true,
-    created_at: now,
-    updated_at: now,
-  };
 
   const config = getSupabaseConfig();
   if (config) {
+    // Verify table exists and is writable before proceeding
     await ensureTable(config);
-    await writeSupabase(config, "POST", "cabinet_products?on_conflict=id", product as unknown as Record<string, unknown>);
+
+    // Try to insert with increasing item numbers on conflict
+    let itemNumber = await getNextItemNumber();
+    let saved = false;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const product: CatalogProduct = {
+        id: input.id,
+        item_number: itemNumber,
+        brand: input.brand,
+        name: input.name,
+        price: input.price,
+        dimensions: input.dimensions,
+        images: input.images,
+        preorder: input.preorder,
+        active: true,
+        created_at: now,
+        updated_at: now,
+      };
+      try {
+        await writeSupabase(config, "POST", "cabinet_products", product as unknown as Record<string, unknown>);
+        saved = true;
+        break;
+      } catch {
+        itemNumber++;
+      }
+    }
+
+    if (!saved) {
+      // Last resort: try upsert
+      const product: CatalogProduct = {
+        id: input.id,
+        item_number: itemNumber,
+        brand: input.brand,
+        name: input.name,
+        price: input.price,
+        dimensions: input.dimensions,
+        images: input.images,
+        preorder: input.preorder,
+        active: true,
+        created_at: now,
+        updated_at: now,
+      };
+      await writeSupabase(config, "POST", "cabinet_products?on_conflict=id", product as unknown as Record<string, unknown>);
+    }
+
     // Also create inventory row
     await writeSupabase(
       config,
@@ -318,13 +349,40 @@ export async function createProduct(input: CreateProductInput): Promise<CatalogP
       "cabinet_inventory?on_conflict=product_id",
       { product_id: input.id, stock: input.stock, updated_at: now }
     );
+
+    return (await getProductById(input.id)) ?? {
+      id: input.id,
+      item_number: itemNumber,
+      brand: input.brand,
+      name: input.name,
+      price: input.price,
+      dimensions: input.dimensions,
+      images: input.images,
+      preorder: input.preorder,
+      active: true,
+      created_at: now,
+      updated_at: now,
+    };
   } else {
     const all = await readLocalAll();
+    const itemNumber = all.length > 0 ? Math.max(...all.map((p) => p.item_number)) + 1 : 1;
+    const product: CatalogProduct = {
+      id: input.id,
+      item_number: itemNumber,
+      brand: input.brand,
+      name: input.name,
+      price: input.price,
+      dimensions: input.dimensions,
+      images: input.images,
+      preorder: input.preorder,
+      active: true,
+      created_at: now,
+      updated_at: now,
+    };
     all.push(product);
     await writeLocal(all);
+    return product;
   }
-
-  return product;
 }
 
 export async function updateProduct(
