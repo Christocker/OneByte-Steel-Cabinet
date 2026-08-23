@@ -99,7 +99,8 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     if (error instanceof CatalogError) {
       return json({ error: error.message }, 400);
     }
-    return json({ error: "Unable to update product." }, 500);
+    const msg = error instanceof Error ? error.message : "Unable to update product.";
+    return json({ error: msg }, 500);
   }
 }
 
@@ -120,6 +121,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     if (error instanceof CatalogError) {
       return json({ error: error.message }, 400);
     }
-    return json({ error: "Unable to delete product." }, 500);
+    const msg = error instanceof Error ? error.message : "Unable to delete product.";
+    return json({ error: msg }, 500);
   }
 }

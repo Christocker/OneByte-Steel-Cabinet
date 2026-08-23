@@ -86,6 +86,7 @@ export async function POST(request: Request) {
     if (error instanceof CatalogError) {
       return json({ error: error.message }, 400);
     }
-    return json({ error: "Unable to create product." }, 500);
+    const msg = error instanceof Error ? error.message : "Unable to create product.";
+    return json({ error: msg }, 500);
   }
 }
