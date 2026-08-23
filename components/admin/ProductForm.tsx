@@ -27,10 +27,30 @@ export default function ProductForm({ mode, initial, onSubmit, onCancel }: Produ
   const [name, setName] = useState(initial?.name ?? "");
   const [brand, setBrand] = useState(initial?.brand ?? "");
   const [price, setPrice] = useState(initial?.price ?? "");
-  const [dimensions, setDimensions] = useState(initial?.dimensions ?? "");
   const [images, setImages] = useState<string[]>(initial?.images ?? []);
   const [stock, setStock] = useState(initial?.stock ?? 0);
   const [preorder, setPreorder] = useState(initial?.preorder ?? false);
+
+  // Parse dimensions from string like "180 × 80 × 40 cm" or "180 × 80 × 40 in"
+  function parseDimensions(raw: string): { h: string; w: string; d: string; unit: "cm" | "in" } {
+    const match = raw.match(/^([\d.]*)\s*[×x]\s*([\d.]*)\s*[×x]\s*([\d.]*)\s*(cm|in)?$/i);
+    if (match) {
+      return { h: match[1], w: match[2], d: match[3], unit: (match[4]?.toLowerCase() as "cm" | "in") || "cm" };
+    }
+    return { h: "", w: "", d: "", unit: "cm" };
+  }
+
+  const parsed = parseDimensions(initial?.dimensions ?? "");
+  const [dimH, setDimH] = useState(parsed.h);
+  const [dimW, setDimW] = useState(parsed.w);
+  const [dimD, setDimD] = useState(parsed.d);
+  const [dimUnit, setDimUnit] = useState<"cm" | "in">(parsed.unit);
+
+  function getDimensionsString(): string {
+    if (!dimH || !dimW || !dimD) return "";
+    return `${dimH} × ${dimW} × ${dimD} ${dimUnit}`;
+  }
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -44,8 +64,9 @@ export default function ProductForm({ mode, initial, onSubmit, onCancel }: Produ
     else if (brand.length > 100) e.brand = "Must be 100 characters or fewer.";
     if (!price.trim()) e.price = "Price is required.";
     else if (price.length > 100) e.price = "Must be 100 characters or fewer.";
-    if (!dimensions.trim()) e.dimensions = "Dimensions are required.";
-    else if (dimensions.length > 100) e.dimensions = "Must be 100 characters or fewer.";
+    const dims = getDimensionsString();
+    if (!dims) e.dimensions = "All dimension fields are required.";
+    else if (dims.length > 100) e.dimensions = "Dimensions must be 100 characters or fewer.";
     if (!Number.isInteger(stock) || stock < 0) e.stock = "Stock must be a non-negative integer.";
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -93,7 +114,7 @@ export default function ProductForm({ mode, initial, onSubmit, onCancel }: Produ
         name: name.trim(),
         brand: brand.trim(),
         price: price.trim(),
-        dimensions: dimensions.trim(),
+        dimensions: getDimensionsString(),
         images,
         stock,
         preorder,
@@ -146,16 +167,56 @@ export default function ProductForm({ mode, initial, onSubmit, onCancel }: Produ
       </div>
 
       <div>
-        <label htmlFor="pf-dims" className="text-sm font-semibold text-navy">Dimensions</label>
-        <input
-          id="pf-dims"
-          value={dimensions}
-          onChange={(e) => setDimensions(e.target.value)}
-          required
-          maxLength={100}
-          placeholder="185 × 90 × 40 cm"
-          className="mt-2 h-12 w-full rounded-xl border-2 border-beige-deep bg-beige px-4 text-navy outline-none transition-colors focus:border-navy"
-        />
+        <label className="text-sm font-semibold text-navy">Dimensions</label>
+        <div className="mt-2 grid grid-cols-4 gap-2">
+          <div>
+            <span className="text-[11px] font-medium text-navy/40">Height</span>
+            <input
+              type="number"
+              value={dimH}
+              onChange={(e) => setDimH(e.target.value)}
+              placeholder="0"
+              min="0"
+              className="mt-1 h-11 w-full rounded-xl border-2 border-beige-deep bg-beige px-3 text-center text-sm font-semibold text-navy outline-none transition-colors focus:border-navy"
+            />
+          </div>
+          <div>
+            <span className="text-[11px] font-medium text-navy/40">Width</span>
+            <input
+              type="number"
+              value={dimW}
+              onChange={(e) => setDimW(e.target.value)}
+              placeholder="0"
+              min="0"
+              className="mt-1 h-11 w-full rounded-xl border-2 border-beige-deep bg-beige px-3 text-center text-sm font-semibold text-navy outline-none transition-colors focus:border-navy"
+            />
+          </div>
+          <div>
+            <span className="text-[11px] font-medium text-navy/40">Depth</span>
+            <input
+              type="number"
+              value={dimD}
+              onChange={(e) => setDimD(e.target.value)}
+              placeholder="0"
+              min="0"
+              className="mt-1 h-11 w-full rounded-xl border-2 border-beige-deep bg-beige px-3 text-center text-sm font-semibold text-navy outline-none transition-colors focus:border-navy"
+            />
+          </div>
+          <div>
+            <span className="text-[11px] font-medium text-navy/40">Unit</span>
+            <select
+              value={dimUnit}
+              onChange={(e) => setDimUnit(e.target.value as "cm" | "in")}
+              className="mt-1 h-11 w-full rounded-xl border-2 border-beige-deep bg-beige px-2 text-center text-sm font-semibold text-navy outline-none transition-colors focus:border-navy"
+            >
+              <option value="cm">cm</option>
+              <option value="in">in</option>
+            </select>
+          </div>
+        </div>
+        {dimH && dimW && dimD && (
+          <p className="mt-1.5 text-xs text-navy/40">Preview: {getDimensionsString()}</p>
+        )}
         {errors.dimensions && <p className="mt-1 text-xs text-red-600">{errors.dimensions}</p>}
       </div>
 
