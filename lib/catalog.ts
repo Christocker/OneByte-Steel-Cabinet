@@ -66,6 +66,51 @@ function headers(config: SupabaseConfig, extra?: Record<string, string>): Header
   return h;
 }
 
+let tableEnsured = false;
+
+async function ensureTable(config: SupabaseConfig): Promise<void> {
+  if (tableEnsured) return;
+  // Try a simple query to check if the table exists
+  try {
+    const res = await fetch(
+      `${config.baseUrl}/rest/v1/cabinet_products?select=id&limit=0`,
+      { headers: headers(config), cache: "no-store" }
+    );
+    if (res.ok) { tableEnsured = true; return; }
+    // If 404 or error, the table doesn't exist — create it
+  } catch { /* table missing */ }
+
+  const sql = `
+CREATE TABLE IF NOT EXISTS public.cabinet_products (
+  id text PRIMARY KEY, item_number integer NOT NULL UNIQUE,
+  brand text NOT NULL, name text NOT NULL, price text NOT NULL,
+  dimensions text NOT NULL, images text[] NOT NULL DEFAULT '{}',
+  preorder boolean NOT NULL DEFAULT false, active boolean NOT NULL DEFAULT true,
+  created_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
+  updated_at timestamptz NOT NULL DEFAULT timezone('utc', now())
+);
+ALTER TABLE public.cabinet_products ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.cabinet_products FROM anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.cabinet_products TO service_role;
+`;
+
+  const sqlRes = await fetch(`${config.baseUrl}/pg`, {
+    method: "POST",
+    headers: {
+      ...headers(config),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ query: sql }),
+  });
+
+  if (!sqlRes.ok) {
+    const err = await sqlRes.text().catch(() => "");
+    throw new CatalogError(`Failed to create product table: ${err}`);
+  }
+
+  tableEnsured = true;
+}
+
 function parseRow(row: unknown): CatalogProduct {
   if (!row || typeof row !== "object") throw new Error("Invalid catalog row.");
   const r = row as Record<string, unknown>;
@@ -86,6 +131,7 @@ function parseRow(row: unknown): CatalogProduct {
 
 async function readSupabaseAll(config: SupabaseConfig): Promise<CatalogProduct[] | null> {
   try {
+    await ensureTable(config);
     const res = await fetch(
       `${config.baseUrl}/rest/v1/cabinet_products?select=*&order=item_number.asc`,
       { headers: headers(config), cache: "no-store" }
@@ -101,6 +147,7 @@ async function readSupabaseAll(config: SupabaseConfig): Promise<CatalogProduct[]
 
 async function readSupabaseActive(config: SupabaseConfig): Promise<CatalogProduct[] | null> {
   try {
+    await ensureTable(config);
     const res = await fetch(
       `${config.baseUrl}/rest/v1/cabinet_products?select=*&active=eq.true&order=item_number.asc`,
       { headers: headers(config), cache: "no-store" }
@@ -250,6 +297,7 @@ export async function createProduct(input: CreateProductInput): Promise<CatalogP
 
   const config = getSupabaseConfig();
   if (config) {
+    await ensureTable(config);
     await writeSupabase(config, "POST", "cabinet_products?on_conflict=id", product as unknown as Record<string, unknown>);
     // Also create inventory row
     await writeSupabase(
@@ -285,6 +333,7 @@ export async function updateProduct(
 
   const config = getSupabaseConfig();
   if (config) {
+    await ensureTable(config);
     await writeSupabase(
       config,
       "PATCH",

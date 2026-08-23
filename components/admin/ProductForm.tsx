@@ -81,10 +81,13 @@ export default function ProductForm({ mode, initial, onSubmit, onCancel }: Produ
     setImages((prev) => prev.filter((_, i) => i !== idx));
   }
 
+  const [submitError, setSubmitError] = useState("");
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!validate()) return;
     setSubmitting(true);
+    setSubmitError("");
     try {
       await onSubmit({
         name: name.trim(),
@@ -95,6 +98,8 @@ export default function ProductForm({ mode, initial, onSubmit, onCancel }: Produ
         stock,
         preorder,
       });
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setSubmitting(false);
     }
@@ -230,6 +235,10 @@ export default function ProductForm({ mode, initial, onSubmit, onCancel }: Produ
         </div>
         {uploading && <p className="mt-1 text-xs text-navy/50">Uploading...</p>}
       </div>
+
+      {submitError && (
+        <p className="rounded-xl bg-red-100 px-4 py-3 text-sm font-medium text-red-800">{submitError}</p>
+      )}
 
       <div className="flex gap-3 pt-2">
         <button
