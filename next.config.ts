@@ -16,7 +16,10 @@ const nextConfig: NextConfig = {
         source: "/(.*)",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          // Allow the portfolio (and its Vercel previews) to embed this site as a
+          // live preview, while keeping clickjacking limited to those ancestors.
+          // Add a custom portfolio domain here if it is not on *.vercel.app.
+          { key: "Content-Security-Policy", value: "frame-ancestors 'self' https://*.vercel.app" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
         ],
