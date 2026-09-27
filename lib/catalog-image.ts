@@ -239,10 +239,10 @@ export async function renderCatalogJpeg(
     ctx.font = "600 20px system-ui, sans-serif";
     ctx.fillText(product.dimensions, x + 18, ty);
 
-    // Availability + stock
+    // Availability (status only — no numeric stock count in the export)
     ty += 22;
     const colors = availabilityColors(product.preorder ?? false, product.stock);
-    const availText = `${colors.label} · Stock: ${product.stock}`;
+    const availText = colors.label;
     ctx.font = "800 18px system-ui, sans-serif";
     const availW = ctx.measureText(availText).width + 46;
     roundRectPath(ctx, x + 18, ty - 20, Math.min(availW, cellW - 36), 32, 16);
