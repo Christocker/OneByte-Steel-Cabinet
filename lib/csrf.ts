@@ -1,10 +1,29 @@
 export function isSameOrigin(request: Request) {
-  const origin = request.headers.get("origin");
-  if (!origin) return true;
+  const requestOrigin = new URL(request.url).origin;
 
-  try {
-    return new URL(origin).origin === new URL(request.url).origin;
-  } catch {
-    return false;
+  const origin = request.headers.get("origin");
+  if (origin) {
+    try {
+      return new URL(origin).origin === requestOrigin;
+    } catch {
+      return false;
+    }
   }
+
+  // Fall back to Fetch Metadata when the Origin header is absent.
+  const fetchSite = request.headers.get("sec-fetch-site");
+  if (fetchSite) {
+    return fetchSite === "same-origin";
+  }
+
+  const referer = request.headers.get("referer");
+  if (referer) {
+    try {
+      return new URL(referer).origin === requestOrigin;
+    } catch {
+      return false;
+    }
+  }
+
+  return false;
 }

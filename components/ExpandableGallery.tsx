@@ -1,49 +1,26 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import type { TargetAndTransition, Variants } from "motion/react";
+import type { TargetAndTransition, Transition, Variants } from "motion/react";
 import type { InventoryProduct } from "@/lib/products";
 import ProductCard from "./ProductCard";
 import Reveal from "./Reveal";
 
-const STAGGER_SECONDS = 0.06;
-const CARD_IN_SECONDS = 1.2;
-const CARD_OUT_SECONDS = 1.0;
-const CONTAINER_SECONDS = 1.3;
+const STAGGER_IN_SECONDS = 0.05;
+const STAGGER_OUT_SECONDS = 0.03;
+const CARD_Y_OFFSET = 24;
+const CARD_BLUR_PX = 4;
+const SPRING = { type: "spring", stiffness: 260, damping: 30, mass: 0.9 } as const;
 const DRAWER_EASE: [number, number, number, number] = [0.4, 0, 0.2, 1];
 
 export default function ExpandableGallery({ products }: { products: InventoryProduct[] }) {
   const [open, setOpen] = useState(false);
+  const [hasOpened, setHasOpened] = useState(false);
   const [columns, setColumns] = useState(3);
-  const [depths, setDepths] = useState<number[]>([]);
   const gridRef = useRef<HTMLDivElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
-  const followRef = useRef<{
-    y0: number;
-    h0: number;
-    prevScrollBehavior: string | null;
-  } | null>(null);
   const reduce = useReducedMotion();
-
-  const clearFollow = () => {
-    const f = followRef.current;
-    if (f && f.prevScrollBehavior !== null) {
-      document.documentElement.style.scrollBehavior = f.prevScrollBehavior;
-    }
-    followRef.current = null;
-  };
-
-  useEffect(() => {
-    const onInput = clearFollow;
-    window.addEventListener("touchstart", onInput, { passive: true });
-    window.addEventListener("wheel", onInput, { passive: true });
-    return () => {
-      window.removeEventListener("touchstart", onInput);
-      window.removeEventListener("wheel", onInput);
-      clearFollow();
-    };
-  }, []);
 
   useLayoutEffect(() => {
     const el = gridRef.current;
@@ -58,19 +35,6 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
     return () => ro.disconnect();
   }, []);
 
-  useLayoutEffect(() => {
-    const drawer = drawerRef.current;
-    if (!drawer) return;
-    const measure = () => {
-      const cells = Array.from(drawer.children[0].children) as HTMLElement[];
-      setDepths(cells.map((el) => el.offsetTop));
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(drawer);
-    return () => ro.disconnect();
-  }, []);
-
   const visibleCount = columns;
   const firstRow = products.slice(0, visibleCount);
   const hidden = products.slice(visibleCount);
@@ -79,36 +43,27 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
 
   const cardVariants: Variants = {
     visible: (i: number): TargetAndTransition => ({
+      opacity: 1,
       y: 0,
-      transition: {
-        delay: reduce ? 0 : i * STAGGER_SECONDS,
-        duration: reduce ? 0.15 : CARD_IN_SECONDS,
-        ease: reduce ? "easeOut" : DRAWER_EASE,
-      },
+      filter: "blur(0px)",
+      transition: reduce
+        ? { duration: 0 }
+        : { ...SPRING, delay: i * STAGGER_IN_SECONDS },
     }),
     hidden: (i: number): TargetAndTransition => ({
-      y: -(depths[i] ?? 0),
-      transition: {
-        delay: reduce ? 0 : Math.max(0, count - 1 - i) * STAGGER_SECONDS,
-        duration: reduce ? 0.15 : CARD_OUT_SECONDS,
-        ease: "easeIn",
-      },
+      opacity: 0,
+      y: CARD_Y_OFFSET,
+      filter: reduce ? "blur(0px)" : `blur(${CARD_BLUR_PX}px)`,
+      transition: reduce
+        ? { duration: 0 }
+        : { ...SPRING, delay: Math.max(0, count - 1 - i) * STAGGER_OUT_SECONDS },
     }),
   };
 
+  const drawerTransition: Transition = reduce ? { duration: 0 } : SPRING;
+
   const toggle = () => {
-    if (open && !reduce) {
-      const drawer = drawerRef.current;
-      if (drawer) {
-        const html = document.documentElement;
-        followRef.current = {
-          y0: window.scrollY,
-          h0: drawer.getBoundingClientRect().height,
-          prevScrollBehavior: html.style.scrollBehavior,
-        };
-        html.style.scrollBehavior = "auto";
-      }
-    }
+    if (!open) setHasOpened(true);
     setOpen((prev) => !prev);
   };
 
@@ -140,30 +95,21 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
         className="relative overflow-hidden"
         initial={false}
         animate={{ height: open ? "auto" : 0 }}
-        transition={
-          reduce
-            ? { duration: 0 }
-            : { duration: CONTAINER_SECONDS, ease: DRAWER_EASE }
-        }
-        onUpdate={(latest) => {
-          const f = followRef.current;
-          if (!f || typeof latest.height !== "number") return;
-          window.scrollTo(0, f.y0 + latest.height - f.h0);
-        }}
-        onAnimationComplete={clearFollow}
+        transition={drawerTransition}
       >
         <div className="grid gap-8 pt-8 pb-14 md:grid-cols-2 lg:grid-cols-3">
-          {hidden.map((p, i) => (
-            <motion.div
-              key={p.id}
-              variants={cardVariants}
-              custom={i}
-              initial={false}
-              animate={open ? "visible" : "hidden"}
-            >
-              <ProductCard product={p} />
-            </motion.div>
-          ))}
+          {hasOpened &&
+            hidden.map((p, i) => (
+              <motion.div
+                key={p.id}
+                variants={cardVariants}
+                custom={i}
+                initial="hidden"
+                animate={open ? "visible" : "hidden"}
+              >
+                <ProductCard product={p} />
+              </motion.div>
+            ))}
         </div>
       </motion.div>
 

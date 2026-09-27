@@ -93,6 +93,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
   try {
     const product = await updateProduct(id, updates as Parameters<typeof updateProduct>[1]);
+    if (!product) return json({ error: "Product not found." }, 404);
     revalidatePath("/");
     return json({ product });
   } catch (error) {

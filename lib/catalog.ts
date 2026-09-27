@@ -1,5 +1,6 @@
 import { readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { nextItemNumberFrom } from "./item-number";
 
 const LOCAL_CATALOG_FILE = path.join(process.cwd(), "data", "catalog.json");
 
@@ -30,6 +31,22 @@ export class CatalogError extends Error {
   }
 }
 
+export class CatalogConfigurationError extends CatalogError {
+  constructor(message: string) {
+    super(message);
+    this.name = "CatalogConfigurationError";
+  }
+}
+
+export class DuplicateKeyError extends Error {
+  readonly detail: string;
+  constructor(detail: string) {
+    super("duplicate key");
+    this.name = "DuplicateKeyError";
+    this.detail = detail;
+  }
+}
+
 function getSupabaseConfig(): SupabaseConfig | null {
   const url = process.env.SUPABASE_URL?.trim();
   const secretKey = process.env.SUPABASE_SECRET_KEY?.trim();
@@ -38,7 +55,7 @@ function getSupabaseConfig(): SupabaseConfig | null {
 
   if (!url || !key) {
     if (process.env.NODE_ENV === "production") {
-      throw new CatalogError(
+      throw new CatalogConfigurationError(
         "SUPABASE_URL and SUPABASE_SECRET_KEY must be configured in production."
       );
     }
@@ -56,7 +73,7 @@ function getSupabaseConfig(): SupabaseConfig | null {
       ...(secretKey ? {} : { authorization: `Bearer ${legacyServiceRoleKey}` }),
     };
   } catch {
-    throw new CatalogError("SUPABASE_URL is not a valid URL.");
+    throw new CatalogConfigurationError("SUPABASE_URL is not a valid URL.");
   }
 }
 
@@ -123,54 +140,52 @@ function parseRow(row: unknown): CatalogProduct {
   };
 }
 
-async function readSupabaseAll(config: SupabaseConfig): Promise<CatalogProduct[] | null> {
-  try {
-    await ensureTable(config);
-    const res = await fetch(
-      `${config.baseUrl}/rest/v1/cabinet_products?select=*&order=item_number.asc`,
-      { headers: headers(config), cache: "no-store" }
-    );
-    if (!res.ok) return null;
-    const data = (await res.json()) as unknown;
-    if (!Array.isArray(data)) return null;
-    return data.map(parseRow);
-  } catch {
-    return null;
+async function readSupabaseAll(config: SupabaseConfig): Promise<CatalogProduct[]> {
+  await ensureTable(config);
+  const res = await fetch(
+    `${config.baseUrl}/rest/v1/cabinet_products?select=*&order=item_number.asc`,
+    { headers: headers(config), cache: "no-store" }
+  );
+  if (!res.ok) {
+    throw new CatalogError(`Catalog request failed with status ${res.status}.`);
   }
+  const data = (await res.json()) as unknown;
+  if (!Array.isArray(data)) {
+    throw new CatalogError("Catalog storage returned an invalid response.");
+  }
+  return data.map(parseRow);
 }
 
-async function readSupabaseActive(config: SupabaseConfig): Promise<CatalogProduct[] | null> {
-  try {
-    await ensureTable(config);
-    const res = await fetch(
-      `${config.baseUrl}/rest/v1/cabinet_products?select=*&active=eq.true&order=item_number.asc`,
-      { headers: headers(config), cache: "no-store" }
-    );
-    if (!res.ok) return null;
-    const data = (await res.json()) as unknown;
-    if (!Array.isArray(data)) return null;
-    return data.map(parseRow);
-  } catch {
-    return null;
+async function readSupabaseActive(config: SupabaseConfig): Promise<CatalogProduct[]> {
+  await ensureTable(config);
+  const res = await fetch(
+    `${config.baseUrl}/rest/v1/cabinet_products?select=*&active=eq.true&order=item_number.asc`,
+    { headers: headers(config), cache: "no-store" }
+  );
+  if (!res.ok) {
+    throw new CatalogError(`Catalog request failed with status ${res.status}.`);
   }
+  const data = (await res.json()) as unknown;
+  if (!Array.isArray(data)) {
+    throw new CatalogError("Catalog storage returned an invalid response.");
+  }
+  return data.map(parseRow);
 }
 
 async function readSupabaseOne(
   config: SupabaseConfig,
   id: string
 ): Promise<CatalogProduct | null> {
-  try {
-    const res = await fetch(
-      `${config.baseUrl}/rest/v1/cabinet_products?select=*&id=eq.${encodeURIComponent(id)}`,
-      { headers: headers(config), cache: "no-store" }
-    );
-    if (!res.ok) return null;
-    const data = (await res.json()) as unknown;
-    if (!Array.isArray(data) || data.length === 0) return null;
-    return parseRow(data[0]);
-  } catch {
-    return null;
+  const res = await fetch(
+    `${config.baseUrl}/rest/v1/cabinet_products?select=*&id=eq.${encodeURIComponent(id)}`,
+    { headers: headers(config), cache: "no-store" }
+  );
+  if (!res.ok) {
+    throw new CatalogError(`Catalog request failed with status ${res.status}.`);
   }
+  const data = (await res.json()) as unknown;
+  if (!Array.isArray(data) || data.length === 0) return null;
+  return parseRow(data[0]);
 }
 
 async function writeSupabase(
@@ -188,7 +203,10 @@ async function writeSupabase(
     cache: "no-store",
   });
   if (res.status === 204) return null;
-  if (res.status === 409) throw new Error("duplicate key"); // let caller handle retry
+  if (res.status === 409) {
+    const detail = await res.text().catch(() => "");
+    throw new DuplicateKeyError(detail);
+  }
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     throw new Error(`Catalog write failed (${res.status}): ${text}`);
@@ -201,7 +219,8 @@ async function writeSupabase(
 async function readLocalAll(): Promise<CatalogProduct[]> {
   try {
     const data = await readFile(LOCAL_CATALOG_FILE, "utf8");
-    return JSON.parse(data) as CatalogProduct[];
+    const parsed = JSON.parse(data) as CatalogProduct[];
+    return parsed.sort((a, b) => a.item_number - b.item_number);
   } catch (err) {
     if (err && typeof err === "object" && "code" in err && err.code === "ENOENT") return [];
     throw new Error("Local catalog could not be read.");
@@ -218,30 +237,22 @@ async function writeLocal(products: CatalogProduct[]): Promise<void> {
 
 export async function getActiveProducts(): Promise<CatalogProduct[]> {
   const config = getSupabaseConfig();
-  if (config) {
-    const rows = await readSupabaseActive(config);
-    if (rows) return rows;
-    // Table may not exist yet — fall back to local file
-  }
+  // With Supabase configured, read failures must surface instead of silently
+  // serving stale local JSON. The local file is a development-only fallback.
+  if (config) return readSupabaseActive(config);
   const all = await readLocalAll();
   return all.filter((p) => p.active);
 }
 
 export async function getAllProducts(): Promise<CatalogProduct[]> {
   const config = getSupabaseConfig();
-  if (config) {
-    const rows = await readSupabaseAll(config);
-    if (rows) return rows;
-  }
+  if (config) return readSupabaseAll(config);
   return readLocalAll();
 }
 
 export async function getProductById(id: string): Promise<CatalogProduct | null> {
   const config = getSupabaseConfig();
-  if (config) {
-    const row = await readSupabaseOne(config, id);
-    if (row) return row;
-  }
+  if (config) return readSupabaseOne(config, id);
   const all = await readLocalAll();
   return all.find((p) => p.id === id) ?? null;
 }
@@ -249,24 +260,23 @@ export async function getProductById(id: string): Promise<CatalogProduct | null>
 export async function getNextItemNumber(): Promise<number> {
   const config = getSupabaseConfig();
   if (config) {
-    try {
-      const res = await fetch(
-        `${config.baseUrl}/rest/v1/cabinet_products?select=item_number&active=eq.true&order=item_number.desc&limit=1`,
-        { headers: headers(config), cache: "no-store" }
-      );
-      if (res.ok) {
-        const data = (await res.json()) as unknown;
-        if (Array.isArray(data) && data.length > 0) {
-          const max = Number((data[0] as Record<string, unknown>).item_number ?? 0);
-          return max + 1;
-        }
-        return 1;
-      }
-    } catch { /* fall through to local */ }
+    await ensureTable(config);
+    // Count every row (active AND hidden) so a hidden product's number is never
+    // reused. This is what keeps creation from colliding after a hide.
+    const res = await fetch(
+      `${config.baseUrl}/rest/v1/cabinet_products?select=item_number&order=item_number.desc&limit=1`,
+      { headers: headers(config), cache: "no-store" }
+    );
+    if (!res.ok) {
+      throw new CatalogError(`Catalog request failed with status ${res.status}.`);
+    }
+    const data = (await res.json()) as unknown;
+    if (!Array.isArray(data) || data.length === 0) return 1;
+    return nextItemNumberFrom(data as Array<{ item_number: number }>);
   }
   const all = await readLocalAll();
   if (all.length === 0) return 1;
-  return Math.max(...all.map((p) => p.item_number)) + 1;
+  return nextItemNumberFrom(all);
 }
 
 export type CreateProductInput = {
@@ -301,7 +311,7 @@ export async function createProduct(input: CreateProductInput): Promise<CatalogP
 
     // Try to insert with increasing item numbers on conflict
     // Use client-provided item number, or query DB as fallback
-    let itemNumber = input.nextItemNumber ?? await getNextItemNumber();
+    let itemNumber = input.nextItemNumber ?? (await getNextItemNumber());
     let saved = false;
     for (let attempt = 0; attempt < 50; attempt++) {
       const product: CatalogProduct = {
@@ -321,8 +331,17 @@ export async function createProduct(input: CreateProductInput): Promise<CatalogP
         await writeSupabase(config, "POST", "cabinet_products", product as unknown as Record<string, unknown>);
         saved = true;
         break;
-      } catch {
-        itemNumber++;
+      } catch (error) {
+        // Retry only when the item_number unique constraint collided. Other 409s
+        // (for example a duplicate product id) and all other failures surface.
+        if (
+          error instanceof DuplicateKeyError &&
+          (error.detail === "" || error.detail.includes("item_number"))
+        ) {
+          itemNumber++;
+          continue;
+        }
+        throw error;
       }
     }
 
@@ -353,7 +372,7 @@ export async function createProduct(input: CreateProductInput): Promise<CatalogP
     };
   } else {
     const all = await readLocalAll();
-    const itemNumber = all.length > 0 ? Math.max(...all.map((p) => p.item_number)) + 1 : 1;
+    const itemNumber = all.length > 0 ? nextItemNumberFrom(all) : 1;
     const product: CatalogProduct = {
       id: input.id,
       item_number: itemNumber,

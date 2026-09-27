@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import { getAdminSession } from "@/lib/auth";
-import { getInventory } from "@/lib/inventory";
+import { getAllInventory } from "@/lib/inventory";
 
 export const dynamic = "force-dynamic";
 
@@ -15,5 +15,5 @@ export default async function AdminPage() {
   const session = await getAdminSession();
   if (!session) redirect("/admin/login");
 
-  return <AdminDashboard initialProducts={await getInventory()} username={session.username} />;
+  return <AdminDashboard initialProducts={await getAllInventory()} username={session.username} />;
 }

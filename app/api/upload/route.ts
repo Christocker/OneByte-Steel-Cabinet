@@ -7,6 +7,16 @@ export const runtime = "nodejs";
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const BUCKET = "product-images";
+const PRODUCT_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
+
+function sanitizeProductId(value: unknown): string {
+  if (typeof value !== "string") return "unknown";
+  const trimmed = value.trim();
+  if (trimmed.length === 0 || trimmed.length > 100 || !PRODUCT_ID_PATTERN.test(trimmed)) {
+    return "unknown";
+  }
+  return trimmed;
+}
 
 function json(body: Record<string, unknown>, status = 200) {
   return NextResponse.json(body, { status });
@@ -77,9 +87,7 @@ export async function POST(request: Request) {
     return json({ error: "File must be 5MB or smaller." }, 400);
   }
 
-  const productId = typeof formData.get("product_id") === "string"
-    ? formData.get("product_id") as string
-    : "unknown";
+  const productId = sanitizeProductId(formData.get("product_id"));
 
   const ext = file.type === "image/jpeg" ? "jpg" : file.type === "image/png" ? "png" : "webp";
   const timestamp = Date.now();

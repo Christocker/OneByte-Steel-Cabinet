@@ -67,6 +67,7 @@ export default function ProductForm({ mode, initial, onSubmit, onCancel }: Produ
     const dims = getDimensionsString();
     if (!dims) e.dimensions = "All dimension fields are required.";
     else if (dims.length > 100) e.dimensions = "Dimensions must be 100 characters or fewer.";
+    if (images.length === 0) e.images = "Add at least one product image.";
     if (!Number.isInteger(stock) || stock < 0) e.stock = "Stock must be a non-negative integer.";
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -226,6 +227,7 @@ export default function ProductForm({ mode, initial, onSubmit, onCancel }: Produ
           <button
             type="button"
             onClick={() => setStock((s: number) => Math.max(0, s - 1))}
+            aria-label="Decrease stock"
             className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-beige-deep bg-beige text-lg font-bold text-navy transition-colors hover:bg-navy hover:text-white"
           >
             -
@@ -241,6 +243,7 @@ export default function ProductForm({ mode, initial, onSubmit, onCancel }: Produ
           <button
             type="button"
             onClick={() => setStock((s: number) => s + 1)}
+            aria-label="Increase stock"
             className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-beige-deep bg-beige text-lg font-bold text-navy transition-colors hover:bg-navy hover:text-white"
           >
             +
@@ -255,6 +258,8 @@ export default function ProductForm({ mode, initial, onSubmit, onCancel }: Produ
           <button
             type="button"
             onClick={() => setPreorder(!preorder)}
+            aria-label="Pre-order"
+            aria-pressed={preorder}
             className={`relative inline-flex h-7 w-14 flex-shrink-0 items-center rounded-full transition-colors duration-300 ${
               preorder ? "bg-amber-500" : "bg-navy/20"
             }`}
@@ -271,6 +276,7 @@ export default function ProductForm({ mode, initial, onSubmit, onCancel }: Produ
 
       <div>
         <label className="text-sm font-semibold text-navy">Product Images</label>
+        {errors.images && <p className="mt-1 text-xs text-red-600">{errors.images}</p>}
         <div className="mt-2 flex flex-wrap gap-3">
           {images.map((url, i) => (
             <div key={url} className="relative h-20 w-20 overflow-hidden rounded-xl border-2 border-beige-deep">
@@ -278,6 +284,7 @@ export default function ProductForm({ mode, initial, onSubmit, onCancel }: Produ
               <button
                 type="button"
                 onClick={() => removeImage(i)}
+                aria-label={`Remove image ${i + 1}`}
                 className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white hover:bg-red-700"
               >
                 x

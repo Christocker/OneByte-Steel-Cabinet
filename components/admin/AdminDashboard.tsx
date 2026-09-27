@@ -2,14 +2,24 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import type { InventoryProduct } from "@/lib/products";
 import type { CatalogProduct } from "@/lib/catalog";
 import { getStockInputError, getPriceSaveError, parseStockValue } from "@/lib/inventory-validation";
 import { formatPriceDisplay } from "@/lib/format";
-import { getAvailability, getAvailabilityLabel, getAvailabilityColor, getAvailabilityDotColor } from "@/lib/availability";
+import { assignDisplayNumbers } from "@/lib/item-number";
 import PriceInput from "./PriceInput";
 import ProductForm, { type ProductFormData } from "./ProductForm";
+import CatalogCardShell from "@/components/CatalogCardShell";
+import PhotoLightbox from "@/components/PhotoLightbox";
+
+type ProductFilter = "all" | "active" | "hidden";
+
+const FILTERS: Array<{ key: ProductFilter; label: string }> = [
+  { key: "all", label: "All" },
+  { key: "active", label: "Active" },
+  { key: "hidden", label: "Hidden" },
+];
 
 function initialDrafts(products: InventoryProduct[]) {
   return Object.fromEntries(products.map((product) => [product.id, String(product.stock)]));
@@ -17,6 +27,22 @@ function initialDrafts(products: InventoryProduct[]) {
 
 function initialPriceDrafts(products: InventoryProduct[]) {
   return Object.fromEntries(products.map((product) => [product.id, String(product.price)]));
+}
+
+function toCatalogProduct(product: InventoryProduct): CatalogProduct {
+  return {
+    id: product.id,
+    item_number: product.itemNumber,
+    brand: product.brand,
+    name: product.name,
+    price: product.price,
+    dimensions: product.dimensions,
+    images: product.images,
+    preorder: product.preorder ?? false,
+    active: product.active ?? true,
+    created_at: "",
+    updated_at: "",
+  };
 }
 
 export default function AdminDashboard({
@@ -33,17 +59,31 @@ export default function AdminDashboard({
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
+  const [filter, setFilter] = useState<ProductFilter>("all");
 
   // Product management state
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<CatalogProduct | null>(null);
-  const [deletingProduct, setDeletingProduct] = useState<CatalogProduct | null>(null);
-  const [catalogProducts, setCatalogProducts] = useState<CatalogProduct[]>([]);
+  const [hidingProduct, setHidingProduct] = useState<CatalogProduct | null>(null);
 
-  // Load catalog on mount so edit/delete work immediately
-  useEffect(() => {
-    loadCatalog();
-  }, []);
+  // Photo lightbox state
+  const [lightbox, setLightbox] = useState<{
+    images: string[];
+    index: number;
+    label: string;
+    altPrefix: string;
+  } | null>(null);
+
+  const orderedProducts = useMemo(
+    () => assignDisplayNumbers([...products].sort((a, b) => a.itemNumber - b.itemNumber)),
+    [products]
+  );
+
+  const visibleProducts = useMemo(() => {
+    if (filter === "active") return orderedProducts.filter((product) => product.active !== false);
+    if (filter === "hidden") return orderedProducts.filter((product) => product.active === false);
+    return orderedProducts;
+  }, [orderedProducts, filter]);
 
   const totalStock = products.reduce((total, product) => total + product.stock, 0);
   const inStockCount = products.filter((product) => product.stock > 0).length;
@@ -158,18 +198,6 @@ export default function AdminDashboard({
     }
   }
 
-  // Product management functions
-  async function loadCatalog() {
-    try {
-      const res = await fetch("/api/products", { credentials: "same-origin" });
-      if (res.status === 401) { window.location.assign("/admin/login"); return; }
-      if (res.ok) {
-        const data = (await res.json()) as { products?: CatalogProduct[] };
-        if (data.products) setCatalogProducts(data.products);
-      }
-    } catch { /* ignore */ }
-  }
-
   async function handleAddProduct(data: ProductFormData) {
     const res = await fetch("/api/products", {
       method: "POST",
@@ -193,6 +221,7 @@ export default function AdminDashboard({
         dimensions: result.product.dimensions,
         images: result.product.images,
         preorder: result.product.preorder || undefined,
+        active: true,
         stock: data.stock,
       };
       setProducts((prev) => [...prev, newProduct]);
@@ -219,18 +248,23 @@ export default function AdminDashboard({
     // Also update stock/price via inventory API if changed
     const currentProduct = products.find((p) => p.id === editingProduct.id);
     if (currentProduct && (data.stock !== currentProduct.stock || data.price !== currentProduct.price)) {
-      await fetch("/api/inventory", {
+      const inventoryRes = await fetch("/api/inventory", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
         body: JSON.stringify({ productId: editingProduct.id, stock: data.stock, price: data.price }),
       });
+      if (inventoryRes.status === 401) { window.location.assign("/admin/login"); return; }
+      if (!inventoryRes.ok) {
+        const err = (await inventoryRes.json().catch(() => ({}))) as { error?: string };
+        throw new Error(err.error || "Unable to update inventory.");
+      }
     }
     const result = (await res.json()) as { product?: CatalogProduct };
     if (result.product) {
       setProducts((prev) => prev.map((p) =>
         p.id === editingProduct.id
-          ? { ...p, name: result.product!.name, brand: result.product!.brand, price: result.product!.price, dimensions: result.product!.dimensions, images: result.product!.images, preorder: result.product!.preorder, stock: data.stock }
+          ? { ...p, name: result.product!.name, brand: result.product!.brand, price: result.product!.price, dimensions: result.product!.dimensions, images: result.product!.images, preorder: result.product!.preorder || undefined, stock: data.stock }
           : p
       ));
       setDrafts((prev) => ({ ...prev, [editingProduct.id]: String(data.stock) }));
@@ -240,23 +274,40 @@ export default function AdminDashboard({
     setNotice("Product updated. The public listing is now up to date.");
   }
 
-  async function handleDeleteProduct() {
-    if (!deletingProduct) return;
-    const res = await fetch(`/api/products/${deletingProduct.id}`, {
+  async function handleHideProduct() {
+    if (!hidingProduct) return;
+    const productId = hidingProduct.id;
+    const res = await fetch(`/api/products/${productId}`, {
       method: "DELETE",
       credentials: "same-origin",
     });
     if (res.status === 401) { window.location.assign("/admin/login"); return; }
     if (!res.ok) {
       const err = (await res.json().catch(() => ({}))) as { error?: string };
-      setNotice(err.error || "Unable to delete product.");
+      setNotice(err.error || "Unable to hide product.");
     } else {
-      setProducts((prev) => prev.filter((p) => p.id !== deletingProduct.id));
-      setDrafts((prev) => { const n = { ...prev }; delete n[deletingProduct.id]; return n; });
-      setPriceDrafts((prev) => { const n = { ...prev }; delete n[deletingProduct.id]; return n; });
-      setNotice("Product removed from the public catalog.");
+      setProducts((prev) => prev.map((p) => (p.id === productId ? { ...p, active: false } : p)));
+      setNotice("Product hidden from the public catalog.");
     }
-    setDeletingProduct(null);
+    setHidingProduct(null);
+  }
+
+  async function handleRestoreProduct(productId: string) {
+    setNotice("");
+    const res = await fetch(`/api/products/${productId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ active: true }),
+    });
+    if (res.status === 401) { window.location.assign("/admin/login"); return; }
+    if (!res.ok) {
+      const err = (await res.json().catch(() => ({}))) as { error?: string };
+      setNotice(err.error || "Unable to restore product.");
+      return;
+    }
+    setProducts((prev) => prev.map((p) => (p.id === productId ? { ...p, active: true } : p)));
+    setNotice("Product restored to the public catalog.");
   }
 
   return (
@@ -331,54 +382,12 @@ export default function AdminDashboard({
           </div>
         </section>
 
-        <section
-          className="mt-10 overflow-hidden rounded-2xl border-2 border-beige-deep bg-beige-soft shadow-lg shadow-navy/10"
-          aria-label="Stock overview"
-        >
-          <div className="flex items-center justify-between border-b-2 border-beige-deep/70 bg-beige px-5 py-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-navy/60">Stock overview</h2>
-            <span className="text-xs font-medium text-navy/45">{products.length} cabinets</span>
-          </div>
-          <div className="max-h-[28rem] overflow-y-auto">
-            <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-beige-soft">
-                <tr className="border-b border-beige-deep/60 text-left text-xs font-semibold uppercase tracking-wider text-navy/50">
-                  <th scope="col" className="px-5 py-2.5">Cabinet</th>
-                  <th scope="col" className="px-5 py-2.5 text-right">Stocks</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-beige-deep/40">
-                {products.map((product) => (
-                  <tr key={product.id} className="transition-colors hover:bg-beige">
-                    <td className="px-5 py-2.5">
-                      <span className="font-semibold text-navy">{product.name}</span>
-                      <span className="ml-2 text-xs font-medium text-navy/35">Item #{product.itemNumber}</span>
-                      <span className="ml-2 text-xs font-semibold uppercase tracking-wide text-navy/45">{product.brand}</span>
-                    </td>
-                    <td className="px-5 py-2.5 text-right">
-                      <span
-                        className={`inline-flex min-w-[2.25rem] items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                          product.stock > 0
-                            ? "bg-emerald-100 text-emerald-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {product.stock}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
         {/* Product Management Section */}
         <section className="mt-10" aria-label="Product management">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-xl font-bold text-navy">Product Management</h2>
-              <p className="mt-1 text-sm text-navy/60">Add, edit, or remove products from the catalog.</p>
+              <p className="mt-1 text-sm text-navy/60">Add, edit, hide, or restore products from the catalog.</p>
             </div>
             <button
               type="button"
@@ -389,154 +398,66 @@ export default function AdminDashboard({
             </button>
           </div>
 
-          <div className="mt-5 overflow-hidden rounded-2xl border-2 border-beige-deep bg-beige-soft shadow-lg shadow-navy/10">
-            <div className="max-h-[32rem] overflow-y-auto">
-              <table className="w-full text-sm">
-                <thead className="sticky top-0 bg-beige-soft">
-                  <tr className="border-b border-beige-deep/60 text-left text-xs font-semibold uppercase tracking-wider text-navy/50">
-                    <th scope="col" className="px-4 py-2.5">Product</th>
-                    <th scope="col" className="hidden px-4 py-2.5 sm:table-cell">Brand</th>
-                    <th scope="col" className="hidden px-4 py-2.5 md:table-cell">Price</th>
-                    <th scope="col" className="hidden px-4 py-2.5 lg:table-cell">Stock</th>
-                    <th scope="col" className="hidden px-4 py-2.5 lg:table-cell">Status</th>
-                    <th scope="col" className="px-4 py-2.5 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-beige-deep/40">
-                  {products.map((product) => {
-                    const status = getAvailability(product.preorder ?? false, product.stock);
-                    const catalogItem: CatalogProduct = {
-                      id: product.id,
-                      item_number: product.itemNumber,
-                      brand: product.brand,
-                      name: product.name,
-                      price: product.price,
-                      dimensions: product.dimensions,
-                      images: product.images,
-                      preorder: product.preorder ?? false,
-                      active: true,
-                      created_at: "",
-                      updated_at: "",
-                    };
-                    return (
-                      <tr key={product.id} className="transition-colors hover:bg-beige">
-                        <td className="px-4 py-2.5">
-                          <div className="flex items-center gap-3">
-                            <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-beige">
-                              {product.images[0] && (
-                                <Image src={product.images[0]} alt="" fill className="object-cover" sizes="40px" />
-                              )}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="truncate font-semibold text-navy">{product.name}</p>
-                              <p className="text-xs text-navy/40">Item #{product.itemNumber}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="hidden px-4 py-2.5 sm:table-cell">
-                          <span className="text-xs font-semibold uppercase tracking-wide text-navy/50">{product.brand}</span>
-                        </td>
-                        <td className="hidden px-4 py-2.5 md:table-cell">
-                          <span className="font-medium text-navy">{formatPriceDisplay(product.price)}</span>
-                        </td>
-                        <td className="hidden px-4 py-2.5 lg:table-cell">
-                          <span className={`inline-flex min-w-[2rem] items-center justify-center rounded-full px-2 py-0.5 text-xs font-bold ${product.stock > 0 ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"}`}>
-                            {product.stock}
-                          </span>
-                        </td>
-                        <td className="hidden px-4 py-2.5 lg:table-cell">
-                          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold ${getAvailabilityColor(status)}`}>
-                            <span className={`h-1.5 w-1.5 rounded-full ${getAvailabilityDotColor(status)}`} />
-                            {getAvailabilityLabel(status)}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2.5 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              type="button"
-                              onClick={() => { setEditingProduct(catalogItem ?? null); }}
-                              className="rounded-lg border border-navy/20 px-3 py-1.5 text-xs font-semibold text-navy transition-colors hover:bg-navy hover:text-white"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => { setDeletingProduct(catalogItem ?? null); }}
-                              className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 transition-colors hover:bg-red-50"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+          <div className="mt-5 flex flex-wrap items-center gap-2" role="group" aria-label="Filter products">
+            {FILTERS.map((option) => (
+              <button
+                key={option.key}
+                type="button"
+                onClick={() => setFilter(option.key)}
+                aria-pressed={filter === option.key}
+                className={`rounded-full border-2 px-4 py-1.5 text-sm font-semibold transition-colors ${
+                  filter === option.key
+                    ? "border-navy bg-navy text-white"
+                    : "border-beige-deep bg-beige-soft text-navy hover:border-navy/40"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
           </div>
         </section>
 
-        <p role="status" aria-live="polite" className="mt-8 min-h-6 text-sm font-semibold text-emerald-800">
+        <p role="status" aria-live="polite" className="mt-6 min-h-6 text-sm font-semibold text-emerald-800">
           {notice}
         </p>
 
         <section className="mt-2 grid gap-6 md:grid-cols-2 xl:grid-cols-3" aria-label="Cabinet inventory">
-          {products.map((product) => {
+          {visibleProducts.length === 0 && (
+            <p className="col-span-full rounded-2xl border-2 border-dashed border-beige-deep bg-beige-soft px-6 py-10 text-center text-sm font-medium text-navy/50">
+              No products match this filter.
+            </p>
+          )}
+
+          {visibleProducts.map((product) => {
             const error = errors[product.id];
             const isSaving = savingId === product.id;
             const isSaved = savedId === product.id;
-            const inStock = product.stock > 0;
+            const hidden = product.active === false;
 
             return (
-              <article
+              <CatalogCardShell
                 key={product.id}
-                className="overflow-hidden rounded-3xl border-2 border-beige-deep bg-beige-soft shadow-xl shadow-navy/15 transition-all duration-300 hover:-translate-y-1 hover:border-navy/35 hover:shadow-2xl hover:shadow-navy/20"
+                product={product}
+                hidden={hidden}
+                onThumbnailClick={(index) =>
+                  setLightbox({
+                    images: product.images,
+                    index,
+                    label: `${product.name} photo viewer`,
+                    altPrefix: product.name,
+                  })
+                }
               >
-                <div className="relative aspect-[4/3] overflow-hidden bg-beige">
-                  <Image
-                    src={product.images[0]}
-                    alt={product.name}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                    className="object-cover transition-transform duration-500 hover:scale-105"
-                  />
-                  {product.preorder ? (
-                    <span className="absolute right-4 top-4 inline-flex items-center gap-2 rounded-full bg-amber-100 px-3 py-1.5 text-xs font-bold text-amber-800 shadow-lg">
-                      <span className="h-2 w-2 rounded-full bg-amber-600" />
-                      Pre-Order
-                    </span>
-                  ) : (
-                    <span
-                      className={`absolute right-4 top-4 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold shadow-lg ${
-                        inStock ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      <span className={`h-2 w-2 rounded-full ${inStock ? "bg-emerald-600" : "bg-red-600"}`} />
-                      {inStock ? "In Stock" : "Out of Stock"}
-                    </span>
-                  )}
-                </div>
-
-                <div className="p-5 sm:p-6">
-                  <h2 className="min-h-14 text-lg font-bold leading-snug text-navy">{product.name}</h2>
-                  <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center rounded-full bg-navy px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-beige-soft shadow-sm shadow-navy/20">Item #{product.itemNumber}</span>
-                    <span className="inline-flex items-center rounded-full border border-beige-deep bg-beige px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-navy/60">Brand: {product.brand}</span>
-                  </div>
-                  <div className="mt-4 flex items-end justify-between gap-4 border-b border-beige-deep/70 pb-5">
+                <div className="w-full">
+                  <div className="flex items-end justify-between gap-3 border-b border-beige-deep/70 pb-3">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-wider text-navy/50">Current stock</p>
-                      <p className="mt-1 text-3xl font-black text-navy">{product.stock}</p>
+                      <p className="mt-0.5 text-2xl font-black text-navy">{product.stock}</p>
                     </div>
-                    <p className="text-right text-sm font-medium text-navy/60">{product.dimensions}</p>
+                    <p className="text-sm font-semibold text-navy/70">{formatPriceDisplay(product.price)}</p>
                   </div>
 
-                  <p className="mt-3 text-sm font-semibold text-navy/70">
-                    Price: <span className="text-navy-light">{formatPriceDisplay(product.price)}</span>
-                  </p>
-
-                  <form onSubmit={(event) => saveStock(event, product.id)} className="mt-5">
+                  <form onSubmit={(event) => saveStock(event, product.id)} className="mt-4">
                     <label htmlFor={`stock-${product.id}`} className="text-sm font-semibold text-navy">
                       Set quantity
                     </label>
@@ -597,8 +518,35 @@ export default function AdminDashboard({
                       {isSaving ? "Saving..." : isSaved ? "Saved" : "Save changes"}
                     </button>
                   </form>
+
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditingProduct(toCatalogProduct(product))}
+                      className="flex-1 rounded-xl border border-navy/20 px-3 py-2 text-xs font-semibold text-navy transition-colors hover:bg-navy hover:text-white"
+                    >
+                      Edit
+                    </button>
+                    {hidden ? (
+                      <button
+                        type="button"
+                        onClick={() => handleRestoreProduct(product.id)}
+                        className="flex-1 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100"
+                      >
+                        Restore
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setHidingProduct(toCatalogProduct(product))}
+                        className="flex-1 rounded-xl border border-red-300 px-3 py-2 text-xs font-semibold text-red-700 transition-colors hover:bg-red-50"
+                      >
+                        Hide
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </article>
+              </CatalogCardShell>
             );
           })}
         </section>
@@ -607,8 +555,13 @@ export default function AdminDashboard({
       {/* Add Product Modal */}
       {showAddForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/50 p-4 backdrop-blur-sm">
-          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl border-2 border-beige-deep bg-beige-soft p-6 shadow-2xl">
-            <h2 className="mb-4 text-xl font-bold text-navy">Add New Product</h2>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-product-title"
+            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl border-2 border-beige-deep bg-beige-soft p-6 shadow-2xl"
+          >
+            <h2 id="add-product-title" className="mb-4 text-xl font-bold text-navy">Add New Product</h2>
             <ProductForm mode="add" onSubmit={handleAddProduct} onCancel={() => setShowAddForm(false)} />
           </div>
         </div>
@@ -617,8 +570,13 @@ export default function AdminDashboard({
       {/* Edit Product Modal */}
       {editingProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/50 p-4 backdrop-blur-sm">
-          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl border-2 border-beige-deep bg-beige-soft p-6 shadow-2xl">
-            <h2 className="mb-4 text-xl font-bold text-navy">Edit Product</h2>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-product-title"
+            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl border-2 border-beige-deep bg-beige-soft p-6 shadow-2xl"
+          >
+            <h2 id="edit-product-title" className="mb-4 text-xl font-bold text-navy">Edit Product</h2>
             <ProductForm
               mode="edit"
               initial={{ ...editingProduct, stock: products.find((p) => p.id === editingProduct.id)?.stock ?? 0 }}
@@ -629,25 +587,30 @@ export default function AdminDashboard({
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
-      {deletingProduct && (
+      {/* Hide Confirmation Modal */}
+      {hidingProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-3xl border-2 border-beige-deep bg-beige-soft p-6 shadow-2xl">
-            <h2 className="text-xl font-bold text-navy">Remove Product</h2>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="hide-product-title"
+            className="w-full max-w-md rounded-3xl border-2 border-beige-deep bg-beige-soft p-6 shadow-2xl"
+          >
+            <h2 id="hide-product-title" className="text-xl font-bold text-navy">Hide Product</h2>
             <p className="mt-3 text-sm text-navy/70">
-              Are you sure you want to remove <strong>{deletingProduct.name}</strong>? It will be hidden from the public catalog.
+              Are you sure you want to hide <strong>{hidingProduct.name}</strong>? It will no longer appear in the public catalog. No data is deleted and you can restore it later.
             </p>
             <div className="mt-6 flex gap-3">
               <button
                 type="button"
-                onClick={handleDeleteProduct}
+                onClick={handleHideProduct}
                 className="flex-1 rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-700"
               >
-                Yes, remove
+                Yes, hide
               </button>
               <button
                 type="button"
-                onClick={() => setDeletingProduct(null)}
+                onClick={() => setHidingProduct(null)}
                 className="flex-1 rounded-xl border-2 border-beige-deep px-4 py-3 text-sm font-semibold text-navy transition-colors hover:bg-beige"
               >
                 Cancel
@@ -656,6 +619,15 @@ export default function AdminDashboard({
           </div>
         </div>
       )}
+
+      <PhotoLightbox
+        images={lightbox?.images ?? []}
+        open={lightbox !== null}
+        startIndex={lightbox?.index ?? 0}
+        onClose={() => setLightbox(null)}
+        label={lightbox?.label ?? "Photo viewer"}
+        altPrefix={lightbox?.altPrefix ?? "Photo"}
+      />
     </main>
   );
 }

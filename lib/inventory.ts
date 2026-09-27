@@ -1,7 +1,13 @@
 import { readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { type InventoryProduct } from "./products";
-import { getActiveProducts, getProductById, type CatalogProduct } from "./catalog";
+import {
+  getActiveProducts,
+  getAllProducts,
+  getProductById,
+  type CatalogProduct,
+} from "./catalog";
+import { assignDisplayNumbers } from "./item-number";
 import { parsePriceValue, parseStockValue } from "./inventory-validation";
 
 const LOCAL_INVENTORY_FILE = path.join(process.cwd(), "data", "inventory.json");
@@ -118,7 +124,8 @@ async function writeLocalRow(productId: string, stock: number, price?: string) {
   const current = await readLocalRows();
   const byId = new Map(current.map((row) => [row.product_id, row]));
   byId.set(productId, { product_id: productId, stock, ...(price ? { price } : {}) });
-  const catalogProducts = await getActiveProducts();
+  // Rebuild from ALL products so rows for hidden products are preserved.
+  const catalogProducts = await getAllProducts();
   const rows = catalogProducts.map((product) => {
     const saved = byId.get(product.id);
     const row: Record<string, unknown> = { product_id: product.id, stock: saved?.stock ?? 0 };
@@ -208,20 +215,33 @@ function catalogToInventory(product: CatalogProduct, stock: number, priceOverrid
     dimensions: product.dimensions,
     images: product.images,
     preorder: product.preorder || undefined,
+    active: product.active,
     stock,
   };
 }
 
-export async function getInventory(): Promise<InventoryProduct[]> {
-  const catalogProducts = await getActiveProducts();
+async function buildInventory(catalogProducts: CatalogProduct[]): Promise<InventoryProduct[]> {
   const config = getSupabaseConfig();
   const rows = config ? await readSupabaseRows(config) : await readLocalRows();
   const byProductId = new Map(rows.map((row) => [row.product_id, row]));
 
-  return catalogProducts.map((product) => {
-    const row = byProductId.get(product.id);
-    return catalogToInventory(product, row?.stock ?? 0, row?.price);
-  });
+  // Assign contiguous display numbers over the products in this list. Stored
+  // item_number values are never rewritten.
+  return assignDisplayNumbers(
+    catalogProducts.map((product) => {
+      const row = byProductId.get(product.id);
+      return catalogToInventory(product, row?.stock ?? 0, row?.price);
+    })
+  );
+}
+
+export async function getInventory(): Promise<InventoryProduct[]> {
+  return buildInventory(await getActiveProducts());
+}
+
+// Admin view: includes hidden (inactive) products so they can be restored.
+export async function getAllInventory(): Promise<InventoryProduct[]> {
+  return buildInventory(await getAllProducts());
 }
 
 export async function updateInventory(productId: string, value: unknown, price?: string) {

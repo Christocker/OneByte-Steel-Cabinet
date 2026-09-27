@@ -1,12 +1,19 @@
 import ExpandableGallery from "./ExpandableGallery";
 import Reveal from "./Reveal";
 import { getInventory, InventoryConfigurationError } from "@/lib/inventory";
+import { CatalogConfigurationError } from "@/lib/catalog";
 
 async function getPublicInventory() {
   try {
     return await getInventory();
   } catch (error) {
-    if (!(error instanceof InventoryConfigurationError)) throw error;
+    if (
+      !(error instanceof InventoryConfigurationError) &&
+      !(error instanceof CatalogConfigurationError)
+    ) {
+      // Supabase reachability/read failures surface to the error boundary.
+      throw error;
+    }
 
     // Keep the storefront available with an empty state until storage is configured.
     return [];
