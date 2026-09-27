@@ -12,6 +12,7 @@ import {
 type CatalogCardShellProps = {
   product: InventoryProduct;
   onThumbnailClick?: (index: number) => void;
+  showStock?: boolean;
   children?: ReactNode;
   className?: string;
 };
@@ -24,6 +25,7 @@ type CatalogCardShellProps = {
 export default function CatalogCardShell({
   product,
   onThumbnailClick,
+  showStock = false,
   children,
   className = "",
 }: CatalogCardShellProps) {
@@ -135,7 +137,16 @@ export default function CatalogCardShell({
           H × W × L
         </p>
 
-        <div className="mt-auto flex items-center justify-end border-t border-beige-deep/70 pt-4">
+        <div
+          className={`mt-auto flex items-center gap-2 border-t border-beige-deep/70 pt-4 ${
+            showStock ? "justify-between" : "justify-end"
+          }`}
+        >
+          {showStock && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-navy/5 px-3 py-1.5 text-xs font-bold text-navy">
+              Stock: {product.stock}
+            </span>
+          )}
           <span
             className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${getAvailabilityColor(status)}`}
           >

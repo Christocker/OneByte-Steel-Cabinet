@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { InventoryProduct } from "@/lib/products";
 import { assignDisplayNumbers } from "@/lib/item-number";
 import AdminProductCard from "./AdminProductCard";
@@ -18,6 +18,22 @@ export default function AdminDashboard({
   const [products, setProducts] = useState(initialProducts);
   const [notice, setNotice] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
+  // Only one card can be in edit mode at a time.
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const dirtyRef = useRef<Record<string, boolean>>({});
+  const handleDirtyChange = useCallback((id: string, dirty: boolean) => {
+    dirtyRef.current[id] = dirty;
+  }, []);
+
+  function requestEdit(id: string) {
+    const current = editingId;
+    if (current && current !== id && dirtyRef.current[current]) {
+      if (!window.confirm("Discard unsaved changes to the product you are editing?")) {
+        return;
+      }
+    }
+    setEditingId(id);
+  }
 
   // Same ordering + numbering as the storefront, so item numbers always match.
   const orderedProducts = useMemo(
@@ -95,6 +111,7 @@ export default function AdminDashboard({
 
   function handleDeleted(id: string) {
     setProducts((prev) => prev.filter((product) => product.id !== id));
+    setEditingId((current) => (current === id ? null : current));
     setNotice("Product permanently deleted.");
   }
 
@@ -202,6 +219,12 @@ export default function AdminDashboard({
             <AdminProductCard
               key={product.id}
               product={product}
+              editing={editingId === product.id}
+              onEdit={() => requestEdit(product.id)}
+              onCloseEdit={() =>
+                setEditingId((current) => (current === product.id ? null : current))
+              }
+              onDirtyChange={(dirty) => handleDirtyChange(product.id, dirty)}
               onSaved={handleSaved}
               onDeleted={handleDeleted}
               onUnauthorized={goToLogin}

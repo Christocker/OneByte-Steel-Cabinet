@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import type { InventoryProduct } from "@/lib/products";
 import { parseStockValue } from "@/lib/inventory-validation";
 import { buildDimensions, parseDimensions, type DimensionUnit } from "@/lib/dimensions";
@@ -11,6 +11,10 @@ import PriceInput from "./PriceInput";
 
 type AdminProductCardProps = {
   product: InventoryProduct;
+  editing: boolean;
+  onEdit: () => void;
+  onCloseEdit: () => void;
+  onDirtyChange: (dirty: boolean) => void;
   onSaved: (product: InventoryProduct) => void;
   onDeleted: (id: string) => void;
   onUnauthorized: () => void;
@@ -18,6 +22,10 @@ type AdminProductCardProps = {
 
 export default function AdminProductCard({
   product,
+  editing,
+  onEdit,
+  onCloseEdit,
+  onDirtyChange,
   onSaved,
   onDeleted,
   onUnauthorized,
@@ -39,11 +47,20 @@ export default function AdminProductCard({
   const [deleting, setDeleting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [notice, setNotice] = useState("");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const dimensions = buildDimensions(dimH, dimW, dimD, dimUnit);
+  // Normalize the stored dimensions the same way so a canonical-but-different
+  // stored string does not read as an unsaved change.
+  const normalizedStoredDimensions = buildDimensions(
+    initialDims.h,
+    initialDims.w,
+    initialDims.d,
+    initialDims.unit
+  );
   const stockNumber = parseStockValue(stock);
 
   const preview: InventoryProduct = {
@@ -56,6 +73,57 @@ export default function AdminProductCard({
     preorder,
     stock: stockNumber ?? 0,
   };
+
+  const dirty =
+    name !== product.name ||
+    brand !== product.brand ||
+    price !== product.price ||
+    dimensions !== normalizedStoredDimensions ||
+    stock !== String(product.stock) ||
+    preorder !== (product.preorder ?? false) ||
+    images.join("|") !== product.images.join("|");
+
+  // Let the dashboard know about unsaved changes so it can warn before
+  // switching edit mode to another card.
+  useEffect(() => {
+    onDirtyChange(dirty);
+  }, [dirty, onDirtyChange]);
+
+  function resetForm() {
+    const parsed = parseDimensions(product.dimensions);
+    setName(product.name);
+    setBrand(product.brand);
+    setPrice(product.price);
+    setDimH(parsed.h);
+    setDimW(parsed.w);
+    setDimD(parsed.d);
+    setDimUnit(parsed.unit);
+    setStock(String(product.stock));
+    setPreorder(product.preorder ?? false);
+    setImages(product.images);
+    setErrors({});
+    setNotice("");
+  }
+
+  // Refresh the editable fields from the saved product whenever edit mode opens.
+  const [prevEditing, setPrevEditing] = useState(editing);
+  if (editing !== prevEditing) {
+    setPrevEditing(editing);
+    if (editing) resetForm();
+  }
+
+  function cancelEdit() {
+    if (dirty) {
+      setConfirmDiscard(true);
+      return;
+    }
+    onCloseEdit();
+  }
+
+  function discardAndClose() {
+    setConfirmDiscard(false);
+    onCloseEdit();
+  }
 
   async function handleUpload(files: FileList | null) {
     if (!files || files.length === 0) return;
@@ -139,7 +207,7 @@ export default function AdminProductCard({
         preorder,
         stock: stockNumber as number,
       });
-      setNotice("Saved. The public listing is now up to date.");
+      onCloseEdit();
     } catch {
       setNotice("Could not save changes.");
     } finally {
@@ -177,212 +245,247 @@ export default function AdminProductCard({
   return (
     <>
       <CatalogCardShell
-        product={preview}
+        product={editing ? preview : product}
+        showStock
         onThumbnailClick={(index) => setLightboxIndex(index)}
       >
-        <form onSubmit={handleSave} className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <label htmlFor={`name-${product.id}`} className="text-xs font-semibold text-navy">
-                Product name
-              </label>
-              <input
-                id={`name-${product.id}`}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                maxLength={200}
-                className="mt-1 h-10 w-full rounded-lg border-2 border-beige-deep bg-beige px-3 text-sm text-navy outline-none focus:border-navy aria-[invalid=true]:border-red-500"
-                aria-invalid={Boolean(errors.name)}
-              />
-              {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
-            </div>
-            <div>
-              <label htmlFor={`brand-${product.id}`} className="text-xs font-semibold text-navy">
-                Brand
-              </label>
-              <input
-                id={`brand-${product.id}`}
-                value={brand}
-                onChange={(e) => setBrand(e.target.value)}
-                maxLength={100}
-                className="mt-1 h-10 w-full rounded-lg border-2 border-beige-deep bg-beige px-3 text-sm text-navy outline-none focus:border-navy aria-[invalid=true]:border-red-500"
-                aria-invalid={Boolean(errors.brand)}
-              />
-              {errors.brand && <p className="mt-1 text-xs text-red-600">{errors.brand}</p>}
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor={`price-${product.id}`} className="text-xs font-semibold text-navy">
-              Price
-            </label>
-            <PriceInput
-              id={`price-${product.id}`}
-              value={price}
-              onChange={setPrice}
-              invalid={Boolean(errors.price)}
-            />
-            {errors.price && <p className="mt-1 text-xs text-red-600">{errors.price}</p>}
-          </div>
-
-          <div>
-            <span className="text-xs font-semibold text-navy">Dimensions (H × W × L)</span>
-            <div className="mt-1 grid grid-cols-4 gap-2">
-              <input
-                type="number"
-                min="0"
-                value={dimH}
-                onChange={(e) => setDimH(e.target.value)}
-                placeholder="H"
-                aria-label="Height"
-                className="h-10 w-full rounded-lg border-2 border-beige-deep bg-beige px-2 text-center text-sm text-navy outline-none focus:border-navy"
-              />
-              <input
-                type="number"
-                min="0"
-                value={dimW}
-                onChange={(e) => setDimW(e.target.value)}
-                placeholder="W"
-                aria-label="Width"
-                className="h-10 w-full rounded-lg border-2 border-beige-deep bg-beige px-2 text-center text-sm text-navy outline-none focus:border-navy"
-              />
-              <input
-                type="number"
-                min="0"
-                value={dimD}
-                onChange={(e) => setDimD(e.target.value)}
-                placeholder="L"
-                aria-label="Length"
-                className="h-10 w-full rounded-lg border-2 border-beige-deep bg-beige px-2 text-center text-sm text-navy outline-none focus:border-navy"
-              />
-              <select
-                value={dimUnit}
-                onChange={(e) => setDimUnit(e.target.value as DimensionUnit)}
-                aria-label="Dimension unit"
-                className="h-10 w-full rounded-lg border-2 border-beige-deep bg-beige px-1 text-center text-sm font-semibold text-navy outline-none focus:border-navy"
-              >
-                <option value="cm">cm</option>
-                <option value="in">in</option>
-              </select>
-            </div>
-            {dimensions && <p className="mt-1 text-xs text-navy/40">Preview: {dimensions}</p>}
-            {errors.dimensions && <p className="mt-1 text-xs text-red-600">{errors.dimensions}</p>}
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <label htmlFor={`stock-${product.id}`} className="text-xs font-semibold text-navy">
-                Stock quantity
-              </label>
-              <div className="mt-1 flex items-stretch gap-2">
-                <button
-                  type="button"
-                  onClick={() => setStock(String(Math.max(0, (stockNumber ?? 0) - 1)))}
-                  aria-label={`Decrease ${product.name} stock`}
-                  className="h-10 w-10 flex-shrink-0 rounded-lg border-2 border-beige-deep bg-beige text-lg font-bold text-navy transition-colors hover:border-navy hover:bg-navy hover:text-white"
-                >
-                  −
-                </button>
+        {editing ? (
+          <form id={`edit-panel-${product.id}`} onSubmit={handleSave} className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label htmlFor={`name-${product.id}`} className="text-xs font-semibold text-navy">
+                  Product name
+                </label>
                 <input
-                  id={`stock-${product.id}`}
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  value={stock}
-                  onChange={(e) => setStock(e.target.value)}
-                  aria-invalid={Boolean(errors.stock)}
-                  className="min-w-0 flex-1 rounded-lg border-2 border-beige-deep bg-beige px-3 text-center text-sm font-bold text-navy outline-none focus:border-navy aria-[invalid=true]:border-red-500"
+                  id={`name-${product.id}`}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  maxLength={200}
+                  className="mt-1 h-10 w-full rounded-lg border-2 border-beige-deep bg-beige px-3 text-sm text-navy outline-none focus:border-navy aria-[invalid=true]:border-red-500"
+                  aria-invalid={Boolean(errors.name)}
                 />
-                <button
-                  type="button"
-                  onClick={() => setStock(String((stockNumber ?? 0) + 1))}
-                  aria-label={`Increase ${product.name} stock`}
-                  className="h-10 w-10 flex-shrink-0 rounded-lg border-2 border-beige-deep bg-beige text-lg font-bold text-navy transition-colors hover:border-navy hover:bg-navy hover:text-white"
-                >
-                  +
-                </button>
+                {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
               </div>
-              {errors.stock && <p className="mt-1 text-xs text-red-600">{errors.stock}</p>}
+              <div>
+                <label htmlFor={`brand-${product.id}`} className="text-xs font-semibold text-navy">
+                  Brand
+                </label>
+                <input
+                  id={`brand-${product.id}`}
+                  value={brand}
+                  onChange={(e) => setBrand(e.target.value)}
+                  maxLength={100}
+                  className="mt-1 h-10 w-full rounded-lg border-2 border-beige-deep bg-beige px-3 text-sm text-navy outline-none focus:border-navy aria-[invalid=true]:border-red-500"
+                  aria-invalid={Boolean(errors.brand)}
+                />
+                {errors.brand && <p className="mt-1 text-xs text-red-600">{errors.brand}</p>}
+              </div>
             </div>
 
             <div>
-              <span className="text-xs font-semibold text-navy">Pre-Order</span>
-              <div className="mt-1 flex h-10 items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setPreorder((prev) => !prev)}
-                  aria-label="Pre-order"
-                  aria-pressed={preorder}
-                  className={`relative inline-flex h-7 w-14 flex-shrink-0 items-center rounded-full transition-colors duration-300 ${
-                    preorder ? "bg-amber-500" : "bg-navy/20"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-300 ${
-                      preorder ? "translate-x-7" : "translate-x-1"
-                    }`}
-                  />
-                </button>
-                <span className="text-sm font-medium text-navy">{preorder ? "ON" : "OFF"}</span>
-              </div>
+              <label htmlFor={`price-${product.id}`} className="text-xs font-semibold text-navy">
+                Price
+              </label>
+              <PriceInput
+                id={`price-${product.id}`}
+                value={price}
+                onChange={setPrice}
+                invalid={Boolean(errors.price)}
+              />
+              {errors.price && <p className="mt-1 text-xs text-red-600">{errors.price}</p>}
             </div>
-          </div>
 
-          <div>
-            <span className="text-xs font-semibold text-navy">Images</span>
-            {errors.images && <p className="mt-1 text-xs text-red-600">{errors.images}</p>}
-            <div className="mt-1 flex flex-wrap gap-2">
-              {images.map((url, i) => (
-                <div key={`${url}-${i}`} className="relative h-16 w-16 overflow-hidden rounded-lg border-2 border-beige-deep">
-                  <Image src={url} alt={`Image ${i + 1}`} fill className="object-cover" sizes="64px" />
+            <div>
+              <span className="text-xs font-semibold text-navy">Dimensions (H × W × L)</span>
+              <div className="mt-1 grid grid-cols-4 gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  value={dimH}
+                  onChange={(e) => setDimH(e.target.value)}
+                  placeholder="H"
+                  aria-label="Height"
+                  className="h-10 w-full rounded-lg border-2 border-beige-deep bg-beige px-2 text-center text-sm text-navy outline-none focus:border-navy"
+                />
+                <input
+                  type="number"
+                  min="0"
+                  value={dimW}
+                  onChange={(e) => setDimW(e.target.value)}
+                  placeholder="W"
+                  aria-label="Width"
+                  className="h-10 w-full rounded-lg border-2 border-beige-deep bg-beige px-2 text-center text-sm text-navy outline-none focus:border-navy"
+                />
+                <input
+                  type="number"
+                  min="0"
+                  value={dimD}
+                  onChange={(e) => setDimD(e.target.value)}
+                  placeholder="L"
+                  aria-label="Length"
+                  className="h-10 w-full rounded-lg border-2 border-beige-deep bg-beige px-2 text-center text-sm text-navy outline-none focus:border-navy"
+                />
+                <select
+                  value={dimUnit}
+                  onChange={(e) => setDimUnit(e.target.value as DimensionUnit)}
+                  aria-label="Dimension unit"
+                  className="h-10 w-full rounded-lg border-2 border-beige-deep bg-beige px-1 text-center text-sm font-semibold text-navy outline-none focus:border-navy"
+                >
+                  <option value="cm">cm</option>
+                  <option value="in">in</option>
+                </select>
+              </div>
+              {dimensions && <p className="mt-1 text-xs text-navy/40">Preview: {dimensions}</p>}
+              {errors.dimensions && <p className="mt-1 text-xs text-red-600">{errors.dimensions}</p>}
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label htmlFor={`stock-${product.id}`} className="text-xs font-semibold text-navy">
+                  Stock quantity
+                </label>
+                <div className="mt-1 flex items-stretch gap-2">
                   <button
                     type="button"
-                    onClick={() => removeImage(i)}
-                    aria-label={`Remove image ${i + 1}`}
-                    className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white hover:bg-red-700"
+                    onClick={() => setStock(String(Math.max(0, (stockNumber ?? 0) - 1)))}
+                    aria-label={`Decrease ${product.name} stock`}
+                    className="h-10 w-10 flex-shrink-0 rounded-lg border-2 border-beige-deep bg-beige text-lg font-bold text-navy transition-colors hover:border-navy hover:bg-navy hover:text-white"
                   >
-                    x
+                    −
+                  </button>
+                  <input
+                    id={`stock-${product.id}`}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={stock}
+                    onChange={(e) => setStock(e.target.value)}
+                    aria-invalid={Boolean(errors.stock)}
+                    className="min-w-0 flex-1 rounded-lg border-2 border-beige-deep bg-beige px-3 text-center text-sm font-bold text-navy outline-none focus:border-navy aria-[invalid=true]:border-red-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setStock(String((stockNumber ?? 0) + 1))}
+                    aria-label={`Increase ${product.name} stock`}
+                    className="h-10 w-10 flex-shrink-0 rounded-lg border-2 border-beige-deep bg-beige text-lg font-bold text-navy transition-colors hover:border-navy hover:bg-navy hover:text-white"
+                  >
+                    +
                   </button>
                 </div>
-              ))}
-              <label className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-beige-deep text-xl text-navy/30 transition-colors hover:border-navy/40 hover:text-navy/50">
-                +
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  multiple
-                  className="hidden"
-                  onChange={(e) => handleUpload(e.target.files)}
-                />
-              </label>
+                {errors.stock && <p className="mt-1 text-xs text-red-600">{errors.stock}</p>}
+              </div>
+
+              <div>
+                <span className="text-xs font-semibold text-navy">Pre-Order</span>
+                <div className="mt-1 flex h-10 items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPreorder((prev) => !prev)}
+                    aria-label="Pre-order"
+                    aria-pressed={preorder}
+                    className={`relative inline-flex h-7 w-14 flex-shrink-0 items-center rounded-full transition-colors duration-300 ${
+                      preorder ? "bg-amber-500" : "bg-navy/20"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-300 ${
+                        preorder ? "translate-x-7" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                  <span className="text-sm font-medium text-navy">{preorder ? "ON" : "OFF"}</span>
+                </div>
+              </div>
             </div>
-            {uploading && <p className="mt-1 text-xs text-navy/50">Uploading...</p>}
-          </div>
 
-          {notice && (
-            <p role="status" className="text-xs font-semibold text-navy/70">
-              {notice}
-            </p>
-          )}
+            <div>
+              <span className="text-xs font-semibold text-navy">Images</span>
+              {errors.images && <p className="mt-1 text-xs text-red-600">{errors.images}</p>}
+              <div className="mt-1 flex flex-wrap gap-2">
+                {images.map((url, i) => (
+                  <div key={`${url}-${i}`} className="relative h-16 w-16 overflow-hidden rounded-lg border-2 border-beige-deep">
+                    <Image src={url} alt={`Image ${i + 1}`} fill className="object-cover" sizes="64px" />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(i)}
+                      aria-label={`Remove image ${i + 1}`}
+                      className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white hover:bg-red-700"
+                    >
+                      x
+                    </button>
+                  </div>
+                ))}
+                <label className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-beige-deep text-xl text-navy/30 transition-colors hover:border-navy/40 hover:text-navy/50">
+                  +
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => handleUpload(e.target.files)}
+                  />
+                </label>
+              </div>
+              {uploading && <p className="mt-1 text-xs text-navy/50">Uploading...</p>}
+            </div>
 
-          <div className="flex gap-2 pt-1">
-            <button
-              type="submit"
-              disabled={saving || uploading}
-              className="flex-1 rounded-xl bg-navy px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-navy-light disabled:cursor-wait disabled:opacity-60"
-            >
-              {saving ? "Saving..." : "Save changes"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfirmDelete(true)}
-              className="flex-1 rounded-xl border border-red-300 px-4 py-3 text-sm font-semibold text-red-700 transition-colors hover:bg-red-50"
-            >
-              Delete
-            </button>
+            {notice && (
+              <p role="alert" className="text-xs font-semibold text-red-700">
+                {notice}
+              </p>
+            )}
+
+            <div className="flex flex-wrap gap-2 pt-1">
+              <button
+                type="submit"
+                disabled={saving || uploading}
+                className="min-w-[8rem] flex-1 rounded-xl bg-navy px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-navy-light disabled:cursor-wait disabled:opacity-60"
+              >
+                {saving ? "Saving..." : "Save changes"}
+              </button>
+              <button
+                type="button"
+                onClick={cancelEdit}
+                disabled={saving || uploading}
+                className="min-w-[7rem] flex-1 rounded-xl border-2 border-beige-deep px-4 py-3 text-sm font-semibold text-navy transition-colors hover:bg-beige disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(true)}
+                className="min-w-[7rem] flex-1 rounded-xl border border-red-300 px-4 py-3 text-sm font-semibold text-red-700 transition-colors hover:bg-red-50"
+              >
+                Delete
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={onEdit}
+                className="min-w-[7rem] flex-1 rounded-xl border border-navy/20 px-4 py-3 text-sm font-semibold text-navy transition-colors hover:bg-navy hover:text-white"
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(true)}
+                className="min-w-[7rem] flex-1 rounded-xl border border-red-300 px-4 py-3 text-sm font-semibold text-red-700 transition-colors hover:bg-red-50"
+              >
+                Delete
+              </button>
+            </div>
+            {notice && (
+              <p role="alert" className="text-xs font-semibold text-red-700">
+                {notice}
+              </p>
+            )}
           </div>
-        </form>
+        )}
       </CatalogCardShell>
 
       {confirmDelete && (
@@ -415,11 +518,51 @@ export default function AdminProductCard({
               </button>
               <button
                 type="button"
+                autoFocus
                 onClick={() => setConfirmDelete(false)}
                 disabled={deleting}
                 className="flex-1 rounded-xl border-2 border-beige-deep px-4 py-3 text-sm font-semibold text-navy transition-colors hover:bg-beige disabled:opacity-60"
               >
                 Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmDiscard && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/50 p-4 backdrop-blur-sm">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={`discard-title-${product.id}`}
+            tabIndex={-1}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") setConfirmDiscard(false);
+            }}
+            className="w-full max-w-md rounded-3xl border-2 border-beige-deep bg-beige-soft p-6 shadow-2xl outline-none"
+          >
+            <h2 id={`discard-title-${product.id}`} className="text-xl font-bold text-navy">
+              Discard changes?
+            </h2>
+            <p className="mt-3 text-sm text-navy/70">
+              Your unsaved changes to <strong>{product.name}</strong> will be lost.
+            </p>
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={discardAndClose}
+                className="flex-1 rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-700"
+              >
+                Discard
+              </button>
+              <button
+                type="button"
+                autoFocus
+                onClick={() => setConfirmDiscard(false)}
+                className="flex-1 rounded-xl border-2 border-beige-deep px-4 py-3 text-sm font-semibold text-navy transition-colors hover:bg-beige"
+              >
+                Keep editing
               </button>
             </div>
           </div>

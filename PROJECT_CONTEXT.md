@@ -512,3 +512,30 @@ all editing inline on the card, and identical item numbers on the storefront and
   rows (`active=false`) and explicitly deleted products are removed; all other data is untouched.
 - Known minor gaps: save across two tables is not atomic; hard delete leaves Storage image files
   orphaned; an already-open admin tab can show stale numbering until reload.
+
+---
+
+# SESSION 4 — Collapsed Client-Style Admin Cards with Edit Toggle
+
+Admin cards now default to the public card look; editing is opt-in.
+
+- **Collapsed (default):** `CatalogCardShell` exactly as the storefront (thumbnails → `PhotoLightbox`,
+  name, `Item #`, price, dimensions, `H × W × L`, availability badge) plus a `Stock: N` badge
+  (`CatalogCardShell` new `showStock` prop) and a control row with **Edit** and **Delete**.
+- **Edit mode:** clicking Edit reveals all editable variables (name, brand, price, dimensions
+  H/W/L + unit, stock, pre-order toggle, image upload/remove) with **Save changes**, **Cancel**,
+  and **Delete**. The card previews edits live.
+- **One card at a time** (`editingId` in `AdminDashboard`).
+- **Cancel** prompts to confirm when there are unsaved changes; **Save** persists in one `PATCH`
+  (incl. stock) and collapses. Switching Edit to another dirty card also prompts.
+- Dirty detection normalizes dimensions so equivalent stored strings don't read as changes.
+- Confirmation dialogs focus their safe button (Escape works); errors show in both collapsed and
+  edit modes via `role="alert"`.
+
+## Verification
+- `npm run lint` → 0; `npx tsc --noEmit` → 0; `npm test` → 18/18 pass; `npm run build` → success.
+- An independent verifier confirmed the collapsed card matches the public card with only the stock
+  badge + controls added, editable fields are hidden until Edit, one-at-a-time holds, Cancel/Save
+  behave as specified, and delete confirmation/soft-delete removal are intact. Its findings
+  (silent failure feedback, dialog focus, dirty false-positive, dangling ARIA, card-switch data
+  loss) were fixed.
