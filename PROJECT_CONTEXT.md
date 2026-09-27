@@ -551,7 +551,8 @@ Admin cards now default to the public card look; editing is opt-in.
   `image/*` bytes.
 - **`lib/catalog-image.ts`** (new): renders all active products into one JPEG on a `<canvas>` —
   branded header/footer, 3-column grid; each cell shows photos, `Item #`, brand, name, price
-  (formatted), dimensions, and availability + stock count. Fetches images (local direct, remote via
+  (formatted), dimensions, and availability status only (In Stock / Out of Stock / Pre-Order — no
+  numeric stock count in the export). Fetches images (local direct, remote via
   the proxy) → blob → `createImageBitmap` → `toBlob("image/jpeg", 0.92)`. Guards oversized canvases.
   Photos render like the card: up to two side-by-side in rounded slots, **contained** (never cropped,
   whole cabinet visible) on a soft beige letterbox; one image shows centered.
