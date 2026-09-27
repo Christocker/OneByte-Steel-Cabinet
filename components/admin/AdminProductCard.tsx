@@ -40,6 +40,9 @@ export default function AdminProductCard({
   const [dimUnit, setDimUnit] = useState<DimensionUnit>(initialDims.unit);
   const [stock, setStock] = useState(String(product.stock));
   const [preorder, setPreorder] = useState(product.preorder ?? false);
+  const [assemblyRecommended, setAssemblyRecommended] = useState(
+    product.assembly_recommended ?? false
+  );
   const [images, setImages] = useState<string[]>(product.images);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -71,6 +74,7 @@ export default function AdminProductCard({
     dimensions: dimensions || product.dimensions,
     images,
     preorder,
+    assembly_recommended: assemblyRecommended,
     stock: stockNumber ?? 0,
   };
 
@@ -81,6 +85,7 @@ export default function AdminProductCard({
     dimensions !== normalizedStoredDimensions ||
     stock !== String(product.stock) ||
     preorder !== (product.preorder ?? false) ||
+    assemblyRecommended !== (product.assembly_recommended ?? false) ||
     images.join("|") !== product.images.join("|");
 
   // Let the dashboard know about unsaved changes so it can warn before
@@ -100,6 +105,7 @@ export default function AdminProductCard({
     setDimUnit(parsed.unit);
     setStock(String(product.stock));
     setPreorder(product.preorder ?? false);
+    setAssemblyRecommended(product.assembly_recommended ?? false);
     setImages(product.images);
     setErrors({});
     setNotice("");
@@ -186,6 +192,11 @@ export default function AdminProductCard({
           images,
           preorder,
           stock: stockNumber,
+          // Only send the new column when it actually changed, so normal edits
+          // keep working even before migration 008 has been applied.
+          ...(assemblyRecommended !== (product.assembly_recommended ?? false)
+            ? { assembly_recommended: assemblyRecommended }
+            : {}),
         }),
       });
       if (res.status === 401) {
@@ -205,6 +216,7 @@ export default function AdminProductCard({
         dimensions,
         images,
         preorder,
+        assembly_recommended: assemblyRecommended,
         stock: stockNumber as number,
       });
       onCloseEdit();
@@ -395,6 +407,30 @@ export default function AdminProductCard({
                   </button>
                   <span className="text-sm font-medium text-navy">{preorder ? "ON" : "OFF"}</span>
                 </div>
+              </div>
+            </div>
+
+            <div>
+              <span className="text-xs font-semibold text-navy">Onsite Assembly Recommended</span>
+              <div className="mt-1 flex h-10 items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setAssemblyRecommended((prev) => !prev)}
+                  aria-label="Onsite assembly recommended"
+                  aria-pressed={assemblyRecommended}
+                  className={`relative inline-flex h-7 w-14 flex-shrink-0 items-center rounded-full transition-colors duration-300 ${
+                    assemblyRecommended ? "bg-amber-500" : "bg-navy/20"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-300 ${
+                      assemblyRecommended ? "translate-x-7" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+                <span className="text-sm font-medium text-navy">
+                  {assemblyRecommended ? "ON" : "OFF"}
+                </span>
               </div>
             </div>
 

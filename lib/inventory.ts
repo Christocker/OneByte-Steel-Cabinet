@@ -215,6 +215,7 @@ function catalogToInventory(product: CatalogProduct, stock: number, priceOverrid
     dimensions: product.dimensions,
     images: product.images,
     preorder: product.preorder || undefined,
+    assembly_recommended: product.assembly_recommended || undefined,
     stock,
   };
 }

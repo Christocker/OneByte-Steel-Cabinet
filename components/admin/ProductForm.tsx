@@ -19,6 +19,7 @@ export type ProductFormData = {
   images: string[];
   stock: number;
   preorder: boolean;
+  assembly_recommended?: boolean;
 };
 
 export default function ProductForm({ onSubmit, onCancel }: ProductFormProps) {
@@ -28,6 +29,7 @@ export default function ProductForm({ onSubmit, onCancel }: ProductFormProps) {
   const [images, setImages] = useState<string[]>([]);
   const [stock, setStock] = useState(0);
   const [preorder, setPreorder] = useState(false);
+  const [assemblyRecommended, setAssemblyRecommended] = useState(false);
 
   const [dimH, setDimH] = useState("");
   const [dimW, setDimW] = useState("");
@@ -102,6 +104,9 @@ export default function ProductForm({ onSubmit, onCancel }: ProductFormProps) {
         images,
         stock,
         preorder,
+        // Only send the new column when set, so adding products keeps working
+        // even before migration 008 has been applied.
+        ...(assemblyRecommended ? { assembly_recommended: true } : {}),
       });
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Something went wrong.");
@@ -254,6 +259,30 @@ export default function ProductForm({ onSubmit, onCancel }: ProductFormProps) {
             />
           </button>
           <span className="text-sm font-medium text-navy">{preorder ? "ON" : "OFF"}</span>
+        </div>
+      </div>
+
+      <div>
+        <label className="text-sm font-semibold text-navy">Onsite Assembly Recommended</label>
+        <div className="mt-2 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setAssemblyRecommended(!assemblyRecommended)}
+            aria-label="Onsite assembly recommended"
+            aria-pressed={assemblyRecommended}
+            className={`relative inline-flex h-7 w-14 flex-shrink-0 items-center rounded-full transition-colors duration-300 ${
+              assemblyRecommended ? "bg-amber-500" : "bg-navy/20"
+            }`}
+          >
+            <span
+              className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-300 ${
+                assemblyRecommended ? "translate-x-7" : "translate-x-1"
+              }`}
+            />
+          </button>
+          <span className="text-sm font-medium text-navy">
+            {assemblyRecommended ? "ON" : "OFF"}
+          </span>
         </div>
       </div>
 

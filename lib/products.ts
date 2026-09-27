@@ -8,6 +8,7 @@ export type CabinetProduct = {
   dimensions: string;
   images: string[];
   preorder?: boolean;
+  assembly_recommended?: boolean;
 };
 
 export type InventoryProduct = CabinetProduct & {

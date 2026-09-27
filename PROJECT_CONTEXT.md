@@ -539,3 +539,42 @@ Admin cards now default to the public card look; editing is opt-in.
   behave as specified, and delete confirmation/soft-delete removal are intact. Its findings
   (silent failure feedback, dialog focus, dirty false-positive, dangling ARIA, card-switch data
   loss) were fixed.
+
+---
+
+# SESSION 5 — Catalog JPEG Export + "Onsite Assembly Recommended"
+
+## One-click JPEG catalog export
+- **`app/api/image-proxy/route.ts`** (new, admin-only): streams Supabase Storage images through our
+  origin so the canvas is never tainted. Pins to the configured `SUPABASE_URL` host (falls back to
+  `*.supabase.co`), requires the `/storage/v1/object/` path, refuses redirects, and only returns
+  `image/*` bytes.
+- **`lib/catalog-image.ts`** (new): renders all active products into one JPEG on a `<canvas>` —
+  branded header/footer, 3-column grid; each cell shows image, `Item #`, brand, name, price
+  (formatted), dimensions, and availability + stock count. Fetches images (local direct, remote via
+  the proxy) → blob → `createImageBitmap` → `toBlob("image/jpeg", 0.92)`. Guards oversized canvases.
+- **`components/admin/AdminDashboard.tsx`:** "Download catalog (JPEG)" button beside *Add Product*;
+  generates and downloads `onebyte-catalog-YYYYMMDD.jpg` in one click, with a generating state.
+
+## Per-product "Onsite Assembly Recommended"
+- **`supabase/migrations/008_assembly_recommended.sql`** (new, additive, default `false`; apply
+  before toggling ON).
+- Field `assembly_recommended` threaded through `lib/catalog.ts` (type, DDL, `parseRow`, create/
+  update), `lib/inventory.ts`, `lib/products.ts`, and the POST/PATCH product routes.
+- **Admin:** a second amber toggle in each card's Edit panel and the add form (dirty/reset/save).
+- **Cards:** amber "Onsite Assembly Recommended" badge next to the availability badge in
+  `CatalogCardShell`, so it shows on the public card and the admin preview.
+- Reads default to `false` when the column is absent; the toggle field is only sent when changed, so
+  ordinary edits and product creation keep working before the migration is applied.
+
+## Verification
+- `npm run lint` → 0; `npx tsc --noEmit` → 0; `npm test` → 18/18 pass; `npm run build` → success.
+- An independent verifier confirmed the proxy is admin-gated and can't fetch arbitrary URLs, the
+  fetch→blob→`ImageBitmap` path is taint-free so JPEG encoding succeeds, the assembly field is wired
+  everywhere `preorder` is, reads degrade to false, and no data files are modified. Its findings
+  (proxy redirect/content-type, two-line-name layout overflow, canvas size cap, download revoke,
+  pre-migration write risk) were fixed.
+
+## Data protection / required ops step
+- Migration **006 applied** (inventory DELETE grant). **008** must be applied in Supabase before the
+  assembly toggle can be saved. `data/` untouched; export is read-only.

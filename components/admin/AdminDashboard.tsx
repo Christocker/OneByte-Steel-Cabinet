@@ -18,6 +18,7 @@ export default function AdminDashboard({
   const [products, setProducts] = useState(initialProducts);
   const [notice, setNotice] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
+  const [exporting, setExporting] = useState(false);
   // Only one card can be in edit mode at a time.
   const [editingId, setEditingId] = useState<string | null>(null);
   const dirtyRef = useRef<Record<string, boolean>>({});
@@ -84,6 +85,7 @@ export default function AdminDashboard({
         dimensions: string;
         images: string[];
         preorder: boolean;
+        assembly_recommended?: boolean;
       };
     };
     if (result.product) {
@@ -96,6 +98,7 @@ export default function AdminDashboard({
         dimensions: result.product.dimensions,
         images: result.product.images,
         preorder: result.product.preorder || undefined,
+        assembly_recommended: result.product.assembly_recommended || undefined,
         stock: data.stock,
       };
       setProducts((prev) => [...prev, newProduct]);
@@ -113,6 +116,36 @@ export default function AdminDashboard({
     setProducts((prev) => prev.filter((product) => product.id !== id));
     setEditingId((current) => (current === id ? null : current));
     setNotice("Product permanently deleted.");
+  }
+
+  async function handleExport() {
+    if (orderedProducts.length === 0) {
+      setNotice("Add at least one product before exporting.");
+      return;
+    }
+    setExporting(true);
+    setNotice("");
+    try {
+      const { renderCatalogJpeg } = await import("@/lib/catalog-image");
+      const blob = await renderCatalogJpeg(
+        orderedProducts,
+        "Dasmariñas, Cavite · +63 918 381 1094 · Facebook: OneByte Steel Cabinets"
+      );
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+      link.href = url;
+      link.download = `onebyte-catalog-${stamp}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setNotice("Catalog image downloaded.");
+    } catch {
+      setNotice("Could not generate the catalog image.");
+    } finally {
+      setExporting(false);
+    }
   }
 
   return (
@@ -194,13 +227,23 @@ export default function AdminDashboard({
               <h2 className="text-xl font-bold text-navy">Product Management</h2>
               <p className="mt-1 text-sm text-navy/60">Edit each card and save, or delete a product permanently.</p>
             </div>
-            <button
-              type="button"
-              onClick={() => setShowAddForm(true)}
-              className="inline-flex items-center gap-2 rounded-xl bg-navy px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-navy-light"
-            >
-              + Add Product
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleExport}
+                disabled={exporting}
+                className="inline-flex items-center gap-2 rounded-xl border-2 border-navy/25 px-6 py-3 text-sm font-semibold text-navy transition-colors hover:bg-navy hover:text-white disabled:cursor-wait disabled:opacity-60"
+              >
+                {exporting ? "Generating..." : "Download catalog (JPEG)"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowAddForm(true)}
+                className="inline-flex items-center gap-2 rounded-xl bg-navy px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-navy-light"
+              >
+                + Add Product
+              </button>
+            </div>
           </div>
         </section>
 

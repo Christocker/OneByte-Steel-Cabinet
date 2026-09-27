@@ -51,6 +51,7 @@ export async function POST(request: Request) {
   const images = Array.isArray(v.images) ? (v.images as string[]) : [];
   const stock = typeof v.stock === "number" ? v.stock : typeof v.stock === "string" ? Number(v.stock) : 0;
   const preorder = v.preorder === true;
+  const assemblyRecommended = v.assembly_recommended === true;
 
   if (!name) return json({ error: "Product name is required." }, 400);
   if (name.length > 200) return json({ error: "Product name must be 200 characters or fewer." }, 400);
@@ -82,6 +83,7 @@ export async function POST(request: Request) {
       images,
       stock,
       preorder,
+      assembly_recommended: assemblyRecommended,
     });
     revalidatePath("/");
     return json({ product }, 201);

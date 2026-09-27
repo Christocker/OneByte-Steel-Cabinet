@@ -137,21 +137,25 @@ export default function CatalogCardShell({
           H × W × L
         </p>
 
-        <div
-          className={`mt-auto flex items-center gap-2 border-t border-beige-deep/70 pt-4 ${
-            showStock ? "justify-between" : "justify-end"
-          }`}
-        >
-          {showStock && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-navy/5 px-3 py-1.5 text-xs font-bold text-navy">
-              Stock: {product.stock}
+        <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-beige-deep/70 pt-4">
+          {product.assembly_recommended && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1.5 text-xs font-bold text-amber-800">
+              <span className="h-2 w-2 rounded-full bg-amber-600" />
+              Onsite Assembly Recommended
             </span>
           )}
-          <span
-            className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${getAvailabilityColor(status)}`}
-          >
-            <span className={`h-2 w-2 rounded-full ${getAvailabilityDotColor(status)}`} />
-            {getAvailabilityLabel(status)}
+          <span className="ml-auto flex items-center gap-2">
+            {showStock && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-navy/5 px-3 py-1.5 text-xs font-bold text-navy">
+                Stock: {product.stock}
+              </span>
+            )}
+            <span
+              className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${getAvailabilityColor(status)}`}
+            >
+              <span className={`h-2 w-2 rounded-full ${getAvailabilityDotColor(status)}`} />
+              {getAvailabilityLabel(status)}
+            </span>
           </span>
         </div>
       </div>

@@ -14,6 +14,7 @@ export type CatalogProduct = {
   dimensions: string;
   images: string[];
   preorder: boolean;
+  assembly_recommended: boolean;
   active: boolean;
   created_at: string;
   updated_at: string;
@@ -106,7 +107,9 @@ CREATE TABLE IF NOT EXISTS public.cabinet_products (
   id text PRIMARY KEY, item_number integer NOT NULL UNIQUE,
   brand text NOT NULL, name text NOT NULL, price text NOT NULL,
   dimensions text NOT NULL, images text[] NOT NULL DEFAULT '{}',
-  preorder boolean NOT NULL DEFAULT false, active boolean NOT NULL DEFAULT true,
+  preorder boolean NOT NULL DEFAULT false,
+  assembly_recommended boolean NOT NULL DEFAULT false,
+  active boolean NOT NULL DEFAULT true,
   created_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
   updated_at timestamptz NOT NULL DEFAULT timezone('utc', now())
 );
@@ -135,6 +138,8 @@ function parseRow(row: unknown): CatalogProduct {
     dimensions: String(r.dimensions ?? ""),
     images: Array.isArray(r.images) ? (r.images as string[]) : [],
     preorder: r.preorder === true || r.preorder === "true",
+    assembly_recommended:
+      r.assembly_recommended === true || r.assembly_recommended === "true",
     active: r.active === true || r.active === "true",
     created_at: String(r.created_at ?? ""),
     updated_at: String(r.updated_at ?? ""),
@@ -289,6 +294,7 @@ export type CreateProductInput = {
   images: string[];
   stock: number;
   preorder: boolean;
+  assembly_recommended: boolean;
   nextItemNumber?: number;
 };
 
@@ -299,6 +305,7 @@ export type UpdateProductInput = {
   dimensions?: string;
   images?: string[];
   preorder?: boolean;
+  assembly_recommended?: boolean;
 };
 
 export async function createProduct(input: CreateProductInput): Promise<CatalogProduct> {
@@ -323,6 +330,7 @@ export async function createProduct(input: CreateProductInput): Promise<CatalogP
         dimensions: input.dimensions,
         images: input.images,
         preorder: input.preorder,
+        assembly_recommended: input.assembly_recommended,
         active: true,
         created_at: now,
         updated_at: now,
@@ -366,6 +374,7 @@ export async function createProduct(input: CreateProductInput): Promise<CatalogP
       dimensions: input.dimensions,
       images: input.images,
       preorder: input.preorder,
+      assembly_recommended: input.assembly_recommended,
       active: true,
       created_at: now,
       updated_at: now,
@@ -382,6 +391,7 @@ export async function createProduct(input: CreateProductInput): Promise<CatalogP
       dimensions: input.dimensions,
       images: input.images,
       preorder: input.preorder,
+      assembly_recommended: input.assembly_recommended,
       active: true,
       created_at: now,
       updated_at: now,
@@ -406,6 +416,9 @@ export async function updateProduct(
   if (input.dimensions !== undefined) updates.dimensions = input.dimensions;
   if (input.images !== undefined) updates.images = input.images;
   if (input.preorder !== undefined) updates.preorder = input.preorder;
+  if (input.assembly_recommended !== undefined) {
+    updates.assembly_recommended = input.assembly_recommended;
+  }
 
   const config = getSupabaseConfig();
   if (config) {

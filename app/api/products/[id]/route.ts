@@ -89,6 +89,9 @@ export async function PATCH(request: Request, { params }: RouteParams) {
   if (v.preorder !== undefined) {
     updates.preorder = v.preorder === true;
   }
+  if (v.assembly_recommended !== undefined) {
+    updates.assembly_recommended = v.assembly_recommended === true;
+  }
 
   let stock: number | undefined;
   if (v.stock !== undefined) {

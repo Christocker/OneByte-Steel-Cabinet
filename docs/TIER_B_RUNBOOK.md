@@ -1,17 +1,24 @@
 # Tier B Runbook — Backup, Migrate, Roll Back
 
-> **STATUS: DRAFTS ONLY. NOTHING HAS BEEN EXECUTED.**
+> **STATUS: apply individually, after a backup.**
 > Persistent data (`data/*.json`, Supabase tables, Storage objects) must remain protected,
 > untouched, and unchanged until every step below is followed.
 
-This runbook covers the deferred Tier B work:
+This runbook covers the schema changes:
 
-| # | File | Type | Data impact |
-|---|------|------|-------------|
-| 003 | `supabase/migrations/003_harden_storage_policies.sql` | RLS / policies | **None** (no rows read/written) |
-| 004 | `supabase/migrations/004_login_attempts.sql` | New table | **Additive** (empty table only) |
-| 005 | `supabase/migrations/005_item_number_sequence.sql` | Sequence + default | **None to existing values** |
-| — | `price` → `numeric` | Conversion | **SKIPPED by decision** (rewrites every row; no monetary logic needs it) |
+| # | File | Type | Data impact | Status |
+|---|------|------|-------------|--------|
+| 003 | `supabase/migrations/003_harden_storage_policies.sql` | RLS / policies | **None** (no rows read/written) | draft |
+| 004 | `supabase/migrations/004_login_attempts.sql` | New table | **Additive** (empty table only) | draft |
+| 005 | `supabase/migrations/005_item_number_sequence.sql` | Sequence + default | **None to existing values** | draft |
+| 006 | `supabase/migrations/006_grant_inventory_delete.sql` | Grant | **None** (privilege only) | **applied** |
+| 007 | `supabase/migrations/007_remove_inactive_products.sql` | Delete | **Deletes `active=false` rows only** | optional |
+| 008 | `supabase/migrations/008_assembly_recommended.sql` | Add column | **Additive**, default false | needed for assembly toggle |
+| — | `price` → `numeric` | Conversion | **SKIPPED by decision** (rewrites every row; no monetary logic needs it) | skipped |
+
+> Migration **006** (inventory DELETE grant) is already applied. Migration **008** must be applied
+> before the "Onsite Assembly Recommended" toggle can be saved; ordinary edits and product creation
+> keep working without it.
 
 Order is intentional: least risky first. Apply one migration, verify, then proceed.
 
