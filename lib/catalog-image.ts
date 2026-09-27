@@ -63,7 +63,9 @@ function wrapText(
   return lines.slice(0, maxLines);
 }
 
-function drawCover(
+// Scale to fit entirely inside the slot and center it, so the whole cabinet is
+// always visible (never cropped top/bottom).
+function drawContain(
   ctx: CanvasRenderingContext2D,
   image: ImageBitmap,
   x: number,
@@ -71,10 +73,10 @@ function drawCover(
   w: number,
   h: number
 ) {
-  const scale = Math.max(w / image.width, h / image.height);
+  const scale = Math.min(w / image.width, h / image.height);
   const dw = image.width * scale;
   const dh = image.height * scale;
-  ctx.drawImage(image, x - (dw - w) / 2, y - (dh - h) / 2, dw, dh);
+  ctx.drawImage(image, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
 }
 
 async function loadImage(url: string): Promise<ImageBitmap | null> {
@@ -108,7 +110,7 @@ export async function renderCatalogJpeg(
   contact: string
 ): Promise<Blob> {
   const cellW = Math.round((WIDTH - PADDING * 2 - GAP * (COLS - 1)) / COLS);
-  const imageH = Math.round(cellW * 0.82);
+  const imageH = Math.round(cellW * 1.0);
   // Tall enough for a two-line product name plus price/dimensions/availability.
   const textH = 248;
   const cellH = imageH + textH;
@@ -140,7 +142,9 @@ export async function renderCatalogJpeg(
   ctx.fillRect(PADDING, 140, WIDTH - PADDING * 2, 2);
 
   const bitmaps = await Promise.all(
-    products.map((product) => (product.images[0] ? loadImage(product.images[0]) : Promise.resolve(null)))
+    products.map((product) =>
+      Promise.all(product.images.slice(0, 2).map((src) => loadImage(src)))
+    )
   );
 
   products.forEach((product, index) => {
@@ -156,23 +160,42 @@ export async function renderCatalogJpeg(
     ctx.strokeStyle = COLORS.border;
     ctx.stroke();
 
-    // Image
-    ctx.save();
-    roundRectPath(ctx, x, y, cellW, imageH, 20);
-    ctx.clip();
+    // Photos: up to two side by side (like the product card), each contained so
+    // the whole cabinet shows, on a soft beige letterbox with rounded corners.
+    const photos = bitmaps[index];
+    const innerPad = 12;
+    const slotGap = 10;
+    const slotH = imageH - innerPad * 2;
     ctx.fillStyle = "#efe7d6";
     ctx.fillRect(x, y, cellW, imageH);
-    const bitmap = bitmaps[index];
-    if (bitmap) {
-      drawCover(ctx, bitmap, x, y, cellW, imageH);
+
+    const drawSlot = (image: ImageBitmap | null, sx: number, sw: number) => {
+      ctx.save();
+      roundRectPath(ctx, sx, y + innerPad, sw, slotH, 14);
+      ctx.clip();
+      ctx.fillStyle = "#efe7d6";
+      ctx.fillRect(sx, y + innerPad, sw, slotH);
+      if (image) {
+        drawContain(ctx, image, sx, y + innerPad, sw, slotH);
+      } else {
+        ctx.fillStyle = "rgba(31,58,95,0.4)";
+        ctx.font = "600 20px system-ui, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("No image", sx + sw / 2, y + innerPad + slotH / 2);
+        ctx.textAlign = "left";
+        ctx.textBaseline = "alphabetic";
+      }
+      ctx.restore();
+    };
+
+    if (photos.length >= 2) {
+      const sw = (cellW - innerPad * 2 - slotGap) / 2;
+      drawSlot(photos[0], x + innerPad, sw);
+      drawSlot(photos[1], x + innerPad + sw + slotGap, sw);
     } else {
-      ctx.fillStyle = "rgba(31,58,95,0.4)";
-      ctx.font = "600 22px system-ui, sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("No image", x + cellW / 2, y + imageH / 2);
-      ctx.textAlign = "left";
+      drawSlot(photos[0] ?? null, x + innerPad, cellW - innerPad * 2);
     }
-    ctx.restore();
 
     let ty = y + imageH + 40;
 
