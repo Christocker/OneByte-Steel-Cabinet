@@ -2,13 +2,11 @@
 
 import Image from "next/image";
 import { FormEvent, useRef, useState } from "react";
-import type { CatalogProduct } from "@/lib/catalog";
-import PriceInput from "./PriceInput";
+import { buildDimensions, type DimensionUnit } from "@/lib/dimensions";
 import { formatPriceDisplay } from "@/lib/format";
+import PriceInput from "./PriceInput";
 
 type ProductFormProps = {
-  mode: "add" | "edit";
-  initial?: CatalogProduct & { stock?: number };
   onSubmit: (data: ProductFormData) => Promise<void>;
   onCancel: () => void;
 };
@@ -23,33 +21,18 @@ export type ProductFormData = {
   preorder: boolean;
 };
 
-export default function ProductForm({ mode, initial, onSubmit, onCancel }: ProductFormProps) {
-  const [name, setName] = useState(initial?.name ?? "");
-  const [brand, setBrand] = useState(initial?.brand ?? "");
-  const [price, setPrice] = useState(initial?.price ?? "");
-  const [images, setImages] = useState<string[]>(initial?.images ?? []);
-  const [stock, setStock] = useState(initial?.stock ?? 0);
-  const [preorder, setPreorder] = useState(initial?.preorder ?? false);
+export default function ProductForm({ onSubmit, onCancel }: ProductFormProps) {
+  const [name, setName] = useState("");
+  const [brand, setBrand] = useState("");
+  const [price, setPrice] = useState("");
+  const [images, setImages] = useState<string[]>([]);
+  const [stock, setStock] = useState(0);
+  const [preorder, setPreorder] = useState(false);
 
-  // Parse dimensions from string like "180 × 80 × 40 cm" or "180 × 80 × 40 in"
-  function parseDimensions(raw: string): { h: string; w: string; d: string; unit: "cm" | "in" } {
-    const match = raw.match(/^([\d.]*)\s*[×x]\s*([\d.]*)\s*[×x]\s*([\d.]*)\s*(cm|in)?$/i);
-    if (match) {
-      return { h: match[1], w: match[2], d: match[3], unit: (match[4]?.toLowerCase() as "cm" | "in") || "cm" };
-    }
-    return { h: "", w: "", d: "", unit: "cm" };
-  }
-
-  const parsed = parseDimensions(initial?.dimensions ?? "");
-  const [dimH, setDimH] = useState(parsed.h);
-  const [dimW, setDimW] = useState(parsed.w);
-  const [dimD, setDimD] = useState(parsed.d);
-  const [dimUnit, setDimUnit] = useState<"cm" | "in">(parsed.unit);
-
-  function getDimensionsString(): string {
-    if (!dimH || !dimW || !dimD) return "";
-    return `${dimH} × ${dimW} × ${dimD} ${dimUnit}`;
-  }
+  const [dimH, setDimH] = useState("");
+  const [dimW, setDimW] = useState("");
+  const [dimD, setDimD] = useState("");
+  const [dimUnit, setDimUnit] = useState<DimensionUnit>("cm");
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -64,7 +47,7 @@ export default function ProductForm({ mode, initial, onSubmit, onCancel }: Produ
     else if (brand.length > 100) e.brand = "Must be 100 characters or fewer.";
     if (!price.trim()) e.price = "Price is required.";
     else if (price.length > 100) e.price = "Must be 100 characters or fewer.";
-    const dims = getDimensionsString();
+    const dims = buildDimensions(dimH, dimW, dimD, dimUnit);
     if (!dims) e.dimensions = "All dimension fields are required.";
     else if (dims.length > 100) e.dimensions = "Dimensions must be 100 characters or fewer.";
     if (images.length === 0) e.images = "Add at least one product image.";
@@ -83,7 +66,7 @@ export default function ProductForm({ mode, initial, onSubmit, onCancel }: Produ
       if (file.size > 5 * 1024 * 1024) continue;
       const fd = new FormData();
       fd.append("file", file);
-      fd.append("product_id", initial?.id || "new-product");
+      fd.append("product_id", "new-product");
       try {
         const res = await fetch("/api/upload", { method: "POST", body: fd });
         if (res.ok) {
@@ -115,7 +98,7 @@ export default function ProductForm({ mode, initial, onSubmit, onCancel }: Produ
         name: name.trim(),
         brand: brand.trim(),
         price: price.trim(),
-        dimensions: getDimensionsString(),
+        dimensions: buildDimensions(dimH, dimW, dimD, dimUnit),
         images,
         stock,
         preorder,
@@ -207,7 +190,7 @@ export default function ProductForm({ mode, initial, onSubmit, onCancel }: Produ
             <span className="text-[11px] font-medium text-navy/40">Unit</span>
             <select
               value={dimUnit}
-              onChange={(e) => setDimUnit(e.target.value as "cm" | "in")}
+              onChange={(e) => setDimUnit(e.target.value as DimensionUnit)}
               className="mt-1 h-11 w-full rounded-xl border-2 border-beige-deep bg-beige px-2 text-center text-sm font-semibold text-navy outline-none transition-colors focus:border-navy"
             >
               <option value="cm">cm</option>
@@ -216,7 +199,7 @@ export default function ProductForm({ mode, initial, onSubmit, onCancel }: Produ
           </div>
         </div>
         {dimH && dimW && dimD && (
-          <p className="mt-1.5 text-xs text-navy/40">Preview: {getDimensionsString()}</p>
+          <p className="mt-1.5 text-xs text-navy/40">Preview: {buildDimensions(dimH, dimW, dimD, dimUnit)}</p>
         )}
         {errors.dimensions && <p className="mt-1 text-xs text-red-600">{errors.dimensions}</p>}
       </div>
@@ -316,7 +299,7 @@ export default function ProductForm({ mode, initial, onSubmit, onCancel }: Produ
           disabled={submitting || uploading}
           className="flex h-12 items-center justify-center rounded-xl bg-navy px-8 font-semibold text-white transition-colors hover:bg-navy-light disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {submitting ? "Saving..." : mode === "add" ? "Add Product" : "Save Changes"}
+          {submitting ? "Saving..." : "Add Product"}
         </button>
         <button
           type="button"

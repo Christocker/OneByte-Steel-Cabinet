@@ -11,7 +11,6 @@ import {
 
 type CatalogCardShellProps = {
   product: InventoryProduct;
-  hidden?: boolean;
   onThumbnailClick?: (index: number) => void;
   children?: ReactNode;
   className?: string;
@@ -19,12 +18,11 @@ type CatalogCardShellProps = {
 
 /**
  * Shared visual shell for a cabinet card. Used by the public catalog
- * (`ProductCard`) and by the admin product manager so both look identical.
- * Pass `children` to render admin actions in the footer.
+ * (`ProductCard`) and by the admin product manager. Pass `children` to render
+ * an admin control section directly beneath the card content.
  */
 export default function CatalogCardShell({
   product,
-  hidden = false,
   onThumbnailClick,
   children,
   className = "",
@@ -128,11 +126,6 @@ export default function CatalogCardShell({
           <span className="inline-flex items-center rounded-full bg-navy px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-beige-soft shadow-sm shadow-navy/20">
             Item #{itemNumber}
           </span>
-          {hidden && (
-            <span className="inline-flex items-center rounded-full bg-navy/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-navy/70">
-              Hidden
-            </span>
-          )}
         </div>
         <p className="text-2xl font-extrabold text-navy-light">
           {formatPriceDisplay(product.price)}
@@ -142,20 +135,19 @@ export default function CatalogCardShell({
           H × W × L
         </p>
 
-        <div
-          className={`mt-auto flex flex-wrap items-center gap-3 border-t border-beige-deep/70 pt-4 ${
-            children ? "justify-between" : "justify-end"
-          }`}
-        >
+        <div className="mt-auto flex items-center justify-end border-t border-beige-deep/70 pt-4">
           <span
             className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${getAvailabilityColor(status)}`}
           >
             <span className={`h-2 w-2 rounded-full ${getAvailabilityDotColor(status)}`} />
             {getAvailabilityLabel(status)}
           </span>
-          {children}
         </div>
       </div>
+
+      {children && (
+        <div className="border-t-2 border-beige-deep/70 px-5 py-5">{children}</div>
+      )}
     </article>
   );
 }

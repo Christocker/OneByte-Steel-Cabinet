@@ -3,6 +3,12 @@ import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/auth";
 import { isSameOrigin } from "@/lib/csrf";
 import { getProductById, updateProduct, deleteProduct, CatalogError } from "@/lib/catalog";
+import {
+  updateInventory,
+  InventoryValidationError,
+  InventoryConfigurationError,
+} from "@/lib/inventory";
+import { parseStockValue } from "@/lib/inventory-validation";
 
 export const runtime = "nodejs";
 
@@ -83,20 +89,41 @@ export async function PATCH(request: Request, { params }: RouteParams) {
   if (v.preorder !== undefined) {
     updates.preorder = v.preorder === true;
   }
-  if (v.active !== undefined) {
-    updates.active = v.active === true;
+
+  let stock: number | undefined;
+  if (v.stock !== undefined) {
+    const parsed = parseStockValue(v.stock);
+    if (parsed === null) {
+      return json({ error: "Stock must be a non-negative whole number." }, 400);
+    }
+    stock = parsed;
   }
 
-  if (Object.keys(updates).length === 0) {
+  if (Object.keys(updates).length === 0 && stock === undefined) {
     return json({ error: "No fields to update." }, 400);
   }
 
   try {
     const product = await updateProduct(id, updates as Parameters<typeof updateProduct>[1]);
     if (!product) return json({ error: "Product not found." }, 404);
+    if (stock !== undefined) {
+      // Keep the inventory row in sync in the same request. The price is passed
+      // through so a stored override never goes stale.
+      await updateInventory(
+        id,
+        stock,
+        typeof updates.price === "string" ? (updates.price as string) : undefined
+      );
+    }
     revalidatePath("/");
     return json({ product });
   } catch (error) {
+    if (error instanceof InventoryValidationError) {
+      return json({ error: error.message }, 400);
+    }
+    if (error instanceof InventoryConfigurationError) {
+      return json({ error: "Inventory storage is not configured." }, 503);
+    }
     if (error instanceof CatalogError) {
       return json({ error: error.message }, 400);
     }
@@ -120,7 +147,8 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     return json({ ok: true });
   } catch (error) {
     if (error instanceof CatalogError) {
-      return json({ error: error.message }, 400);
+      const status = error.message === "Product not found." ? 404 : 400;
+      return json({ error: error.message }, status);
     }
     const msg = error instanceof Error ? error.message : "Unable to delete product.";
     return json({ error: msg }, 500);

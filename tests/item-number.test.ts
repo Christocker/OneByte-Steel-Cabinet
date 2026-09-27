@@ -11,13 +11,8 @@ describe("nextItemNumberFrom", () => {
     assert.equal(nextItemNumberFrom([{ item_number: 1 }, { item_number: 5 }, { item_number: 3 }]), 6);
   });
 
-  it("counts hidden rows too, so a hidden number is never reused", () => {
-    // 23 was hidden (still stored) and 22 is the highest active number.
-    const rows = [
-      { item_number: 1 },
-      { item_number: 22 },
-      { item_number: 23 }, // hidden
-    ];
+  it("counts every stored row, so a number is never reused", () => {
+    const rows = [{ item_number: 1 }, { item_number: 22 }, { item_number: 23 }];
     assert.equal(nextItemNumberFrom(rows), 24);
   });
 
@@ -54,8 +49,8 @@ describe("assignDisplayNumbers", () => {
   });
 
   it("re-flows to a continuous sequence when an item is removed", () => {
-    const withHiddenRemoved = [{ item_number: 1 }, { item_number: 3 }, { item_number: 4 }];
-    const numbered = assignDisplayNumbers(withHiddenRemoved);
+    const afterDelete = [{ item_number: 1 }, { item_number: 3 }, { item_number: 4 }];
+    const numbered = assignDisplayNumbers(afterDelete);
     assert.deepEqual(
       numbered.map((p) => p.displayItemNumber),
       [1, 2, 3]

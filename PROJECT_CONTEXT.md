@@ -470,3 +470,45 @@ approved, still-unexecuted Tier B drafts (003–005). No migration was run; no r
   scheduled for Tier B removal).
 - Product + inventory insert is not atomic (a failed second insert leaves a product with stock 0).
 - No focus trap in the lightbox (focus is moved in, not trapped).
+
+---
+
+# SESSION 3 — Permanent Delete + Fully Inline Admin Cards + Number Parity
+
+Supersedes the Session 2 hide/restore behaviour. Requirement: permanent delete, no hide, no restore,
+all editing inline on the card, and identical item numbers on the storefront and admin.
+
+## Shipped (code-only; no DB executed in this session)
+- **Permanent hard delete.** `lib/catalog.ts` `deleteProduct` now issues real `DELETE`s on
+  `cabinet_inventory` (by `product_id`) then `cabinet_products` (by `id`); a missing product throws
+  `CatalogError` (route returns 404). Dev-local removes rows from `data/catalog.json` and
+  `data/inventory.json`. No `active=false` path remains; `UpdateProductInput.active` removed.
+- **Delete confirmation.** Each card's Delete opens a `role="dialog"` confirmation ("cannot be
+  undone"), with Escape-to-close. Delete is scoped to exactly one product + its inventory row.
+- **Hide/restore fully removed.** No "Hidden" filter/badge, no Restore, no hide modal;
+  `CatalogCardShell` `hidden` prop removed.
+- **Fully inline cards.** New `components/admin/AdminProductCard.tsx` contains name, brand, price,
+  dimensions H/W/L + unit, stock, pre-order toggle, and image upload/remove, with exactly
+  **Save changes** and **Delete**. Save sends one `PATCH /api/products/[id]` including `stock`; the
+  route updates the product and its inventory row. Edit button/modal removed; Add stays a modal
+  (`ProductForm`, add-only). Dimension helpers extracted to `lib/dimensions.ts`.
+- **Item-number parity.** `app/admin/page.tsx` now loads `getInventory()` (same source as the public
+  page) and `getAllInventory` is removed. Both sides sort by stored `item_number` ascending and use
+  `assignDisplayNumbers`, so every product shows the **same** contiguous number, including after
+  add/delete.
+- **Cleanup migrations (drafts, not applied):** `006_grant_inventory_delete.sql` grants
+  `service_role` DELETE on `cabinet_inventory` (required for hard delete); `007_remove_inactive_products.sql`
+  permanently deletes any `active=false` rows + their inventory rows after a backup.
+
+## Verification
+- `npm run lint` → 0; `npx tsc --noEmit` → 0; `npm test` → 18/18 pass; `npm run build` → success.
+- Two independent verifier agents confirmed: no hide/restore remains, hard delete issues DELETE on
+  both tables and is scoped to the single product, the inline card covers every edit field, and
+  public/admin item numbers are identical across add/delete scenarios.
+
+## Data protection / required ops step
+- `006` and `007` are **not applied**. A real deployment must back up Supabase, then apply `006`
+  before hard delete will work, and `007` to remove the previously hidden listings. Only hidden
+  rows (`active=false`) and explicitly deleted products are removed; all other data is untouched.
+- Known minor gaps: save across two tables is not atomic; hard delete leaves Storage image files
+  orphaned; an already-open admin tab can show stale numbering until reload.

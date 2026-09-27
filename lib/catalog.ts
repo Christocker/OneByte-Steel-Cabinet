@@ -3,6 +3,7 @@ import path from "node:path";
 import { nextItemNumberFrom } from "./item-number";
 
 const LOCAL_CATALOG_FILE = path.join(process.cwd(), "data", "catalog.json");
+const LOCAL_INVENTORY_FILE = path.join(process.cwd(), "data", "inventory.json");
 
 export type CatalogProduct = {
   id: string;
@@ -261,8 +262,8 @@ export async function getNextItemNumber(): Promise<number> {
   const config = getSupabaseConfig();
   if (config) {
     await ensureTable(config);
-    // Count every row (active AND hidden) so a hidden product's number is never
-    // reused. This is what keeps creation from colliding after a hide.
+    // Count every row so a deleted product's stored number is never accidentally
+    // reused while its removal is still in flight.
     const res = await fetch(
       `${config.baseUrl}/rest/v1/cabinet_products?select=item_number&order=item_number.desc&limit=1`,
       { headers: headers(config), cache: "no-store" }
@@ -298,7 +299,6 @@ export type UpdateProductInput = {
   dimensions?: string;
   images?: string[];
   preorder?: boolean;
-  active?: boolean;
 };
 
 export async function createProduct(input: CreateProductInput): Promise<CatalogProduct> {
@@ -406,7 +406,6 @@ export async function updateProduct(
   if (input.dimensions !== undefined) updates.dimensions = input.dimensions;
   if (input.images !== undefined) updates.images = input.images;
   if (input.preorder !== undefined) updates.preorder = input.preorder;
-  if (input.active !== undefined) updates.active = input.active;
 
   const config = getSupabaseConfig();
   if (config) {
@@ -429,6 +428,50 @@ export async function updateProduct(
   return (await getProductById(id))!;
 }
 
+async function pruneLocalInventory(productId: string): Promise<void> {
+  try {
+    const raw = await readFile(LOCAL_INVENTORY_FILE, "utf8");
+    const rows = JSON.parse(raw) as Array<{ product_id?: unknown }>;
+    if (!Array.isArray(rows)) return;
+    const filtered = rows.filter((row) => row?.product_id !== productId);
+    if (filtered.length === rows.length) return;
+    const tmp = `${LOCAL_INVENTORY_FILE}.${process.pid}.tmp`;
+    await writeFile(tmp, `${JSON.stringify(filtered, null, 2)}\n`, {
+      encoding: "utf8",
+      mode: 0o600,
+    });
+    await rename(tmp, LOCAL_INVENTORY_FILE);
+  } catch {
+    // No local inventory file to prune (production uses Supabase).
+  }
+}
+
+// Permanent delete: removes the product row and its inventory row. There is no
+// soft-hide path and no restore.
 export async function deleteProduct(id: string): Promise<void> {
-  await updateProduct(id, { active: false });
+  const config = getSupabaseConfig();
+  if (config) {
+    await ensureTable(config);
+    const existing = await getProductById(id);
+    if (!existing) throw new CatalogError("Product not found.");
+    // Inventory first, then the product, so a partial failure never leaves the
+    // product gone but its stock row orphaned by our own action.
+    await writeSupabase(
+      config,
+      "DELETE",
+      `cabinet_inventory?product_id=eq.${encodeURIComponent(id)}`
+    );
+    await writeSupabase(
+      config,
+      "DELETE",
+      `cabinet_products?id=eq.${encodeURIComponent(id)}`
+    );
+    return;
+  }
+
+  const all = await readLocalAll();
+  const next = all.filter((product) => product.id !== id);
+  if (next.length === all.length) throw new CatalogError("Product not found.");
+  await writeLocal(next);
+  await pruneLocalInventory(id);
 }

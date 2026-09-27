@@ -18,36 +18,9 @@ export function parseStockValue(value: unknown): number | null {
     : null;
 }
 
-export function getPriceSaveError(value: string): string | null {
-  const trimmed = value.trim();
-  if (trimmed.length === 0) {
-    return "Enter a price.";
-  }
-  if (trimmed.length > MAX_PRICE_LENGTH) {
-    return `Price must be ${MAX_PRICE_LENGTH} characters or fewer.`;
-  }
-  return null;
-}
-
 export function parsePriceValue(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
   if (trimmed.length === 0 || trimmed.length > MAX_PRICE_LENGTH) return null;
   return trimmed;
-}
-
-export function getStockInputError(value: string): string | null {
-  if (value.length === 0) {
-    return "Enter a stock quantity.";
-  }
-
-  if (!/^\d+$/.test(value)) {
-    return "Use whole numbers only, from 0 upward.";
-  }
-
-  if (parseStockValue(value) === null) {
-    return `Stock must be between 0 and ${MAX_STOCK.toLocaleString()}.`;
-  }
-
-  return null;
 }

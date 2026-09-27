@@ -124,7 +124,7 @@ async function writeLocalRow(productId: string, stock: number, price?: string) {
   const current = await readLocalRows();
   const byId = new Map(current.map((row) => [row.product_id, row]));
   byId.set(productId, { product_id: productId, stock, ...(price ? { price } : {}) });
-  // Rebuild from ALL products so rows for hidden products are preserved.
+  // Rebuild from all products so every stock row is preserved.
   const catalogProducts = await getAllProducts();
   const rows = catalogProducts.map((product) => {
     const saved = byId.get(product.id);
@@ -215,7 +215,6 @@ function catalogToInventory(product: CatalogProduct, stock: number, priceOverrid
     dimensions: product.dimensions,
     images: product.images,
     preorder: product.preorder || undefined,
-    active: product.active,
     stock,
   };
 }
@@ -235,13 +234,10 @@ async function buildInventory(catalogProducts: CatalogProduct[]): Promise<Invent
   );
 }
 
+// Public storefront and admin dashboard both use this same source so the item
+// numbers they display are always identical.
 export async function getInventory(): Promise<InventoryProduct[]> {
   return buildInventory(await getActiveProducts());
-}
-
-// Admin view: includes hidden (inactive) products so they can be restored.
-export async function getAllInventory(): Promise<InventoryProduct[]> {
-  return buildInventory(await getAllProducts());
 }
 
 export async function updateInventory(productId: string, value: unknown, price?: string) {
