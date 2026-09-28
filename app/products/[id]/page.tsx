@@ -7,8 +7,6 @@ import { getAvailability, getAvailabilityLabel } from "@/lib/availability";
 import { formatPriceDisplay } from "@/lib/format";
 import { getSiteUrl } from "@/lib/site";
 
-export const dynamic = "force-dynamic";
-
 type RouteParams = { params: Promise<{ id: string }> };
 
 async function loadProduct(id: string) {
@@ -22,7 +20,8 @@ async function loadProduct(id: string) {
 export async function generateMetadata({ params }: RouteParams): Promise<Metadata> {
   const { id } = await params;
   const product = await loadProduct(id);
-  if (!product) return { title: "Cabinet not found" };
+  // Resolve the 404 before the response streams so the status code is a real 404.
+  if (!product) notFound();
 
   const price = formatPriceDisplay(product.price);
   const title = `${product.name} — ${price}`;
