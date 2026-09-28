@@ -2,6 +2,8 @@ import ExpandableGallery from "./ExpandableGallery";
 import Reveal from "./Reveal";
 import { getInventory, InventoryConfigurationError } from "@/lib/inventory";
 import { CatalogConfigurationError } from "@/lib/catalog";
+import { getAvailability } from "@/lib/availability";
+import { getSiteUrl } from "@/lib/site";
 
 async function getPublicInventory() {
   try {
@@ -20,8 +22,50 @@ async function getPublicInventory() {
   }
 }
 
+function availabilityUrl(product: { preorder?: boolean; stock: number }): string {
+  switch (getAvailability(product.preorder ?? false, product.stock)) {
+    case "in-stock":
+      return "https://schema.org/InStock";
+    case "preorder":
+      return "https://schema.org/PreOrder";
+    default:
+      return "https://schema.org/OutOfStock";
+  }
+}
+
 export default async function Products() {
   const inventory = await getPublicInventory();
+  const siteUrl = getSiteUrl();
+
+  const itemList = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: inventory.map((product, index) => {
+      const numericPrice = Number(product.price.replace(/[^\d.]/g, ""));
+      const image = product.images[0]
+        ? product.images[0].startsWith("/")
+          ? `${siteUrl}${product.images[0]}`
+          : product.images[0]
+        : undefined;
+      return {
+        "@type": "ListItem",
+        position: index + 1,
+        item: {
+          "@type": "Product",
+          name: product.name,
+          ...(image ? { image } : {}),
+          offers: Number.isFinite(numericPrice)
+            ? {
+                "@type": "Offer",
+                priceCurrency: "PHP",
+                price: numericPrice,
+                availability: availabilityUrl(product),
+              }
+            : undefined,
+        },
+      };
+    }),
+  };
 
   return (
     <section id="products" className="mx-auto max-w-7xl border-t-2 border-beige-deep px-6 py-20 sm:px-8 sm:py-24">
@@ -41,6 +85,11 @@ export default async function Products() {
       </Reveal>
 
       <ExpandableGallery products={inventory} />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemList) }}
+      />
     </section>
   );
 }

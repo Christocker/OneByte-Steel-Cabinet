@@ -18,6 +18,12 @@ export default function AdminDashboard({
 }) {
   const [products, setProducts] = useState(initialProducts);
   const [notice, setNotice] = useState("");
+  const [noticeError, setNoticeError] = useState(false);
+
+  function showNotice(text: string, error = false) {
+    setNotice(text);
+    setNoticeError(error);
+  }
   const [showAddForm, setShowAddForm] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [exportFilter, setExportFilter] = useState({
@@ -131,23 +137,23 @@ export default function AdminDashboard({
       setProducts((prev) => [...prev, newProduct]);
     }
     setShowAddForm(false);
-    setNotice("Product created. The public listing is now up to date.");
+    showNotice("Product created. The public listing is now up to date.");
   }
 
   function handleSaved(updated: InventoryProduct) {
     setProducts((prev) => prev.map((product) => (product.id === updated.id ? updated : product)));
-    setNotice("Changes saved. The public listing is now up to date.");
+    showNotice("Changes saved. The public listing is now up to date.");
   }
 
   function handleDeleted(id: string) {
     setProducts((prev) => prev.filter((product) => product.id !== id));
     setEditingId((current) => (current === id ? null : current));
-    setNotice("Product permanently deleted.");
+    showNotice("Product permanently deleted.");
   }
 
   async function handleExport() {
     if (orderedProducts.length === 0) {
-      setNotice("Add at least one product before exporting.");
+      showNotice("Add at least one product before exporting.", true);
       return;
     }
     // Keep each product's website item number (displayItemNumber) even when
@@ -163,11 +169,11 @@ export default function AdminDashboard({
       }
     });
     if (selected.length === 0) {
-      setNotice("Select at least one category to include in the export.");
+      showNotice("Select at least one category to include in the export.", true);
       return;
     }
     setExporting(true);
-    setNotice("");
+    showNotice("");
     try {
       const { renderCatalogJpeg } = await import("@/lib/catalog-image");
       const blob = await renderCatalogJpeg(
@@ -194,9 +200,9 @@ export default function AdminDashboard({
       link.click();
       link.remove();
       window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-      setNotice("Catalog image downloaded.");
+      showNotice("Catalog image downloaded.");
     } catch {
-      setNotice("Could not generate the catalog image.");
+      showNotice("Could not generate the catalog image.", true);
     } finally {
       setExporting(false);
     }
@@ -348,7 +354,13 @@ export default function AdminDashboard({
           </div>
         </section>
 
-        <p role="status" aria-live="polite" className="mt-6 min-h-6 text-sm font-semibold text-emerald-800">
+        <p
+          role={noticeError ? "alert" : "status"}
+          aria-live="polite"
+          className={`mt-6 min-h-6 text-sm font-semibold ${
+            noticeError ? "text-red-700" : "text-emerald-800"
+          }`}
+        >
           {notice}
         </p>
 

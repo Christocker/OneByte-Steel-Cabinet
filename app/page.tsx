@@ -8,6 +8,7 @@ import Gallery from "@/components/Gallery";
 import Faq from "@/components/Faq";
 import Reveal from "@/components/Reveal";
 import StickyMobileContact from "@/components/StickyMobileContact";
+import StructuredData from "@/components/StructuredData";
 import { SITE_CONTACT } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +16,7 @@ export const dynamic = "force-dynamic";
 export default function Home() {
   return (
 <main className="min-h-screen bg-beige pb-24 text-navy sm:pb-0">
+      <StructuredData />
       <Navbar />
       <Hero />
       <Products />

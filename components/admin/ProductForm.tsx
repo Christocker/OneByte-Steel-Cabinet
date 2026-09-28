@@ -39,6 +39,7 @@ export default function ProductForm({ onSubmit, onCancel }: ProductFormProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   function validate(): boolean {
@@ -62,10 +63,17 @@ export default function ProductForm({ onSubmit, onCancel }: ProductFormProps) {
     if (!files || files.length === 0) return;
     setUploading(true);
     const newUrls: string[] = [];
+    const skipped: string[] = [];
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) continue;
-      if (file.size > 5 * 1024 * 1024) continue;
+      if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+        skipped.push(`${file.name} (unsupported type)`);
+        continue;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        skipped.push(`${file.name} (over 5MB)`);
+        continue;
+      }
       const fd = new FormData();
       fd.append("file", file);
       fd.append("product_id", "new-product");
@@ -74,12 +82,16 @@ export default function ProductForm({ onSubmit, onCancel }: ProductFormProps) {
         if (res.ok) {
           const data = (await res.json()) as { url?: string };
           if (data.url) newUrls.push(data.url);
+          else skipped.push(`${file.name} (upload failed)`);
+        } else {
+          skipped.push(`${file.name} (upload failed)`);
         }
       } catch {
-        // skip failed uploads
+        skipped.push(`${file.name} (upload failed)`);
       }
     }
     if (newUrls.length > 0) setImages((prev) => [...prev, ...newUrls]);
+    setUploadError(skipped.length > 0 ? `Skipped: ${skipped.join(", ")}` : "");
     setUploading(false);
     if (fileRef.current) fileRef.current.value = "";
   }
@@ -316,6 +328,7 @@ export default function ProductForm({ onSubmit, onCancel }: ProductFormProps) {
           </label>
         </div>
         {uploading && <p className="mt-1 text-xs text-navy/50">Uploading...</p>}
+        {uploadError && <p className="mt-1 text-xs text-red-600">{uploadError}</p>}
       </div>
 
       {submitError && (

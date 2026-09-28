@@ -136,10 +136,17 @@ export default function AdminProductCard({
     if (!files || files.length === 0) return;
     setUploading(true);
     const newUrls: string[] = [];
+    const skipped: string[] = [];
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) continue;
-      if (file.size > 5 * 1024 * 1024) continue;
+      if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+        skipped.push(`${file.name} (unsupported type)`);
+        continue;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        skipped.push(`${file.name} (over 5MB)`);
+        continue;
+      }
       const fd = new FormData();
       fd.append("file", file);
       fd.append("product_id", product.id);
@@ -148,12 +155,16 @@ export default function AdminProductCard({
         if (res.ok) {
           const data = (await res.json()) as { url?: string };
           if (data.url) newUrls.push(data.url);
+          else skipped.push(`${file.name} (upload failed)`);
+        } else {
+          skipped.push(`${file.name} (upload failed)`);
         }
       } catch {
-        // skip failed uploads
+        skipped.push(`${file.name} (upload failed)`);
       }
     }
     if (newUrls.length > 0) setImages((prev) => [...prev, ...newUrls]);
+    setNotice(skipped.length > 0 ? `Skipped: ${skipped.join(", ")}` : "");
     setUploading(false);
     if (fileRef.current) fileRef.current.value = "";
   }
