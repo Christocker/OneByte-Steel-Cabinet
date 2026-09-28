@@ -9,13 +9,11 @@ import {
   getAvailabilityColor,
   getAvailabilityDotColor,
 } from "@/lib/availability";
-import { SITE_CONTACT, whatsappInquiryUrl } from "@/lib/site";
 
 type CatalogCardShellProps = {
   product: InventoryProduct;
   onThumbnailClick?: (index: number) => void;
   showStock?: boolean;
-  showContact?: boolean;
   linkToProduct?: boolean;
   children?: ReactNode;
   className?: string;
@@ -30,7 +28,6 @@ export default function CatalogCardShell({
   product,
   onThumbnailClick,
   showStock = false,
-  showContact = false,
   linkToProduct = false,
   children,
   className = "",
@@ -173,33 +170,6 @@ export default function CatalogCardShell({
             </span>
           </span>
         </div>
-
-        {showContact && (
-          <div className="mt-3 grid grid-cols-3 gap-2 text-xs font-bold">
-            <a
-              href={whatsappInquiryUrl(product)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-lg bg-[#128C7E] px-2 py-2.5 text-center text-white transition-colors hover:bg-[#0e7064]"
-            >
-              WhatsApp
-            </a>
-            <a
-              href={SITE_CONTACT.messengerUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-lg border border-navy/20 px-2 py-2.5 text-center text-navy transition-colors hover:bg-navy hover:text-white"
-            >
-              Message
-            </a>
-            <a
-              href={`tel:${SITE_CONTACT.phone}`}
-              className="rounded-lg border border-navy/20 px-2 py-2.5 text-center text-navy transition-colors hover:bg-navy hover:text-white"
-            >
-              Call
-            </a>
-          </div>
-        )}
       </div>
 
       {children && (
