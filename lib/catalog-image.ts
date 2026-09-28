@@ -212,13 +212,9 @@ export async function renderCatalogJpeg(
 
     ty += 34;
 
-    // Brand
-    ctx.fillStyle = COLORS.muted;
-    ctx.font = "700 16px system-ui, sans-serif";
-    ctx.fillText(product.brand.toUpperCase(), x + 18, ty);
-
+    // Brand is intentionally omitted from the exported image.
     // Name (up to 2 lines)
-    ty += 30;
+    ty += 10;
     ctx.fillStyle = COLORS.navy;
     ctx.font = "700 24px system-ui, sans-serif";
     const nameLines = wrapText(ctx, product.name, cellW - 36, 2);

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { InventoryProduct } from "@/lib/products";
 import { assignDisplayNumbers } from "@/lib/item-number";
+import { getAvailability } from "@/lib/availability";
 import AdminProductCard from "./AdminProductCard";
 import ProductForm, { type ProductFormData } from "./ProductForm";
 
@@ -19,6 +20,11 @@ export default function AdminDashboard({
   const [notice, setNotice] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [exportFilter, setExportFilter] = useState({
+    inStock: true,
+    outOfStock: true,
+    preorder: true,
+  });
   // Only one card can be in edit mode at a time.
   const [editingId, setEditingId] = useState<string | null>(null);
   const dirtyRef = useRef<Record<string, boolean>>({});
@@ -123,12 +129,28 @@ export default function AdminDashboard({
       setNotice("Add at least one product before exporting.");
       return;
     }
+    // Keep each product's website item number (displayItemNumber) even when
+    // categories are filtered out, so the export matches the client site.
+    const selected = orderedProducts.filter((product) => {
+      switch (getAvailability(product.preorder ?? false, product.stock)) {
+        case "preorder":
+          return exportFilter.preorder;
+        case "in-stock":
+          return exportFilter.inStock;
+        default:
+          return exportFilter.outOfStock;
+      }
+    });
+    if (selected.length === 0) {
+      setNotice("Select at least one category to include in the export.");
+      return;
+    }
     setExporting(true);
     setNotice("");
     try {
       const { renderCatalogJpeg } = await import("@/lib/catalog-image");
       const blob = await renderCatalogJpeg(
-        orderedProducts,
+        selected,
         "Dasmariñas, Cavite · +63 918 381 1094 · Facebook: OneByte Steel Cabinets"
       );
       const url = URL.createObjectURL(blob);
@@ -227,22 +249,64 @@ export default function AdminDashboard({
               <h2 className="text-xl font-bold text-navy">Product Management</h2>
               <p className="mt-1 text-sm text-navy/60">Edit each card and save, or delete a product permanently.</p>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={handleExport}
-                disabled={exporting}
-                className="inline-flex items-center gap-2 rounded-xl border-2 border-navy/25 px-6 py-3 text-sm font-semibold text-navy transition-colors hover:bg-navy hover:text-white disabled:cursor-wait disabled:opacity-60"
+            <div className="flex flex-col gap-2 sm:items-end">
+              <div
+                className="flex flex-wrap items-center gap-3 text-sm text-navy"
+                role="group"
+                aria-label="Include in exported catalog image"
               >
-                {exporting ? "Generating..." : "Download catalog (JPEG)"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowAddForm(true)}
-                className="inline-flex items-center gap-2 rounded-xl bg-navy px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-navy-light"
-              >
-                + Add Product
-              </button>
+                <span className="font-semibold text-navy/60">Include:</span>
+                <label className="inline-flex items-center gap-1.5">
+                  <input
+                    type="checkbox"
+                    checked={exportFilter.inStock}
+                    onChange={(e) =>
+                      setExportFilter((current) => ({ ...current, inStock: e.target.checked }))
+                    }
+                    className="h-4 w-4 accent-navy"
+                  />
+                  In Stock
+                </label>
+                <label className="inline-flex items-center gap-1.5">
+                  <input
+                    type="checkbox"
+                    checked={exportFilter.outOfStock}
+                    onChange={(e) =>
+                      setExportFilter((current) => ({ ...current, outOfStock: e.target.checked }))
+                    }
+                    className="h-4 w-4 accent-navy"
+                  />
+                  Out of Stock
+                </label>
+                <label className="inline-flex items-center gap-1.5">
+                  <input
+                    type="checkbox"
+                    checked={exportFilter.preorder}
+                    onChange={(e) =>
+                      setExportFilter((current) => ({ ...current, preorder: e.target.checked }))
+                    }
+                    className="h-4 w-4 accent-navy"
+                  />
+                  Pre-Order
+                </label>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleExport}
+                  disabled={exporting}
+                  className="inline-flex items-center gap-2 rounded-xl border-2 border-navy/25 px-6 py-3 text-sm font-semibold text-navy transition-colors hover:bg-navy hover:text-white disabled:cursor-wait disabled:opacity-60"
+                >
+                  {exporting ? "Generating..." : "Download catalog (JPEG)"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAddForm(true)}
+                  className="inline-flex items-center gap-2 rounded-xl bg-navy px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-navy-light"
+                >
+                  + Add Product
+                </button>
+              </div>
             </div>
           </div>
         </section>
