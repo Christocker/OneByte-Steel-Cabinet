@@ -241,6 +241,13 @@ export async function getInventory(): Promise<InventoryProduct[]> {
   return buildInventory(await getActiveProducts());
 }
 
+export async function getInventoryProductById(
+  id: string
+): Promise<InventoryProduct | null> {
+  const products = await getInventory();
+  return products.find((product) => product.id === id) ?? null;
+}
+
 export async function updateInventory(productId: string, value: unknown, price?: string) {
   const product = await getProductById(productId);
   if (!product) {

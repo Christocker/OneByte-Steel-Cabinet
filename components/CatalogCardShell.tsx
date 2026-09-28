@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import type { InventoryProduct } from "@/lib/products";
 import { formatPriceDisplay } from "@/lib/format";
@@ -15,6 +16,7 @@ type CatalogCardShellProps = {
   onThumbnailClick?: (index: number) => void;
   showStock?: boolean;
   showContact?: boolean;
+  linkToProduct?: boolean;
   children?: ReactNode;
   className?: string;
 };
@@ -29,6 +31,7 @@ export default function CatalogCardShell({
   onThumbnailClick,
   showStock = false,
   showContact = false,
+  linkToProduct = false,
   children,
   className = "",
 }: CatalogCardShellProps) {
@@ -126,7 +129,16 @@ export default function CatalogCardShell({
       </div>
 
       <div className="flex flex-1 flex-col px-5 pb-6 pt-2">
-        <h3 className="text-lg font-bold text-navy">{product.name}</h3>
+        {linkToProduct ? (
+          <Link
+            href={`/products/${product.id}`}
+            className="text-lg font-bold text-navy underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-navy"
+          >
+            {product.name}
+          </Link>
+        ) : (
+          <h3 className="text-lg font-bold text-navy">{product.name}</h3>
+        )}
         <div className="mt-1.5 mb-2 flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center rounded-full bg-navy px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-beige-soft shadow-sm shadow-navy/20">
             Item #{itemNumber}
