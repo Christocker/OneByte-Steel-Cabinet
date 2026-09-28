@@ -16,6 +16,12 @@ export const dynamic = "force-dynamic";
 export default function Home() {
   return (
 <main className="min-h-screen bg-beige pb-24 text-navy sm:pb-0">
+      <a
+        href="#products"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-navy focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
+      >
+        Skip to products
+      </a>
       <StructuredData />
       <Navbar />
       <Hero />

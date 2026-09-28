@@ -2,9 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
 export default function AdminLoginForm() {
+  const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -29,7 +31,8 @@ export default function AdminLoginForm() {
         return;
       }
 
-      window.location.assign("/admin");
+      router.push("/admin");
+      router.refresh();
     } catch {
       setError("Unable to reach the sign-in service. Try again.");
     } finally {

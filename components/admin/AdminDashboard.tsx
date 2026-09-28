@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { InventoryProduct } from "@/lib/products";
 import { assignDisplayNumbers } from "@/lib/item-number";
@@ -16,6 +17,7 @@ export default function AdminDashboard({
   initialProducts: InventoryProduct[];
   username: string;
 }) {
+  const router = useRouter();
   const [products, setProducts] = useState(initialProducts);
   const [notice, setNotice] = useState("");
   const [noticeError, setNoticeError] = useState(false);
@@ -78,7 +80,7 @@ export default function AdminDashboard({
   const inStockCount = products.filter((product) => product.stock > 0).length;
 
   function goToLogin() {
-    window.location.assign("/admin/login");
+    router.push("/admin/login");
   }
 
   async function logout() {
