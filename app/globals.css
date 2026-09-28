@@ -133,6 +133,12 @@ body.lightbox-open #site-header {
   opacity: 0;
 }
 
+/* The sticky mobile contact bar hides while a photo viewer is open. */
+body.lightbox-open .sticky-contact {
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* iOS-style scrollbar */
 ::-webkit-scrollbar {
   width: 10px;

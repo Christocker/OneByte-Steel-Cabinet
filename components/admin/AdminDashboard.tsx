@@ -155,7 +155,18 @@ export default function AdminDashboard({
       );
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
-      const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Manila",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }).formatToParts(new Date());
+      const getPart = (type: string) =>
+        parts.find((part) => part.type === type)?.value ?? "";
+      const stamp = `${getPart("year")}${getPart("month")}${getPart("day")}-${getPart("hour")}${getPart("minute")}`;
       link.href = url;
       link.download = `onebyte-catalog-${stamp}.jpg`;
       document.body.appendChild(link);

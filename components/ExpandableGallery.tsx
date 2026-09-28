@@ -35,7 +35,9 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
     return () => ro.disconnect();
   }, []);
 
-  const visibleCount = columns;
+  // Always show at least three cabinets, even when the grid is a single column
+  // on mobile, so the catalog is never reduced to one visible product.
+  const visibleCount = Math.max(3, columns);
   const firstRow = products.slice(0, visibleCount);
   const hidden = products.slice(visibleCount);
   const hasMore = hidden.length > 0;
@@ -123,14 +125,14 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
           whileTap={{ scale: 0.96 }}
           className="inline-flex items-center gap-2.5 rounded-2xl bg-navy px-8 py-4 font-semibold text-white transition-colors duration-300 hover:bg-navy-light hover:shadow-xl hover:shadow-navy/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy"
         >
-          <span className="relative inline-flex h-6 min-w-[9rem] items-center justify-center overflow-hidden">
+          <span className="relative inline-flex h-6 min-w-[11rem] items-center justify-center overflow-hidden">
             <motion.span
               className="absolute w-full text-center"
               initial={false}
               animate={open ? { opacity: 0, y: -10 } : { opacity: 1, y: 0 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
             >
-              View All Cabinets
+              View All Cabinets ({count} more)
             </motion.span>
             <motion.span
               className="absolute w-full text-center"

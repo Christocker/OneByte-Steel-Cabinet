@@ -136,7 +136,9 @@ function parseRow(row: unknown): CatalogProduct {
     name: String(r.name ?? ""),
     price: String(r.price ?? "0"),
     dimensions: String(r.dimensions ?? ""),
-    images: Array.isArray(r.images) ? (r.images as string[]) : [],
+    images: Array.isArray(r.images)
+      ? (r.images.filter((image): image is string => typeof image === "string") as string[])
+      : [],
     preorder: r.preorder === true || r.preorder === "true",
     assembly_recommended:
       r.assembly_recommended === true || r.assembly_recommended === "true",

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/auth";
 import { isSameOrigin } from "@/lib/csrf";
 import { getAllProducts, createProduct, CatalogError } from "@/lib/catalog";
+import { sanitizeImageUrls } from "@/lib/image-urls";
 
 export const runtime = "nodejs";
 
@@ -48,7 +49,14 @@ export async function POST(request: Request) {
   const brand = typeof v.brand === "string" ? v.brand.trim() : "";
   const price = typeof v.price === "string" ? v.price.trim() : "";
   const dimensions = typeof v.dimensions === "string" ? v.dimensions.trim() : "";
-  const images = Array.isArray(v.images) ? (v.images as string[]) : [];
+  let images: string[] = [];
+  if (v.images !== undefined) {
+    const parsedImages = sanitizeImageUrls(v.images);
+    if (parsedImages === null) {
+      return json({ error: "Images must be a list of up to 8 valid image URLs." }, 400);
+    }
+    images = parsedImages;
+  }
   const stock = typeof v.stock === "number" ? v.stock : typeof v.stock === "string" ? Number(v.stock) : 0;
   const preorder = v.preorder === true;
   const assemblyRecommended = v.assembly_recommended === true;

@@ -9,6 +9,7 @@ import {
   InventoryConfigurationError,
 } from "@/lib/inventory";
 import { parseStockValue } from "@/lib/inventory-validation";
+import { sanitizeImageUrls } from "@/lib/image-urls";
 
 export const runtime = "nodejs";
 
@@ -83,8 +84,11 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     updates.dimensions = dims;
   }
   if (v.images !== undefined) {
-    if (!Array.isArray(v.images)) return json({ error: "Images must be an array." }, 400);
-    updates.images = v.images as string[];
+    const parsedImages = sanitizeImageUrls(v.images);
+    if (parsedImages === null) {
+      return json({ error: "Images must be a list of up to 8 valid image URLs." }, 400);
+    }
+    updates.images = parsedImages;
   }
   if (v.preorder !== undefined) {
     updates.preorder = v.preorder === true;

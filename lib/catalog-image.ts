@@ -1,6 +1,7 @@
 import type { InventoryProduct } from "./products";
 import { formatPriceDisplay } from "./format";
 import { getAvailability, getAvailabilityLabel } from "./availability";
+import { getSiteHost } from "./site";
 
 // Browser-only: renders the whole catalog into a single JPEG using <canvas>.
 // Images are fetched (local directly, remote via /api/image-proxy) so the canvas
@@ -11,7 +12,7 @@ const PADDING = 28;
 const GAP = 24;
 const COLS = 3;
 const HEADER = 176;
-const FOOTER = 96;
+const FOOTER = 128;
 
 const COLORS = {
   bg: "#f4eddd",
@@ -111,8 +112,9 @@ export async function renderCatalogJpeg(
 ): Promise<Blob> {
   const cellW = Math.round((WIDTH - PADDING * 2 - GAP * (COLS - 1)) / COLS);
   const imageH = Math.round(cellW * 1.0);
-  // Tall enough for a two-line product name plus price/dimensions/availability.
-  const textH = 248;
+  // Tall enough for a two-line name, price, dimensions, availability, and the
+  // optional assembly note.
+  const textH = 286;
   const cellH = imageH + textH;
   const rows = Math.max(1, Math.ceil(products.length / COLS));
   const height = HEADER + rows * cellH + (rows - 1) * GAP + FOOTER + PADDING;
@@ -250,10 +252,31 @@ export async function renderCatalogJpeg(
     ctx.fill();
     ctx.fillStyle = colors.text;
     ctx.fillText(availText, x + 18 + 30, ty);
+
+    if (product.assembly_recommended) {
+      ty += 32;
+      const asmText = "Onsite Assembly Recommended";
+      ctx.font = "800 16px system-ui, sans-serif";
+      const asmW = Math.min(ctx.measureText(asmText).width + 42, cellW - 36);
+      roundRectPath(ctx, x + 18, ty - 19, asmW, 30, 15);
+      ctx.fillStyle = "#fef3c7";
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(x + 18 + 15, ty - 4, 5, 0, Math.PI * 2);
+      ctx.fillStyle = "#d97706";
+      ctx.fill();
+      ctx.fillStyle = "#92400e";
+      ctx.fillText(asmText, x + 18 + 27, ty);
+    }
   });
 
   // Footer
   const fy = height - FOOTER + 20;
+  const generatedAt = new Intl.DateTimeFormat("en-PH", {
+    timeZone: "Asia/Manila",
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date());
   ctx.fillStyle = COLORS.border;
   ctx.fillRect(PADDING, fy - 24, WIDTH - PADDING * 2, 2);
   ctx.fillStyle = COLORS.muted;
@@ -262,7 +285,12 @@ export async function renderCatalogJpeg(
   ctx.fillText(
     "Prices may change without prior notice. Message us to order.",
     WIDTH / 2,
-    fy + 12
+    fy + 6
+  );
+  ctx.fillText(
+    `Generated: ${generatedAt} PHT · ${getSiteHost()}`,
+    WIDTH / 2,
+    fy + 40
   );
   ctx.textAlign = "left";
 

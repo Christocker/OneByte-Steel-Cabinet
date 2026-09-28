@@ -11,27 +11,36 @@ const geistSans = Geist({
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
-  title: "OneByte Steel Cabinets",
+  title: {
+    default: "Steel Cabinets for Sale in Dasmariñas, Cavite | OneByte",
+    template: "%s | OneByte Steel Cabinets",
+  },
   description:
-    "Premium steel cabinets built to last for homes, offices, schools, warehouses, and businesses.",
+    "Steel cabinets in Dasmariñas, Cavite: full glass, half glass, sliding, full metal, wardrobes, and filing cabinets. Message us for prices, delivery, and pick-up.",
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "OneByte Steel Cabinets",
+    title: "Steel Cabinets for Sale in Dasmariñas, Cavite | OneByte",
     description:
-      "Premium steel cabinets built to last for homes, offices, schools, warehouses, and businesses.",
+      "Full glass, half glass, sliding, full metal, wardrobes, and filing cabinets. Message us for prices, delivery, and pick-up.",
     url: getSiteUrl(),
     siteName: "OneByte Steel Cabinets",
     locale: "en_PH",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Steel Cabinets for Sale in Dasmariñas, Cavite | OneByte",
+    description:
+      "Full glass, half glass, sliding, full metal, wardrobes, and filing cabinets. Message us for prices, delivery, and pick-up.",
   },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#09090b",
+  themeColor: "#f4eddd",
 };
 
 export default function RootLayout({
@@ -40,7 +49,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
+    <html lang="en-PH" className={`${geistSans.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <SmoothScroll />
         {children}

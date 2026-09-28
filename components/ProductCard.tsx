@@ -13,6 +13,7 @@ export default function ProductCard({ product }: { product: InventoryProduct }) 
     <>
       <CatalogCardShell
         product={product}
+        showContact
         onThumbnailClick={(i) => {
           setIndex(i);
           setOpen(true);

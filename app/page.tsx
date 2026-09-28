@@ -7,12 +7,14 @@ import About from "@/components/About";
 import Gallery from "@/components/Gallery";
 import Faq from "@/components/Faq";
 import Reveal from "@/components/Reveal";
+import StickyMobileContact from "@/components/StickyMobileContact";
+import { SITE_CONTACT } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
 export default function Home() {
   return (
-<main className="min-h-screen bg-beige text-navy">
+<main className="min-h-screen bg-beige pb-24 text-navy sm:pb-0">
       <Navbar />
       <Hero />
       <Products />
@@ -31,9 +33,13 @@ export default function Home() {
             className="mx-auto h-[72px] w-[72px] rounded-2xl shadow-lg shadow-navy/20"
           />
           <h3 className="mt-4 text-lg font-bold text-navy">OneByte Steel Cabinets</h3>
-          <p className="mt-2 text-sm text-navy/60">
+          <p className="mt-2 text-sm text-navy/70">
             Selling since 2024 · Dasmariñas, Cavite
           </p>
+          <p className="mt-1 text-sm font-semibold text-navy/80">
+            Store hours: {SITE_CONTACT.hoursSummary}
+          </p>
+          <p className="mt-1 text-xs text-navy/60">{SITE_CONTACT.responseNote}</p>
 
           <h2 className="mt-10 text-4xl font-bold text-navy sm:text-5xl">Contact Us</h2>
           <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-navy/60">
@@ -97,6 +103,8 @@ export default function Home() {
           </a>
         </Reveal>
       </footer>
+
+      <StickyMobileContact />
     </main>
   );
 }
