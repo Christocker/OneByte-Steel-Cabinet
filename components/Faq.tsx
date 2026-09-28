@@ -76,7 +76,7 @@ export default function Faq() {
                 }`}
               >
                 <div className="overflow-hidden">
-                  <p className="px-6 pb-6 leading-relaxed text-navy/70">
+                  <p className="px-6 pb-6 leading-relaxed text-navy/80">
                     {f.answer}
                   </p>
                 </div>

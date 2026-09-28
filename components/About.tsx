@@ -33,13 +33,13 @@ export default function About() {
 
       <div className="mt-14 grid items-center gap-12 lg:grid-cols-2">
         <Reveal>
-          <p className="text-lg leading-relaxed text-navy/70">
+          <p className="text-lg leading-relaxed text-navy/80">
             OneByte Steel Cabinets sells premium steel cabinets for homes,
             offices, schools, and businesses. Full glass, full metal, sliding
             glass, and shelf-type styles — built from heavy-gauge steel to
             last.
           </p>
-          <p className="mt-5 text-lg leading-relaxed text-navy/70">
+          <p className="mt-5 text-lg leading-relaxed text-navy/80">
             Since 2024, we have been selling quality cabinets at the lowest
             prices, with friendly service from our base in Dasmariñas, Cavite.
             Whatever you need, we have it.
@@ -70,7 +70,7 @@ export default function About() {
               delay={i * 80}
             >
               <h3 className="text-lg font-bold text-navy">{f.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-navy/70">{f.text}</p>
+              <p className="mt-2 text-sm leading-relaxed text-navy/80">{f.text}</p>
             </Reveal>
           ))}
         </div>
@@ -80,7 +80,7 @@ export default function About() {
         <div>
           <h3 className="text-2xl font-bold text-navy">Find Us</h3>
           <p className="mt-3 text-lg font-semibold text-navy-light">OneByte</p>
-          <p className="mt-1 text-sm leading-relaxed text-navy/70">
+          <p className="mt-1 text-sm leading-relaxed text-navy/80">
             Dasmariñas, Cavite — drop by our store or message us anytime for
             inquiries and quotes.
           </p>

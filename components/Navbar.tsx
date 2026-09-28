@@ -42,14 +42,14 @@ export default function Navbar() {
             <a
               key={l.label}
               href={l.href}
-              className="relative whitespace-nowrap text-sm font-medium text-navy/70 transition-colors duration-300 hover:text-navy after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0 after:rounded-full after:bg-navy after:transition-all after:duration-300 hover:after:w-full"
+              className="relative whitespace-nowrap text-sm font-medium text-navy/80 transition-colors duration-300 hover:text-navy after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0 after:rounded-full after:bg-navy after:transition-all after:duration-300 hover:after:w-full"
             >
               {l.label}
             </a>
           ))}
           <Link
             href="/admin"
-            className="rounded-xl border border-navy/25 px-4 py-2 text-sm font-semibold text-navy/70 transition-all duration-300 hover:bg-navy hover:text-white active:scale-95"
+            className="rounded-xl border border-navy/25 px-4 py-2 text-sm font-semibold text-navy/80 transition-all duration-300 hover:bg-navy hover:text-white active:scale-95"
           >
             Admin
           </Link>
@@ -90,7 +90,7 @@ export default function Navbar() {
               key={l.label}
               href={l.href}
               onClick={closeMenu}
-              className="block rounded-xl px-4 py-3.5 text-base font-medium text-navy/70 transition-colors duration-200 hover:bg-navy/5 hover:text-navy"
+              className="block rounded-xl px-4 py-3.5 text-base font-medium text-navy/80 transition-colors duration-200 hover:bg-navy/5 hover:text-navy"
             >
               {l.label}
             </a>
@@ -98,7 +98,7 @@ export default function Navbar() {
           <Link
             href="/admin"
             onClick={closeMenu}
-            className="block rounded-xl border border-navy/25 px-4 py-3.5 text-base font-medium text-navy/70 transition-colors duration-200 hover:bg-navy/5 hover:text-navy"
+            className="block rounded-xl border border-navy/25 px-4 py-3.5 text-base font-medium text-navy/80 transition-colors duration-200 hover:bg-navy/5 hover:text-navy"
           >
             Admin
           </Link>

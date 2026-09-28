@@ -36,5 +36,11 @@ export function formatPriceDisplay(value: string | number): string {
 
 export function formatPriceInput(raw: string): string {
   const cleaned = raw.replace(/,/g, "");
-  return cleaned.replace(/\B(?=(\w{3})+(?!\w))/g, ",");
+  // Group only the leading run of digits so suffixes like "x2" or unit text are
+  // never split (previously "500x" became "5,00x").
+  const match = cleaned.match(/^\d+/);
+  if (!match) return cleaned;
+  const digits = match[0];
+  const rest = cleaned.slice(digits.length);
+  return `${digits.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}${rest}`;
 }

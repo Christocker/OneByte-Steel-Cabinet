@@ -40,7 +40,7 @@ function PaymentOptions() {
         <span className="mt-2 inline-flex rounded-full bg-emerald-600/90 px-3 py-1 text-sm font-semibold text-white">
           Pay at pick up
         </span>
-        <p className="mt-3 text-base leading-relaxed text-navy/70">
+        <p className="mt-3 text-base leading-relaxed text-navy/80">
           Lalamove won&apos;t leave until the payment is complete.
         </p>
       </div>
@@ -49,7 +49,7 @@ function PaymentOptions() {
         <span className="mt-2 inline-flex rounded-full bg-navy px-3 py-1 text-sm font-semibold text-white">
           Pay after delivery
         </span>
-        <p className="mt-3 text-base leading-relaxed text-navy/70">
+        <p className="mt-3 text-base leading-relaxed text-navy/80">
           We deliver first, then you pay.
         </p>
       </div>
@@ -67,7 +67,7 @@ export default function HowToOrder() {
         <h2 className="mt-3 text-5xl font-bold text-navy sm:text-6xl lg:text-7xl">
           Ordering is Easy
         </h2>
-        <p className="mx-auto mt-4 max-w-xl text-xl text-navy/70">
+        <p className="mx-auto mt-4 max-w-xl text-xl text-navy/80">
           Four simple steps, and your cabinet is on its way.
         </p>
       </Reveal>
@@ -86,7 +86,7 @@ export default function HowToOrder() {
               {s.payment ? (
                 <PaymentOptions />
               ) : (
-                <p className="mt-3 text-base leading-relaxed text-navy/70">{s.text}</p>
+                <p className="mt-3 text-base leading-relaxed text-navy/80">{s.text}</p>
               )}
             </Reveal>
           ))}
@@ -104,7 +104,7 @@ export default function HowToOrder() {
                 {s.payment ? (
                   <PaymentOptions />
                 ) : (
-                  <p className="mt-3 text-base leading-relaxed text-navy/70">{s.text}</p>
+                  <p className="mt-3 text-base leading-relaxed text-navy/80">{s.text}</p>
                 )}
               </div>
             </Reveal>

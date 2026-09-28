@@ -29,7 +29,7 @@ export default function Hero() {
               </span>
             </h1>
 
-            <p className="mx-auto mt-6 max-w-xl text-lg text-navy/70 sm:text-xl lg:mx-0">
+            <p className="mx-auto mt-6 max-w-xl text-lg text-navy/80 sm:text-xl lg:mx-0">
               Your trusted dealer for secure, durable, and modern steel cabinets —
               for homes, offices, schools, warehouses, and businesses.
             </p>

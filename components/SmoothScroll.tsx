@@ -14,6 +14,11 @@ export default function SmoothScroll() {
     let topRaf = 0;
     let prevBehavior = "";
 
+    const reduceMotion =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) return;
+
     if ("scrollRestoration" in history) {
       history.scrollRestoration = "manual";
     }

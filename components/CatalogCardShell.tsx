@@ -136,7 +136,7 @@ export default function CatalogCardShell({
           {formatPriceDisplay(product.price)}
         </p>
         <p className="mt-1.5 text-[15px] font-semibold text-navy/80">{product.dimensions}</p>
-        <p className="mt-0.5 text-[11px] font-medium uppercase tracking-wider text-navy/40">
+        <p className="mt-0.5 text-[11px] font-medium uppercase tracking-wider text-navy/60">
           H × W × L
         </p>
 

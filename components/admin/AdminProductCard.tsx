@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import type { InventoryProduct } from "@/lib/products";
-import { parseStockValue } from "@/lib/inventory-validation";
+import { parseStockValue, MAX_STOCK } from "@/lib/inventory-validation";
 import { buildDimensions, parseDimensions, type DimensionUnit } from "@/lib/dimensions";
 import CatalogCardShell from "@/components/CatalogCardShell";
 import PhotoLightbox from "@/components/PhotoLightbox";
@@ -47,6 +47,7 @@ export default function AdminProductCard({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [quickSaving, setQuickSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -159,6 +160,37 @@ export default function AdminProductCard({
 
   function removeImage(idx: number) {
     setImages((prev) => prev.filter((_, i) => i !== idx));
+  }
+
+  // One-tap stock changes straight from the collapsed card (no edit mode).
+  async function quickSetStock(next: number) {
+    if (quickSaving) return;
+    const value = Math.max(0, Math.min(MAX_STOCK, Math.floor(next)));
+    setQuickSaving(true);
+    setNotice("");
+    try {
+      const res = await fetch(`/api/products/${product.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ stock: value }),
+      });
+      if (res.status === 401) {
+        onUnauthorized();
+        return;
+      }
+      if (!res.ok) {
+        const err = (await res.json().catch(() => ({}))) as { error?: string };
+        setNotice(err.error || "Could not update stock.");
+        return;
+      }
+      onSaved({ ...product, stock: value });
+      setNotice("Stock updated.");
+    } catch {
+      setNotice("Could not update stock.");
+    } finally {
+      setQuickSaving(false);
+    }
   }
 
   async function handleSave(event: FormEvent<HTMLFormElement>) {
@@ -499,6 +531,37 @@ export default function AdminProductCard({
           </form>
         ) : (
           <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold text-navy/60">Quick stock:</span>
+              <button
+                type="button"
+                onClick={() => quickSetStock(product.stock - 1)}
+                disabled={quickSaving}
+                aria-label={`Decrease ${product.name} stock by 1`}
+                className="min-w-[3rem] rounded-lg border-2 border-beige-deep bg-beige px-3 py-2 text-sm font-bold text-navy transition-colors hover:border-navy hover:bg-navy hover:text-white disabled:opacity-50"
+              >
+                −1
+              </button>
+              <button
+                type="button"
+                onClick={() => quickSetStock(product.stock + 1)}
+                disabled={quickSaving}
+                aria-label={`Increase ${product.name} stock by 1`}
+                className="min-w-[3rem] rounded-lg border-2 border-beige-deep bg-beige px-3 py-2 text-sm font-bold text-navy transition-colors hover:border-navy hover:bg-navy hover:text-white disabled:opacity-50"
+              >
+                +1
+              </button>
+              <button
+                type="button"
+                onClick={() => quickSetStock(0)}
+                disabled={quickSaving}
+                aria-label={`Set ${product.name} stock to 0`}
+                className="rounded-lg border-2 border-beige-deep bg-beige px-3 py-2 text-sm font-bold text-navy transition-colors hover:border-navy hover:bg-navy hover:text-white disabled:opacity-50"
+              >
+                Set 0
+              </button>
+              {quickSaving && <span className="text-xs text-navy/50">Saving…</span>}
+            </div>
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"

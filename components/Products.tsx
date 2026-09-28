@@ -32,10 +32,10 @@ export default async function Products() {
         <h2 className="mt-3 text-5xl font-bold text-navy sm:text-6xl lg:text-7xl">
           Our Cabinets
         </h2>
-        <p className="mx-auto mt-4 max-w-xl text-lg text-navy/70">
+        <p className="mx-auto mt-4 max-w-xl text-lg text-navy/80">
           Every cabinet in our collection — with live stock availability.
         </p>
-        <p className="mx-auto mt-3 text-sm font-bold text-navy/60">
+        <p className="mx-auto mt-3 text-sm font-bold text-navy/70">
           <span aria-hidden="true">⚠ </span>Prices may change without prior notice.
         </p>
       </Reveal>

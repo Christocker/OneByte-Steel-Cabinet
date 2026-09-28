@@ -98,6 +98,8 @@ export default function ExpandableGallery({ products }: { products: InventoryPro
         initial={false}
         animate={{ height: open ? "auto" : 0 }}
         transition={drawerTransition}
+        inert={!open}
+        aria-hidden={!open}
       >
         <div className="grid gap-8 pt-8 pb-14 md:grid-cols-2 lg:grid-cols-3">
           {hasOpened &&
