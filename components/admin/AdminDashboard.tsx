@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { InventoryProduct } from "@/lib/products";
 import { assignDisplayNumbers } from "@/lib/item-number";
 import { getAvailability } from "@/lib/availability";
@@ -32,6 +32,26 @@ export default function AdminDashboard({
     dirtyRef.current[id] = dirty;
   }, []);
 
+  const hasUnsavedChanges = useCallback(
+    () => Object.values(dirtyRef.current).some(Boolean),
+    []
+  );
+
+  useEffect(() => {
+    function onBeforeUnload(event: BeforeUnloadEvent) {
+      if (hasUnsavedChanges()) {
+        event.preventDefault();
+        event.returnValue = "";
+      }
+    }
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  function confirmLeave(message: string) {
+    return !hasUnsavedChanges() || window.confirm(message);
+  }
+
   function requestEdit(id: string) {
     const current = editingId;
     if (current && current !== id && dirtyRef.current[current]) {
@@ -56,6 +76,7 @@ export default function AdminDashboard({
   }
 
   async function logout() {
+    if (!confirmLeave("You have unsaved changes. Sign out anyway?")) return;
     try {
       await fetch("/api/admin/logout", {
         method: "POST",
@@ -201,6 +222,11 @@ export default function AdminDashboard({
           <div className="flex flex-shrink-0 items-center gap-2 sm:gap-4">
             <Link
               href="/"
+              onClick={(event) => {
+                if (!confirmLeave("You have unsaved changes. Leave anyway?")) {
+                  event.preventDefault();
+                }
+              }}
               className="hidden rounded-xl border border-navy/20 px-4 py-2.5 text-sm font-semibold text-navy transition-colors hover:bg-navy hover:text-white sm:block"
             >
               View website
