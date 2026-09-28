@@ -1,6 +1,7 @@
 import { readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { nextItemNumberFrom } from "./item-number";
+import { MAX_IMAGES } from "./image-urls";
 
 const LOCAL_CATALOG_FILE = path.join(process.cwd(), "data", "catalog.json");
 const LOCAL_INVENTORY_FILE = path.join(process.cwd(), "data", "inventory.json");
@@ -137,7 +138,9 @@ function parseRow(row: unknown): CatalogProduct {
     price: String(r.price ?? "0"),
     dimensions: String(r.dimensions ?? ""),
     images: Array.isArray(r.images)
-      ? (r.images.filter((image): image is string => typeof image === "string") as string[])
+      ? (r.images
+          .filter((image): image is string => typeof image === "string")
+          .slice(0, MAX_IMAGES) as string[])
       : [],
     preorder: r.preorder === true || r.preorder === "true",
     assembly_recommended:

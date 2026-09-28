@@ -288,7 +288,9 @@ export async function renderCatalogJpeg(
     fy + 6
   );
   ctx.fillText(
-    `Generated: ${generatedAt} PHT · ${getSiteHost()}`,
+    `Generated: ${generatedAt} PHT · ${
+      typeof window !== "undefined" ? window.location.host : getSiteHost()
+    }`,
     WIDTH / 2,
     fy + 40
   );

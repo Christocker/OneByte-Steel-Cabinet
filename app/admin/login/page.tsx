@@ -6,7 +6,7 @@ import { isAdmin } from "@/lib/auth";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Admin Sign In | OneByte Steel Cabinets",
+  title: "Admin Sign In",
   robots: { index: false, follow: false },
 };
 

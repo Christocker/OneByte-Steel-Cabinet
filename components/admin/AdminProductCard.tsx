@@ -4,6 +4,7 @@ import Image from "next/image";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import type { InventoryProduct } from "@/lib/products";
 import { parseStockValue, MAX_STOCK } from "@/lib/inventory-validation";
+import { MAX_IMAGES } from "@/lib/image-urls";
 import { buildDimensions, parseDimensions, type DimensionUnit } from "@/lib/dimensions";
 import CatalogCardShell from "@/components/CatalogCardShell";
 import PhotoLightbox from "@/components/PhotoLightbox";
@@ -53,6 +54,12 @@ export default function AdminProductCard({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [notice, setNotice] = useState("");
+  const [noticeError, setNoticeError] = useState(false);
+
+  function showNotice(text: string, error = false) {
+    setNotice(text);
+    setNoticeError(error);
+  }
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -95,6 +102,9 @@ export default function AdminProductCard({
     onDirtyChange(dirty);
   }, [dirty, onDirtyChange]);
 
+  // Clear this card's dirty flag when it unmounts (for example after deletion).
+  useEffect(() => () => onDirtyChange(false), [onDirtyChange]);
+
   function resetForm() {
     const parsed = parseDimensions(product.dimensions);
     setName(product.name);
@@ -109,7 +119,7 @@ export default function AdminProductCard({
     setAssemblyRecommended(product.assembly_recommended ?? false);
     setImages(product.images);
     setErrors({});
-    setNotice("");
+    showNotice("");
   }
 
   // Refresh the editable fields from the saved product whenever edit mode opens.
@@ -129,6 +139,7 @@ export default function AdminProductCard({
 
   function discardAndClose() {
     setConfirmDiscard(false);
+    resetForm();
     onCloseEdit();
   }
 
@@ -137,8 +148,13 @@ export default function AdminProductCard({
     setUploading(true);
     const newUrls: string[] = [];
     const skipped: string[] = [];
+    const remaining = MAX_IMAGES - images.length;
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
+      if (newUrls.length >= remaining) {
+        skipped.push(`${file.name} (limit ${MAX_IMAGES} images)`);
+        continue;
+      }
       if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
         skipped.push(`${file.name} (unsupported type)`);
         continue;
@@ -164,7 +180,7 @@ export default function AdminProductCard({
       }
     }
     if (newUrls.length > 0) setImages((prev) => [...prev, ...newUrls]);
-    setNotice(skipped.length > 0 ? `Skipped: ${skipped.join(", ")}` : "");
+    showNotice(skipped.length > 0 ? `Skipped: ${skipped.join(", ")}` : "", skipped.length > 0);
     setUploading(false);
     if (fileRef.current) fileRef.current.value = "";
   }
@@ -178,7 +194,7 @@ export default function AdminProductCard({
     if (quickSaving) return;
     const value = Math.max(0, Math.min(MAX_STOCK, Math.floor(next)));
     setQuickSaving(true);
-    setNotice("");
+    showNotice("");
     try {
       const res = await fetch(`/api/products/${product.id}`, {
         method: "PATCH",
@@ -192,13 +208,13 @@ export default function AdminProductCard({
       }
       if (!res.ok) {
         const err = (await res.json().catch(() => ({}))) as { error?: string };
-        setNotice(err.error || "Could not update stock.");
+        showNotice(err.error || "Could not update stock.", true);
         return;
       }
       onSaved({ ...product, stock: value });
-      setNotice("Stock updated.");
+      showNotice("Stock updated.");
     } catch {
-      setNotice("Could not update stock.");
+      showNotice("Could not update stock.", true);
     } finally {
       setQuickSaving(false);
     }
@@ -221,7 +237,7 @@ export default function AdminProductCard({
     if (Object.keys(next).length > 0) return;
 
     setSaving(true);
-    setNotice("");
+    showNotice("");
     try {
       const res = await fetch(`/api/products/${product.id}`, {
         method: "PATCH",
@@ -248,7 +264,7 @@ export default function AdminProductCard({
       }
       if (!res.ok) {
         const err = (await res.json().catch(() => ({}))) as { error?: string };
-        setNotice(err.error || "Could not save changes.");
+        showNotice(err.error || "Could not save changes.", true);
         return;
       }
       onSaved({
@@ -264,7 +280,7 @@ export default function AdminProductCard({
       });
       onCloseEdit();
     } catch {
-      setNotice("Could not save changes.");
+      showNotice("Could not save changes.", true);
     } finally {
       setSaving(false);
     }
@@ -272,7 +288,7 @@ export default function AdminProductCard({
 
   async function handleDelete() {
     setDeleting(true);
-    setNotice("");
+    showNotice("");
     try {
       const res = await fetch(`/api/products/${product.id}`, {
         method: "DELETE",
@@ -284,13 +300,13 @@ export default function AdminProductCard({
       }
       if (!res.ok) {
         const err = (await res.json().catch(() => ({}))) as { error?: string };
-        setNotice(err.error || "Could not delete product.");
+        showNotice(err.error || "Could not delete product.", true);
         setConfirmDelete(false);
         return;
       }
       onDeleted(product.id);
     } catch {
-      setNotice("Could not delete product.");
+      showNotice("Could not delete product.", true);
       setConfirmDelete(false);
     } finally {
       setDeleting(false);
@@ -510,7 +526,12 @@ export default function AdminProductCard({
             </div>
 
             {notice && (
-              <p role="alert" className="text-xs font-semibold text-red-700">
+              <p
+                role={noticeError ? "alert" : "status"}
+                className={`text-xs font-semibold ${
+                  noticeError ? "text-red-700" : "text-emerald-800"
+                }`}
+              >
                 {notice}
               </p>
             )}
@@ -590,7 +611,12 @@ export default function AdminProductCard({
               </button>
             </div>
             {notice && (
-              <p role="alert" className="text-xs font-semibold text-red-700">
+              <p
+                role={noticeError ? "alert" : "status"}
+                className={`text-xs font-semibold ${
+                  noticeError ? "text-red-700" : "text-emerald-800"
+                }`}
+              >
                 {notice}
               </p>
             )}

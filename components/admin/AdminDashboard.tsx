@@ -150,6 +150,7 @@ export default function AdminDashboard({
   function handleDeleted(id: string) {
     setProducts((prev) => prev.filter((product) => product.id !== id));
     setEditingId((current) => (current === id ? null : current));
+    delete dirtyRef.current[id];
     showNotice("Product permanently deleted.");
   }
 
@@ -214,7 +215,15 @@ export default function AdminDashboard({
     <main className="min-h-screen bg-beige text-navy">
       <header className="border-b-2 border-beige-deep bg-beige-soft/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-5 sm:px-8">
-          <Link href="/" className="flex min-w-0 items-center gap-3">
+          <Link
+            href="/"
+            onClick={(event) => {
+              if (!confirmLeave("You have unsaved changes. Leave anyway?")) {
+                event.preventDefault();
+              }
+            }}
+            className="flex min-w-0 items-center gap-3"
+          >
             <Image
               src="/images/logo/onebyte-logo.jpg"
               alt="OneByte Steel Cabinets logo"

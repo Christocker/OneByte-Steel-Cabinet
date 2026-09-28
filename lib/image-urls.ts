@@ -3,6 +3,8 @@ const MAX_URL_LENGTH = 2048;
 
 // Accepts only local paths ("/images/...") or absolute https URLs, with sane
 // bounds, so a bad value can never crash the storefront's <Image> renderer.
+// Remote URLs must match the same allow-list as next.config.ts (Supabase
+// Storage), otherwise next/image would reject them at render time.
 export function sanitizeImageUrls(value: unknown): string[] | null {
   if (!Array.isArray(value)) return null;
   if (value.length > MAX_IMAGES) return null;
@@ -12,7 +14,24 @@ export function sanitizeImageUrls(value: unknown): string[] | null {
     if (typeof item !== "string") return null;
     const url = item.trim();
     if (url.length === 0 || url.length > MAX_URL_LENGTH) return null;
-    if (!url.startsWith("/") && !url.startsWith("https://")) return null;
+
+    if (url.startsWith("/")) {
+      out.push(url);
+      continue;
+    }
+
+    if (!url.startsWith("https://")) return null;
+    try {
+      const parsed = new URL(url);
+      if (
+        !parsed.hostname.endsWith(".supabase.co") ||
+        !parsed.pathname.startsWith("/storage/v1/object/")
+      ) {
+        return null;
+      }
+    } catch {
+      return null;
+    }
     out.push(url);
   }
   return out;

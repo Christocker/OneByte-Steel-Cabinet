@@ -41,7 +41,8 @@ export default async function Products() {
     "@context": "https://schema.org",
     "@type": "ItemList",
     itemListElement: inventory.map((product, index) => {
-      const numericPrice = Number(product.price.replace(/[^\d.]/g, ""));
+      const priceDigits = product.price.replace(/[^\d.]/g, "");
+      const numericPrice = priceDigits.length > 0 ? Number(priceDigits) : Number.NaN;
       const image = product.images[0]
         ? product.images[0].startsWith("/")
           ? `${siteUrl}${product.images[0]}`
@@ -88,7 +89,7 @@ export default async function Products() {
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemList) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemList).replace(/</g, "\\u003c") }}
       />
     </section>
   );

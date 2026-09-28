@@ -7,7 +7,7 @@ import { getInventory } from "@/lib/inventory";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Inventory Dashboard | OneByte Steel Cabinets",
+  title: "Inventory Dashboard",
   robots: { index: false, follow: false },
 };
 
