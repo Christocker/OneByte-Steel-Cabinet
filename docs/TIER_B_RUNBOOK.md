@@ -14,11 +14,13 @@ This runbook covers the schema changes:
 | 006 | `supabase/migrations/006_grant_inventory_delete.sql` | Grant | **None** (privilege only) | **applied** |
 | 007 | `supabase/migrations/007_remove_inactive_products.sql` | Delete | **Deletes `active=false` rows only** | optional |
 | 008 | `supabase/migrations/008_assembly_recommended.sql` | Add column | **Additive**, default false | needed for assembly toggle |
+| 009 | `supabase/migrations/009_cabinet_gallery.sql` | New table | **Additive** (new table + existing gallery photos) | needed for gallery management |
 | — | `price` → `numeric` | Conversion | **SKIPPED by decision** (rewrites every row; no monetary logic needs it) | skipped |
 
 > Migration **006** (inventory DELETE grant) is already applied. Migration **008** must be applied
 > before the "Onsite Assembly Recommended" toggle can be saved; ordinary edits and product creation
-> keep working without it.
+> keep working without it. Migration **009** must be applied before gallery photos can be added or
+> removed in the admin; the public gallery falls back to the seeded photos until then.
 
 Order is intentional: least risky first. Apply one migration, verify, then proceed.
 

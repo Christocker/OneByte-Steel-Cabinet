@@ -33,7 +33,8 @@ Always run `npm run lint`, `npx tsc --noEmit`, `npm test`, and `npm run build` b
 - `components/` — public sections + shared `CatalogCardShell` and `PhotoLightbox`
   (used by the public card, gallery, admin cards, and export). `components/admin/*` is the dashboard.
 - `lib/` — `catalog.ts` (product repository), `inventory.ts` (stock/price service),
-  `item-number.ts` (numbering), `catalog-image.ts` (JPEG export), auth/CSRF/validation helpers.
+  `gallery.ts` (public gallery photo store), `item-number.ts` (numbering),
+  `catalog-image.ts` (JPEG export), auth/CSRF/validation helpers.
 - `data/` — **dev-only** JSON fallback. Never hand-edit; production uses Supabase.
 - `supabase/migrations/` — schema. Drafts are marked `STATUS: DRAFT — NOT APPLIED`.
 - `docs/TIER_B_RUNBOOK.md` — backup/migrate/rollback procedure.

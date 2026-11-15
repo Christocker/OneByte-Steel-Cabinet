@@ -5,16 +5,22 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { InventoryProduct } from "@/lib/products";
+import type { GalleryPhoto } from "@/lib/gallery";
 import { assignDisplayNumbers } from "@/lib/item-number";
 import { getAvailability } from "@/lib/availability";
+import AdminGallery from "./AdminGallery";
 import AdminProductCard from "./AdminProductCard";
 import ProductForm, { type ProductFormData } from "./ProductForm";
 
 export default function AdminDashboard({
   initialProducts,
+  initialGallery,
+  galleryAvailable,
   username,
 }: {
   initialProducts: InventoryProduct[];
+  initialGallery: GalleryPhoto[];
+  galleryAvailable: boolean;
   username: string;
 }) {
   const router = useRouter();
@@ -398,6 +404,14 @@ export default function AdminDashboard({
             />
           ))}
         </section>
+
+        <div className="mt-16 border-t-2 border-beige-deep pt-10">
+          <AdminGallery
+            initialPhotos={initialGallery}
+            storageAvailable={galleryAvailable}
+            onUnauthorized={goToLogin}
+          />
+        </div>
       </div>
 
       {showAddForm && (

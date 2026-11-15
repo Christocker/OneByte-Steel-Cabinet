@@ -34,6 +34,7 @@ Follow `docs/TIER_B_RUNBOOK.md` (backup → dry run → apply). Current set:
 | `006_grant_inventory_delete.sql` | allow hard delete of inventory rows | applied |
 | `007_remove_inactive_products.sql` | remove hidden listings | optional |
 | `008_assembly_recommended.sql` | "Onsite Assembly Recommended" flag | needed for that toggle |
+| `009_cabinet_gallery.sql` | editable public gallery photos | needed for gallery management |
 
 ## Env variables
 
@@ -53,7 +54,8 @@ Never expose the Supabase secret key with a `NEXT_PUBLIC_` prefix or commit any 
 Open `/admin` to sign in (sessions are signed, expiring, HttpOnly cookies). Product cards are
 collapsed by default; use **Edit** to change fields inline, quick stock buttons for fast stock
 changes, and **Delete** (permanent) with confirmation. **Download catalog (JPEG)** generates a
-shareable image of the catalog with optional In Stock / Out of Stock / Pre-Order filtering.
+shareable image of the catalog with optional In Stock / Out of Stock / Pre-Order filtering. The
+**Gallery** section below the products lets the admin upload new photos and remove existing ones.
 
 ## Verification
 
