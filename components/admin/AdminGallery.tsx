@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useRef, useState, type DragEvent } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import type { GalleryPhoto } from "@/lib/gallery";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -43,9 +44,14 @@ export default function AdminGallery({
   const [editing, setEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
+  const [savingOrder, setSavingOrder] = useState(false);
   const [notice, setNotice] = useState("");
   const [noticeError, setNoticeError] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const dragStartOrderRef = useRef<GalleryPhoto[] | null>(null);
+  const reduceMotion = useReducedMotion();
 
   function showNotice(text: string, error = false) {
     setNotice(text);
@@ -196,6 +202,95 @@ export default function AdminGallery({
     }
   }
 
+  async function saveOrder(next: GalleryPhoto[], previous: GalleryPhoto[]) {
+    const orderedIds = next.map((photo) => photo.id);
+    if (orderedIds.every((id, index) => id === previous[index]?.id)) return;
+
+    setSavingOrder(true);
+    showNotice("");
+
+    try {
+      const response = await fetch("/api/gallery", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ ids: orderedIds }),
+      });
+
+      if (response.status === 401) {
+        onUnauthorized();
+        return;
+      }
+      if (!response.ok) {
+        const error = (await response.json().catch(() => ({}))) as { error?: string };
+        setPhotos(previous);
+        showNotice(error.error || "Could not save the gallery order.", true);
+        return;
+      }
+
+      const result = (await response.json()) as { photos?: GalleryPhoto[] };
+      if (result.photos) setPhotos(result.photos);
+      showNotice("Gallery order saved.");
+    } catch {
+      setPhotos(previous);
+      showNotice("Could not save the gallery order.", true);
+    } finally {
+      setSavingOrder(false);
+    }
+  }
+
+  function endDrag() {
+    setDraggingId(null);
+    setOverId(null);
+    dragStartOrderRef.current = null;
+  }
+
+  function handleDragStart(event: DragEvent<HTMLDivElement>, photo: GalleryPhoto) {
+    if (!editing || savingOrder) {
+      event.preventDefault();
+      return;
+    }
+    dragStartOrderRef.current = photos;
+    setDraggingId(photo.id);
+    setOverId(null);
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", photo.id);
+  }
+
+  function handleDragOver(event: DragEvent<HTMLDivElement>, photo: GalleryPhoto) {
+    if (!editing || !draggingId) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+    if (overId !== photo.id) setOverId(photo.id);
+  }
+
+  function handleDrop(event: DragEvent<HTMLDivElement>, targetId: string) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const draggedId =
+      draggingId || event.dataTransfer.getData("text/plain");
+    const previous = dragStartOrderRef.current ?? photos;
+    if (!draggedId || draggedId === targetId) {
+      endDrag();
+      return;
+    }
+
+    const from = photos.findIndex((photo) => photo.id === draggedId);
+    const to = photos.findIndex((photo) => photo.id === targetId);
+    if (from === -1 || to === -1) {
+      endDrag();
+      return;
+    }
+
+    const next = [...photos];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    setPhotos(next);
+    endDrag();
+    void saveOrder(next, previous);
+  }
+
   return (
     <section aria-labelledby="admin-gallery-title">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -205,50 +300,55 @@ export default function AdminGallery({
           </h2>
           <p className="mt-1 text-sm text-navy/60">
             {editing
-              ? "Remove photos with the × button, or add new ones with the tile after the last photo."
-              : "Photos shown in the public “In Use” gallery. Select Edit to add or remove photos."}
+              ? "Drag photos by holding them to reorder. Use the × button to remove, or the tile after the last photo to add."
+              : "Photos shown in the public “In Use” gallery. Select Edit to add, remove, or reorder photos."}
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setEditing((current) => !current)}
-          disabled={!storageAvailable || uploading}
-          aria-pressed={editing}
-          className={`inline-flex items-center gap-2 rounded-xl border-2 px-5 py-3 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-            editing
-              ? "border-navy bg-navy text-white hover:bg-navy-light"
-              : "border-navy/25 text-navy hover:bg-navy hover:text-white"
-          }`}
-        >
-          {editing ? (
-            <svg
-              className="h-4 w-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2.5}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M5 12l5 5L20 7" />
-            </svg>
-          ) : (
-            <svg
-              className="h-4 w-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M12 20h9" />
-              <path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" />
-            </svg>
+        <div className="flex items-center gap-3">
+          {savingOrder && (
+            <span className="text-xs font-semibold text-navy/50">Saving order…</span>
           )}
-          {editing ? "Done" : "Edit"}
-        </button>
+          <button
+            type="button"
+            onClick={() => setEditing((current) => !current)}
+            disabled={!storageAvailable || uploading || savingOrder}
+            aria-pressed={editing}
+            className={`inline-flex items-center gap-2 rounded-xl border-2 px-5 py-3 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+              editing
+                ? "border-navy bg-navy text-white hover:bg-navy-light"
+                : "border-navy/25 text-navy hover:bg-navy hover:text-white"
+            }`}
+          >
+            {editing ? (
+              <svg
+                className="h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M5 12l5 5L20 7" />
+              </svg>
+            ) : (
+              <svg
+                className="h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" />
+              </svg>
+            )}
+            {editing ? "Done" : "Edit"}
+          </button>
+        </div>
       </div>
 
       {!storageAvailable && (
@@ -279,55 +379,102 @@ export default function AdminGallery({
       ) : (
         <div className="mt-2 grid gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {photos.map((photo, index) => (
-            <div
+            <motion.div
               key={photo.id}
-              className="group relative overflow-hidden rounded-2xl border-2 border-beige-deep bg-beige-soft shadow-lg shadow-navy/10"
+              layout="position"
+              transition={
+                reduceMotion
+                  ? { duration: 0 }
+                  : { type: "spring", stiffness: 380, damping: 32, mass: 0.7 }
+              }
+              className={`group relative overflow-hidden rounded-2xl border-2 border-beige-deep bg-beige-soft shadow-lg shadow-navy/10 transition-[border-color,box-shadow,opacity] ${
+                draggingId === photo.id
+                  ? "opacity-40 ring-2 ring-navy/50"
+                  : overId === photo.id && draggingId
+                    ? "border-navy/50 ring-2 ring-navy/30"
+                    : ""
+              }`}
             >
-              <div className="relative aspect-[3/4] w-full bg-beige">
-                <Image
-                  src={photo.url}
-                  alt={`Gallery photo ${index + 1}`}
-                  fill
-                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-                  className="object-cover"
-                />
-              </div>
-              <span className="absolute bottom-2 left-2 rounded-full bg-navy/80 px-2.5 py-1 text-[11px] font-bold text-white">
-                Photo {index + 1}
-              </span>
+              <div
+                draggable={editing && !savingOrder && !uploading}
+                onDragStart={(event) => handleDragStart(event, photo)}
+                onDragOver={(event) => handleDragOver(event, photo)}
+                onDrop={(event) => handleDrop(event, photo.id)}
+                onDragEnd={endDrag}
+                className={`relative h-full w-full ${
+                  editing && !savingOrder
+                    ? "cursor-grab active:cursor-grabbing"
+                    : ""
+                }`}
+              >
+                <div className="relative aspect-[3/4] w-full bg-beige">
+                  <Image
+                    src={photo.url}
+                    alt={`Gallery photo ${index + 1}`}
+                    fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                    className="object-cover"
+                    draggable={false}
+                  />
+                </div>
 
-              {editing && (
-                <button
-                  type="button"
-                  onClick={() => removePhoto(photo)}
-                  disabled={removingId === photo.id}
-                  aria-label={`Remove gallery photo ${index + 1}`}
-                  title="Remove photo"
-                  className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/85 text-navy shadow-lg backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white hover:text-red-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy disabled:cursor-wait disabled:opacity-60"
-                >
-                  {removingId === photo.id ? (
-                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-navy/30 border-t-navy" />
-                  ) : (
+                <span className="pointer-events-none absolute left-2 top-2 flex h-7 min-w-7 items-center justify-center rounded-full border border-white/50 bg-navy/80 px-2 text-xs font-bold text-white shadow-md backdrop-blur">
+                  #{index + 1}
+                </span>
+
+                {editing && (
+                  <span className="pointer-events-none absolute bottom-2 left-2 inline-flex items-center gap-1.5 rounded-full bg-navy/80 px-2.5 py-1 text-[11px] font-semibold text-white shadow-md backdrop-blur">
                     <svg
-                      className="h-4 w-4"
+                      className="h-3 w-3"
                       viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                      strokeLinecap="round"
+                      fill="currentColor"
+                      aria-hidden="true"
                     >
-                      <path d="M6 6l12 12M18 6L6 18" />
+                      <circle cx="9" cy="6" r="1.6" />
+                      <circle cx="15" cy="6" r="1.6" />
+                      <circle cx="9" cy="12" r="1.6" />
+                      <circle cx="15" cy="12" r="1.6" />
+                      <circle cx="9" cy="18" r="1.6" />
+                      <circle cx="15" cy="18" r="1.6" />
                     </svg>
-                  )}
-                </button>
-              )}
-            </div>
+                    Drag to reorder
+                  </span>
+                )}
+
+                {editing && (
+                  <button
+                    type="button"
+                    onClick={() => removePhoto(photo)}
+                    disabled={removingId === photo.id || savingOrder}
+                    draggable={false}
+                    aria-label={`Remove gallery photo ${index + 1}`}
+                    title="Remove photo"
+                    className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/85 text-navy shadow-lg backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white hover:text-red-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy disabled:cursor-wait disabled:opacity-60"
+                  >
+                    {removingId === photo.id ? (
+                      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-navy/30 border-t-navy" />
+                    ) : (
+                      <svg
+                        className="h-4 w-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                      >
+                        <path d="M6 6l12 12M18 6L6 18" />
+                      </svg>
+                    )}
+                  </button>
+                )}
+              </div>
+            </motion.div>
           ))}
 
           {editing && (
             <label
               className={`group flex aspect-[3/4] w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed bg-beige-soft/60 px-4 text-center transition-colors ${
-                uploading || !storageAvailable
+                uploading || !storageAvailable || savingOrder
                   ? "cursor-not-allowed border-beige-deep text-navy/30"
                   : "cursor-pointer border-beige-deep text-navy/55 hover:border-navy/40 hover:bg-beige-soft hover:text-navy"
               }`}
@@ -353,7 +500,7 @@ export default function AdminGallery({
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 multiple
-                disabled={uploading || !storageAvailable}
+                disabled={uploading || !storageAvailable || savingOrder}
                 onChange={(event) => handleFiles(event.target.files)}
                 className="hidden"
               />

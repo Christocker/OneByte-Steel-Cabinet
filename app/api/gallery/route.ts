@@ -8,6 +8,7 @@ import {
   GalleryError,
   GalleryValidationError,
   getGallery,
+  reorderGalleryPhotos,
 } from "@/lib/gallery";
 
 export const runtime = "nodejs";
@@ -73,5 +74,44 @@ export async function POST(request: Request) {
       return json({ error: error.message }, 500);
     }
     return json({ error: "Gallery photo could not be added." }, 500);
+  }
+}
+
+export async function PATCH(request: Request) {
+  const unauthorized = await requireAdmin();
+  if (unauthorized) return unauthorized;
+
+  if (!isSameOrigin(request)) {
+    return json({ error: "Invalid request origin." }, 403);
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: "Invalid request body." }, 400);
+  }
+
+  const values = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
+  const ids = Array.isArray(values.ids) ? values.ids : null;
+
+  try {
+    if (!ids) {
+      throw new GalleryValidationError("A complete gallery order is required.");
+    }
+    const photos = await reorderGalleryPhotos(ids);
+    revalidatePath("/");
+    return json({ photos });
+  } catch (error) {
+    if (error instanceof GalleryValidationError) {
+      return json({ error: error.message }, 400);
+    }
+    if (error instanceof GalleryConfigurationError) {
+      return json({ error: error.message }, 503);
+    }
+    if (error instanceof GalleryError) {
+      return json({ error: error.message }, 500);
+    }
+    return json({ error: "Gallery order could not be saved." }, 500);
   }
 }

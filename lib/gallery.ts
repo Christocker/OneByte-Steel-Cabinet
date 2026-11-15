@@ -282,3 +282,70 @@ export async function deleteGalleryPhoto(id: string): Promise<void> {
   }
   await writeLocalGallery(next);
 }
+
+export async function reorderGalleryPhotos(ids: string[]): Promise<GalleryPhoto[]> {
+  if (
+    !Array.isArray(ids) ||
+    ids.length === 0 ||
+    ids.some((id) => typeof id !== "string" || id.length === 0)
+  ) {
+    throw new GalleryValidationError("A complete gallery order is required.");
+  }
+  if (new Set(ids).size !== ids.length) {
+    throw new GalleryValidationError("Gallery order cannot contain duplicate photos.");
+  }
+
+  const config = getSupabaseConfig();
+  const photos = config ? await readSupabaseGallery(config) : await readLocalGallery();
+  if (ids.length !== photos.length) {
+    throw new GalleryValidationError("Gallery order must include every photo.");
+  }
+
+  const byId = new Map(photos.map((photo) => [photo.id, photo]));
+  const ordered = ids.map((id, index) => {
+    const photo = byId.get(id);
+    if (!photo) {
+      throw new GalleryValidationError("Gallery order contains an unknown photo.");
+    }
+    return { ...photo, position: index + 1 };
+  });
+
+  if (config) {
+    const response = await fetch(
+      `${config.baseUrl}/rest/v1/cabinet_gallery?on_conflict=id`,
+      {
+        method: "POST",
+        headers: headers(config, {
+          "Content-Type": "application/json",
+          Prefer: "resolution=merge-duplicates,return=minimal",
+        }),
+        body: JSON.stringify(
+          ordered.map((photo) => ({
+            id: photo.id,
+            url: photo.url,
+            width: photo.width,
+            height: photo.height,
+            sort_order: photo.position,
+          }))
+        ),
+        cache: "no-store",
+      }
+    );
+
+    if (response.status === 404) {
+      throw new GalleryConfigurationError(
+        "The gallery table is missing. Apply migration 009_cabinet_gallery.sql in Supabase."
+      );
+    }
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+      throw new GalleryError(
+        `Gallery order could not be saved (${response.status})${detail ? `: ${detail}` : "."}`
+      );
+    }
+  } else {
+    await writeLocalGallery(ordered);
+  }
+
+  return ordered;
+}

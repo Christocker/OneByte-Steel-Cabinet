@@ -55,7 +55,8 @@ Open `/admin` to sign in (sessions are signed, expiring, HttpOnly cookies). Prod
 collapsed by default; use **Edit** to change fields inline, quick stock buttons for fast stock
 changes, and **Delete** (permanent) with confirmation. **Download catalog (JPEG)** generates a
 shareable image of the catalog with optional In Stock / Out of Stock / Pre-Order filtering. The
-**Gallery** section below the products lets the admin upload new photos and remove existing ones.
+**Gallery** section below the products lets the admin upload new photos, remove existing ones, and
+drag photos to reorder them.
 
 ## Verification
 
