@@ -4,6 +4,7 @@ import Image from "next/image";
 import { FormEvent, useRef, useState } from "react";
 import { buildDimensions, type DimensionUnit } from "@/lib/dimensions";
 import { formatPriceDisplay } from "@/lib/format";
+import { toTitleCase, capitalizeWordStarts } from "@/lib/product-name";
 import PriceInput from "./PriceInput";
 
 type ProductFormProps = {
@@ -44,8 +45,9 @@ export default function ProductForm({ onSubmit, onCancel }: ProductFormProps) {
 
   function validate(): boolean {
     const e: Record<string, string> = {};
-    if (!name.trim()) e.name = "Product name is required.";
-    else if (name.length > 200) e.name = "Must be 200 characters or fewer.";
+    const cleanName = toTitleCase(name.trim());
+    if (!cleanName) e.name = "Product name is required.";
+    else if (cleanName.length > 200) e.name = "Must be 200 characters or fewer.";
     if (!brand.trim()) e.brand = "Brand is required.";
     else if (brand.length > 100) e.brand = "Must be 100 characters or fewer.";
     if (!price.trim()) e.price = "Price is required.";
@@ -109,7 +111,7 @@ export default function ProductForm({ onSubmit, onCancel }: ProductFormProps) {
     setSubmitError("");
     try {
       await onSubmit({
-        name: name.trim(),
+        name: toTitleCase(name.trim()),
         brand: brand.trim(),
         price: price.trim(),
         dimensions: buildDimensions(dimH, dimW, dimD, dimUnit),
@@ -134,7 +136,8 @@ export default function ProductForm({ onSubmit, onCancel }: ProductFormProps) {
         <input
           id="pf-name"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => setName(capitalizeWordStarts(e.target.value))}
+          onBlur={() => setName(toTitleCase(name.trim()))}
           required
           maxLength={200}
           className="mt-2 h-12 w-full rounded-xl border-2 border-beige-deep bg-beige px-4 text-navy outline-none transition-colors focus:border-navy"

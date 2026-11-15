@@ -6,6 +6,7 @@ import type { InventoryProduct } from "@/lib/products";
 import { parseStockValue, MAX_STOCK } from "@/lib/inventory-validation";
 import { MAX_IMAGES } from "@/lib/image-urls";
 import { buildDimensions, parseDimensions, type DimensionUnit } from "@/lib/dimensions";
+import { toTitleCase, capitalizeWordStarts } from "@/lib/product-name";
 import CatalogCardShell from "@/components/CatalogCardShell";
 import PhotoLightbox from "@/components/PhotoLightbox";
 import PriceInput from "./PriceInput";
@@ -223,8 +224,9 @@ export default function AdminProductCard({
   async function handleSave(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const next: Record<string, string> = {};
-    if (!name.trim()) next.name = "Product name is required.";
-    else if (name.length > 200) next.name = "Must be 200 characters or fewer.";
+    const cleanName = toTitleCase(name.trim());
+    if (!cleanName) next.name = "Product name is required.";
+    else if (cleanName.length > 200) next.name = "Must be 200 characters or fewer.";
     if (!brand.trim()) next.brand = "Brand is required.";
     else if (brand.length > 100) next.brand = "Must be 100 characters or fewer.";
     if (!price.trim()) next.price = "Price is required.";
@@ -244,7 +246,7 @@ export default function AdminProductCard({
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
         body: JSON.stringify({
-          name: name.trim(),
+          name: cleanName,
           brand: brand.trim(),
           price: price.trim(),
           dimensions,
@@ -269,7 +271,7 @@ export default function AdminProductCard({
       }
       onSaved({
         ...product,
-        name: name.trim(),
+        name: cleanName,
         brand: brand.trim(),
         price: price.trim(),
         dimensions,
@@ -330,7 +332,8 @@ export default function AdminProductCard({
                 <input
                   id={`name-${product.id}`}
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => setName(capitalizeWordStarts(e.target.value))}
+                  onBlur={() => setName(toTitleCase(name.trim()))}
                   maxLength={200}
                   className="mt-1 h-10 w-full rounded-lg border-2 border-beige-deep bg-beige px-3 text-sm text-navy outline-none focus:border-navy aria-[invalid=true]:border-red-500"
                   aria-invalid={Boolean(errors.name)}

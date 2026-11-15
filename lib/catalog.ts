@@ -2,6 +2,7 @@ import { readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { nextItemNumberFrom } from "./item-number";
 import { MAX_IMAGES } from "./image-urls";
+import { toTitleCase } from "./product-name";
 
 const LOCAL_CATALOG_FILE = path.join(process.cwd(), "data", "catalog.json");
 const LOCAL_INVENTORY_FILE = path.join(process.cwd(), "data", "inventory.json");
@@ -134,7 +135,7 @@ function parseRow(row: unknown): CatalogProduct {
     id: String(r.id ?? ""),
     item_number: Number(r.item_number ?? 0),
     brand: String(r.brand ?? ""),
-    name: String(r.name ?? ""),
+    name: toTitleCase(String(r.name ?? "")),
     price: String(r.price ?? "0"),
     dimensions: String(r.dimensions ?? ""),
     images: Array.isArray(r.images)
@@ -231,7 +232,12 @@ async function readLocalAll(): Promise<CatalogProduct[]> {
   try {
     const data = await readFile(LOCAL_CATALOG_FILE, "utf8");
     const parsed = JSON.parse(data) as CatalogProduct[];
-    return parsed.sort((a, b) => a.item_number - b.item_number);
+    return parsed
+      .map((product) => ({
+        ...product,
+        name: toTitleCase(String(product.name ?? "")),
+      }))
+      .sort((a, b) => a.item_number - b.item_number);
   } catch (err) {
     if (err && typeof err === "object" && "code" in err && err.code === "ENOENT") return [];
     throw new Error("Local catalog could not be read.");
@@ -315,6 +321,7 @@ export type UpdateProductInput = {
 
 export async function createProduct(input: CreateProductInput): Promise<CatalogProduct> {
   const now = new Date().toISOString();
+  const name = toTitleCase(input.name);
 
   const config = getSupabaseConfig();
   if (config) {
@@ -330,7 +337,7 @@ export async function createProduct(input: CreateProductInput): Promise<CatalogP
         id: input.id,
         item_number: itemNumber,
         brand: input.brand,
-        name: input.name,
+        name,
         price: input.price,
         dimensions: input.dimensions,
         images: input.images,
@@ -374,7 +381,7 @@ export async function createProduct(input: CreateProductInput): Promise<CatalogP
       id: input.id,
       item_number: itemNumber,
       brand: input.brand,
-      name: input.name,
+      name,
       price: input.price,
       dimensions: input.dimensions,
       images: input.images,
@@ -391,7 +398,7 @@ export async function createProduct(input: CreateProductInput): Promise<CatalogP
       id: input.id,
       item_number: itemNumber,
       brand: input.brand,
-      name: input.name,
+      name,
       price: input.price,
       dimensions: input.dimensions,
       images: input.images,
@@ -415,7 +422,7 @@ export async function updateProduct(
   if (!existing) throw new CatalogError("Product not found.");
 
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
-  if (input.name !== undefined) updates.name = input.name;
+  if (input.name !== undefined) updates.name = toTitleCase(input.name);
   if (input.brand !== undefined) updates.brand = input.brand;
   if (input.price !== undefined) updates.price = input.price;
   if (input.dimensions !== undefined) updates.dimensions = input.dimensions;
