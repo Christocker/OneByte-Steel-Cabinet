@@ -40,6 +40,7 @@ export default function AdminGallery({
   onUnauthorized,
 }: AdminGalleryProps) {
   const [photos, setPhotos] = useState(initialPhotos);
+  const [editing, setEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
@@ -203,28 +204,51 @@ export default function AdminGallery({
             Gallery
           </h2>
           <p className="mt-1 text-sm text-navy/60">
-            Photos shown in the public “In Use” gallery. Add or remove them here.
+            {editing
+              ? "Remove photos with the × button, or add new ones with the tile after the last photo."
+              : "Photos shown in the public “In Use” gallery. Select Edit to add or remove photos."}
           </p>
         </div>
 
-        <label
-          className={`inline-flex items-center justify-center rounded-xl bg-navy px-6 py-3 text-sm font-semibold text-white transition-colors ${
-            uploading || !storageAvailable
-              ? "cursor-not-allowed opacity-50"
-              : "cursor-pointer hover:bg-navy-light"
+        <button
+          type="button"
+          onClick={() => setEditing((current) => !current)}
+          disabled={!storageAvailable || uploading}
+          aria-pressed={editing}
+          className={`inline-flex items-center gap-2 rounded-xl border-2 px-5 py-3 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+            editing
+              ? "border-navy bg-navy text-white hover:bg-navy-light"
+              : "border-navy/25 text-navy hover:bg-navy hover:text-white"
           }`}
         >
-          {uploading ? "Uploading..." : "+ Add photos"}
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            multiple
-            disabled={uploading || !storageAvailable}
-            onChange={(event) => handleFiles(event.target.files)}
-            className="hidden"
-          />
-        </label>
+          {editing ? (
+            <svg
+              className="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M5 12l5 5L20 7" />
+            </svg>
+          ) : (
+            <svg
+              className="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" />
+            </svg>
+          )}
+          {editing ? "Done" : "Edit"}
+        </button>
       </div>
 
       {!storageAvailable && (
@@ -248,9 +272,9 @@ export default function AdminGallery({
         {notice}
       </p>
 
-      {photos.length === 0 ? (
+      {photos.length === 0 && !editing ? (
         <p className="mt-2 rounded-2xl border-2 border-dashed border-beige-deep bg-beige-soft px-6 py-10 text-center text-sm font-medium text-navy/50">
-          No gallery photos yet. Use Add photos to upload the first one.
+          No gallery photos yet. Select Edit to add the first one.
         </p>
       ) : (
         <div className="mt-2 grid gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
@@ -271,17 +295,70 @@ export default function AdminGallery({
               <span className="absolute bottom-2 left-2 rounded-full bg-navy/80 px-2.5 py-1 text-[11px] font-bold text-white">
                 Photo {index + 1}
               </span>
-              <button
-                type="button"
-                onClick={() => removePhoto(photo)}
-                disabled={removingId === photo.id}
-                aria-label={`Remove gallery photo ${index + 1}`}
-                className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-red-600 text-sm font-bold text-white shadow-md transition-colors hover:bg-red-700 disabled:cursor-wait disabled:opacity-60"
-              >
-                {removingId === photo.id ? "…" : "x"}
-              </button>
+
+              {editing && (
+                <button
+                  type="button"
+                  onClick={() => removePhoto(photo)}
+                  disabled={removingId === photo.id}
+                  aria-label={`Remove gallery photo ${index + 1}`}
+                  title="Remove photo"
+                  className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/85 text-navy shadow-lg backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white hover:text-red-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy disabled:cursor-wait disabled:opacity-60"
+                >
+                  {removingId === photo.id ? (
+                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-navy/30 border-t-navy" />
+                  ) : (
+                    <svg
+                      className="h-4 w-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                    >
+                      <path d="M6 6l12 12M18 6L6 18" />
+                    </svg>
+                  )}
+                </button>
+              )}
             </div>
           ))}
+
+          {editing && (
+            <label
+              className={`group flex aspect-[3/4] w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed bg-beige-soft/60 px-4 text-center transition-colors ${
+                uploading || !storageAvailable
+                  ? "cursor-not-allowed border-beige-deep text-navy/30"
+                  : "cursor-pointer border-beige-deep text-navy/55 hover:border-navy/40 hover:bg-beige-soft hover:text-navy"
+              }`}
+            >
+              <span className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-current transition-transform duration-200 group-hover:scale-105">
+                <svg
+                  className="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                >
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+              </span>
+              <span className="mt-3 text-sm font-semibold">
+                {uploading ? "Uploading..." : "Add photos"}
+              </span>
+              <span className="mt-1 text-[11px] font-medium">JPG, PNG, WebP · 5MB max</span>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                disabled={uploading || !storageAvailable}
+                onChange={(event) => handleFiles(event.target.files)}
+                className="hidden"
+              />
+            </label>
+          )}
         </div>
       )}
     </section>
